@@ -23,8 +23,8 @@ weirdfight.priority = 'low'
 
 def weirdhug(phenny, input):
     phenny.do("hugs %s" % otherbot)
-bothug.commands = ['hug']
-bothug.priority = 'low'
+weirdhug.commands = ['hug']
+weirdhug.priority = 'low'
 
 if __name__ == '__main__':
     print(__doc__.strip())

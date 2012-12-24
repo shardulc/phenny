@@ -60,6 +60,7 @@ class SVNPoller:
 		#	repo_file.close()
 		#	print((str(self.last_revision)+" gotten from self.get_last_revision()"))
 		self.last_revision = None
+		self.revisions = {}
 
 	def __str__(self):
 		return "(%s) %s %s" % (self.repo, self.root, self.last_revision)
@@ -97,7 +98,7 @@ class SVNPoller:
 		if self.repo not in revisions:
 			revisions[self.repo] = 0
 		self.revisions = revisions
-		self.last_revision = self.revisions[self.repo]
+		self.last_revision = int(self.revisions[self.repo])
 		last_revision = self.get_last_revision()
 		print(str(last_revision), str(self.last_revision), str(self.revisions))
 		## if successfully polled and a new revision ##
@@ -120,13 +121,12 @@ class SVNPoller:
 	def newReport(self, last_revision):
 		if self.last_revision == 0 or self.last_revision == None:
 			self.last_revision = last_revision -1
+		else:
+			print(self.last_revision, last_revision)
 		print("newReport", str(last_revision), str(self.last_revision))
 
 		for rev in range(self.last_revision+1, last_revision+1):
-			author, comment, dir = self.revision_info(rev)
-			if comment is None:
-				comment = "Use comments people -_-"
-			msg = "%s: %s * r%s: %s: %s\n" % (self.repo, author, rev, dir, comment.strip())
+			msg = generateReport(rev)
 		if not msg:
 			msg = ":("
 		yield msg
@@ -156,9 +156,43 @@ class SVNPoller:
 		tree = self.svn("log", "-r", str(revision), "--verbose")
 		author = tree.find("//author").text
 		comment = tree.find("//msg").text
-		dir = tree.find("//path").text
+		#dir = tree.find("//path").text
+		paths = []
+		for path in tree.findall("//path"):
+			paths.append(path.text)
 
-		return author, comment, dir
+		return author, comment, paths
+
+	def generateReport(self, rev):
+		author, comment, paths = self.revision_info(rev)
+		if comment is None:
+			comment = "Use comments people -_-"
+		basepath = os.path.commonprefix(paths)
+		textPaths = ""
+		first = True
+		for path in paths:
+			if not first:
+				textPaths+=", "
+			else:
+				first = False
+			textPaths+=os.path.relpath(path, basepath)
+		if len(paths) > 1:
+			finalPath = "%s: %s" % (basepath, textPaths)
+		else:
+			finalPath = paths[0]
+		msg = "%s: %s * r%s: %s: %s\n" % (self.repo, author, rev, finalPath, comment.strip())
+		return msg
+
+
+def recentcommits(phenny, input):
+	print("POLLING!!!!")
+	pollers = {}
+	for repo in Repos:
+		pollers[repo] = SVNPoller(repo, Repos[repo])
+	for repo in Repos:
+		#for (msg, revisions) in pollers[repo].check(phenny.revisions):
+		phenny.say(pollers[repo].generateReport(pollers[repo].get_last_revision()))
+
 
 def pollsvn(phenny, input):
 	print("POLLING!!!!")
@@ -167,17 +201,19 @@ def pollsvn(phenny, input):
 		pollers[repo] = SVNPoller(repo, Repos[repo])
 	for repo in Repos:
 		for (msg, revisions) in pollers[repo].check(phenny.revisions):
-			if phenny.revisions:
-				if revisions[repo] != phenny.revisions[repo]:
-					phenny.revisions = revisions
-					phenny.say("New revisions!"+msg)
-				else:
-					phenny.say("No new revisions!")
-				print(repo, str(phenny.revisions))
-			else:
-				phenny.say("First revisions!")
-				phenny.revisions = revisions
-			phenny.say("rev data: "+str(pollers[repo]))
+			#if phenny.revisions:
+			#	if revisions[repo] != phenny.revisions[repo]:
+			#		phenny.revisions = revisions
+			#		phenny.say("New revisions!"+msg)
+			#	else:
+			#		phenny.say("No new revisions!")
+			#	print(repo, str(phenny.revisions))
+			#else:
+			#	phenny.say("First revisions!")
+			#	phenny.revisions = revisions
+			if(msg):
+				phenny.say(msg)
+			#phenny.say("rev data: "+str(pollers[repo]))
 			if phenny.revisions:
 				if len(phenny.revisions)>0:
 					dumpRevisions(phenny.repos_filename, phenny.revisions)
@@ -195,7 +231,11 @@ def pollsvn(phenny, input):
 
 pollsvn.name = 'SVN poll'
 #pollsvn.rule = ('$nick', ['esan!'], r'(\S+)?')
-pollsvn.rule = ('$nick', ['esan!'], '')
+#pollsvn.rule = ('$nick', 'esan!', '')
+pollsvn.rule = ('$nick', 'esan!')
 pollsvn.priority = 'medium'
 #pollsvn.thread = True
 
+
+recentcommits.rule = ('$nick', 'recent')
+recentcommits.priority = 'medium'

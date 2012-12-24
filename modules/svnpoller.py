@@ -52,7 +52,6 @@ class SVNPoller:
         except Exception, e:
 #surpress all outputs...
             pass
-#            print "ERROR: %s" % e
 
     def svn(self, *cmd):
         pipe = Popen(self.pre +  list(cmd) + [self.root], stdout=PIPE)
@@ -65,7 +64,6 @@ class SVNPoller:
     def get_last_revision(self):
         tree = self.svn("info")
         revision = tree.find("//commit").get("revision")
-#        print revision
         return int(revision)
 
     def revision_info(self, revision):
@@ -73,11 +71,6 @@ class SVNPoller:
         author = tree.find("//author").text
         comment = tree.find("//msg").text
         dir = tree.find("//path").text
-
-#        print author
-#        print comment
-#        print dir
-#        print "\n"
 
         return author, comment, dir
 
@@ -91,17 +84,13 @@ if __name__ == "__main__":
     factory.protocol = IRCClient
     reactor.connectTCP("irc.freenode.net", 6667, factory)
 
+    toPolls = ["https://apertium.svn.sourceforge.net/svnroot/apertium",
+        "https://hfst.svn.sourceforge.net/svnroot/hfst",
+        "http://beta.visl.sdu.dk/svn/visl/tools/vislcg3"]
 
-    poller1 = SVNPoller("https://apertium.svn.sourceforge.net/svnroot/apertium")
-    poller2 = SVNPoller("https://hfst.svn.sourceforge.net/svnroot/hfst")
-    poller3 = SVNPoller("http://beta.visl.sdu.dk/svn/visl/tools/vislcg3")
-
-
-    task1 = LoopingCall(poller1.check)
-    task2 = LoopingCall(poller2.check)
-    task3 = LoopingCall(poller3.check)
-    task1.start(4)
-    task2.start(4)
-    task3.start(4)
+    for toPoll in toPolls
+        poller = SVNPoller(toPoll)
+        task = LoopingCall(poller.check)
+        task.start(4)
 
     reactor.run()

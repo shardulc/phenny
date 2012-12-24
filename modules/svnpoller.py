@@ -3,11 +3,14 @@
 
 from twisted.words.protocols import irc
 from twisted.internet.protocol import ReconnectingClientFactory
+from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
 import re
 import os
 from subprocess import Popen, PIPE
 from xml.etree.cElementTree import parse as xmlparse
 from cStringIO import StringIO
+
 
 class IRCClient(irc.IRCClient):
     nickname = "begiak"
@@ -71,14 +74,12 @@ class SVNPoller:
         author = tree.find("//author").text
         comment = tree.find("//msg").text
         dir = tree.find("//path").text
+        print(str(tree))
 
         return author, comment, dir
 
 
 if __name__ == "__main__":
-
-    from twisted.internet import reactor
-    from twisted.internet.task import LoopingCall
 
     factory = ReconnectingClientFactory()
     factory.protocol = IRCClient

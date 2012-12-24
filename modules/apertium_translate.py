@@ -41,7 +41,7 @@ def apertium_translate(phenny, input):
    """Translates a phrase using the apertium API"""
    line = input.group(2)
    if not line:
-      return phenny.reply("Need something to translate!")
+      raise GrumbleError("Need something to translate!")
    #line = line.encode('utf-8')
 
    pairs = []
@@ -63,7 +63,7 @@ def apertium_translate(phenny, input):
    #translate_me = ' '.join(line.split(' ')[:-2])
 
    if (len(translate_me) > 350) and (not input.admin): 
-      return phenny.reply('Phrase must be under 350 characters.')
+      raise GrumbleError('Phrase must be under 350 characters.')
 
    msg = translate_me
    finalmsg = False

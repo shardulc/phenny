@@ -8,7 +8,7 @@ import random
 
 otherbot = "zfe"
 
-def botfight(phenny, input):
+def weirdfight(phenny, input):
     global otherbot
     whouser = input.groups()[1]
     if whouser:
@@ -18,12 +18,12 @@ def botfight(phenny, input):
     response = random.choice(messages)
 
     phenny.do(response % otherbot)
-botfight.commands = ['botfight']
-botfight.priority = 'low'
+weirdfight.commands = ['fight']
+weirdfight.priority = 'low'
 
-def bothug(phenny, input):
+def weirdhug(phenny, input):
     phenny.do("hugs %s" % otherbot)
-bothug.commands = ['bothug']
+bothug.commands = ['hug']
 bothug.priority = 'low'
 
 if __name__ == '__main__':

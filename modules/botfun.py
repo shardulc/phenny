@@ -6,7 +6,7 @@ author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 
 import random
 
-otherbot = "truncatedcone"
+otherbot = "ChanServ"
 
 def botfight(phenny, input):
     messages = ["hits %s", "punches %s", "kicks %s", "hits %s with a rubber hose", "stabs %s with a clean kitchen knife"]

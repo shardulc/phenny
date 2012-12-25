@@ -126,7 +126,7 @@ class SVNPoller:
 		print("newReport", str(last_revision), str(self.last_revision))
 
 		for rev in range(self.last_revision+1, last_revision+1):
-			msg = generateReport(rev)
+			msg = self.generateReport(rev)
 		if not msg:
 			msg = ":("
 		yield msg
@@ -211,11 +211,17 @@ def pollsvn(phenny, input):
 			#else:
 			#	phenny.say("First revisions!")
 			#	phenny.revisions = revisions
-			if(msg):
-				phenny.say(msg)
+			if msg is not None:
+				print("msg: %s" % msg)
+				#print(str(input.sender), str(input.nick))
+				for chan in input.chans:
+					#phenny.say(msg)
+					print("chan, msg: %s, %s" % (chan, msg))
+					phenny.bot.msg(chan, msg)
 			#phenny.say("rev data: "+str(pollers[repo]))
 			if phenny.revisions:
 				if len(phenny.revisions)>0:
+					print("dumping revisions")
 					dumpRevisions(phenny.repos_filename, phenny.revisions)
 		
 		
@@ -232,10 +238,16 @@ def pollsvn(phenny, input):
 pollsvn.name = 'SVN poll'
 #pollsvn.rule = ('$nick', ['esan!'], r'(\S+)?')
 #pollsvn.rule = ('$nick', 'esan!', '')
-pollsvn.rule = ('$nick', 'esan!')
+#pollsvn.rule = ('$nick', 'esan!')
+#pollsvn.event = '262'  # 246, 262
+pollsvn.event = "PONG"
+pollsvn.rule = r'.*'
 pollsvn.priority = 'medium'
 #pollsvn.thread = True
 
-
+recentcommits.name = 'List the most recent SVN commits'
 recentcommits.rule = ('$nick', 'recent')
+#recentcommits.event = "PING"
+#recentcommits.rule = r'.*'
 recentcommits.priority = 'medium'
+recentcommits.thread = True

@@ -32,7 +32,7 @@ def setup(phenny):
 
         def pong(phenny, input):
             try:
-                # print "PONG!"
+                #print("PONG!")
                 phenny.data['startup.setup.timer'].cancel()
                 time.sleep(refresh_delay + 60.0)
                 pingloop()

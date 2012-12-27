@@ -121,9 +121,9 @@ class SVNPoller:
 	def newReport(self, last_revision):
 		if self.last_revision == 0 or self.last_revision == None:
 			self.last_revision = last_revision -1
-		else:
-			print(self.last_revision, last_revision)
-		print("newReport", str(last_revision), str(self.last_revision))
+		#else:
+		#	print(self.last_revision, last_revision)
+		#print("newReport", str(last_revision), str(self.last_revision))
 
 		for rev in range(self.last_revision+1, last_revision+1):
 			msg = self.generateReport(rev)
@@ -167,6 +167,8 @@ class SVNPoller:
 		author, comment, paths = self.revision_info(rev)
 		if comment is None:
 			comment = "Use comments people -_-"
+		else:
+			comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
 		basepath = os.path.commonprefix(paths)
 		textPaths = ""
 		first = True

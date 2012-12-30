@@ -243,9 +243,9 @@ def f_time(self, origin, match, args):
             timenow = time.gmtime(time.time() + (t * 3600))
             msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz), timenow)
             self.msg(origin.sender, msg)
-f_time.commands = ['t']
-f_time.name = 't'
-f_time.example = '.t UTC'
+f_time.commands = ['time']
+f_time.name = 'time'
+f_time.example = '.time UTC'
 
 def beats(phenny, input): 
     """Shows the internet time in Swatch beats."""

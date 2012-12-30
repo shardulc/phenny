@@ -137,7 +137,11 @@ def message(phenny, input):
             reminders.extend(getReminders(phenny, channel, remkey, tellee))
 
     for line in reminders[:maximum]: 
-        phenny.say(line)
+        if "**pm**" in line:
+            line = line.replace("**pm**", "")
+            phenny.msg(tellee, line)
+        else:
+            phenny.say(line)
 
     if reminders[maximum:]: 
         phenny.say('Further messages sent privately')

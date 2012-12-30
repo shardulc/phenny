@@ -171,13 +171,21 @@ class SVNPoller:
 			comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
 		basepath = os.path.commonprefix(paths)
 		textPaths = ""
-		first = True
+		count = 0
+		first = False
 		for path in paths:
-			if not first:
+			if count != 0 and first == False:
 				textPaths+=", "
-			else:
-				first = False
-			textPaths+=os.path.relpath(path, basepath)
+			count += 1
+			if count < 3:
+				textPaths+=os.path.relpath(path, basepath)
+			elif count >= 3 and first == False:
+				if (len(paths) - 2) > 1:
+					plural = "s"
+				else:
+					plural = ""
+				textPaths+="and %s other file%s" % (str(len(paths) - 2), plural)
+				first = True
 		if len(paths) > 1:
 			finalPath = "%s: %s" % (basepath, textPaths)
 		else:
@@ -193,7 +201,13 @@ def recentcommits(phenny, input):
 		pollers[repo] = SVNPoller(repo, Repos[repo])
 	for repo in Repos:
 		#for (msg, revisions) in pollers[repo].check(phenny.revisions):
-		phenny.say(pollers[repo].generateReport(pollers[repo].get_last_revision()))
+		msg = pollers[repo].generateReport(pollers[repo].get_last_revision())
+		if len(msg) > 200:
+			while len(msg) > 80:
+				phenny.say(msg[:80])
+				msg = msg[80:]
+		else:
+			phenny.say(msg)
 
 
 def pollsvn(phenny, input):

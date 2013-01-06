@@ -143,7 +143,8 @@ def apertium_wiki(term, last=False):
    #term = term.decode('utf-8').encode('utf-8')
    return sentence + ' - ' + (wikiuri % (term))
 
-def awik(phenny, input): 
+def awik(phenny, input):
+   """Search for something on Apertium wiki."""
    origterm = input.groups()[1]
    if not origterm: 
       return phenny.say('Perhaps you meant ".wik Zen"?')
@@ -164,4 +165,5 @@ def awik(phenny, input):
    else: phenny.say('Can\'t find anything in apertium\'s wiki for "%s".' % origterm)
 
 awik.commands = ['awik']
+awik.example = '.awik Begiak'
 awik.priority = 'high'

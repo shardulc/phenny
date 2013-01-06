@@ -175,9 +175,17 @@ def apertium_listpairs(phenny, input):
 
       phenny.say(finals)
 
-apertium_translate.commands = ['at', 't']
-apertium_translate.priority = 'high'
+apertium_listpairs.name = 'listpairs'
 apertium_listpairs.commands = ['listpairs']
-apertium_translate.priority = 'low'
+apertium_listpairs.example = '.listpairs ca'
+apertium_listpairs.priority = 'low'
+
+apertium_listlangs.name = 'listlangs'
 apertium_listlangs.commands = ['listlangs']
-apertium_translate.priority = 'low'
+apertium_listlangs.example = '.listlangs'
+apertium_listlangs.priority = 'low'
+
+apertium_translate.name = 't'
+apertium_translate.commands = ['t']
+apertium_translate.example = '.t I like pie en-es'
+apertium_translate.priority = 'high'

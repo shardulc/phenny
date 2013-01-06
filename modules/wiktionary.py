@@ -90,6 +90,7 @@ def format(word, definitions, number=2):
     return result.strip(' .,')
 
 def w(phenny, input): 
+    """Look up a word on Wiktionary."""
     if not input.group(2):
         return phenny.reply("Nothing to define.")
     word = input.group(2)

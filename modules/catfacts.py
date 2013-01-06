@@ -18,7 +18,7 @@ def catfacts_get():
         return False
 
 def catfacts(phenny, input):
+    """Random facts about cats"""
     fact = catfacts_get()
     if fact:
         phenny.reply(fact)
-catfacts.commands = ['catfacts']

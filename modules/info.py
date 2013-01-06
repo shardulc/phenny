@@ -21,8 +21,9 @@ doc.example = '$nickname: doc tell?'
 doc.priority = 'low'
 
 def commands(phenny, input): 
+    """List commands that begiak recognizes."""
     # This function only works in private message
-    if input.sender.startswith('#'): return
+    #if input.sender.startswith('#'): return
     names = ', '.join(sorted(phenny.doc.keys()))
     phenny.say('Commands I recognise: ' + names + '.')
     phenny.say(("For help, do '%s: help example?' where example is the " + 

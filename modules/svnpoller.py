@@ -195,6 +195,7 @@ class SVNPoller:
 
 
 def recentcommits(phenny, input):
+	"""List the most recent SVN commits."""
 	print("POLLING!!!!")
 	pollers = {}
 	for repo in Repos:
@@ -261,8 +262,9 @@ pollsvn.rule = r'.*'
 pollsvn.priority = 'medium'
 #pollsvn.thread = True
 
-recentcommits.name = 'List the most recent SVN commits'
+recentcommits.name = 'recent'
 recentcommits.rule = ('$nick', 'recent')
+recentcommits.example = 'begiak: recent'
 #recentcommits.event = "PING"
 #recentcommits.rule = r'.*'
 recentcommits.priority = 'medium'

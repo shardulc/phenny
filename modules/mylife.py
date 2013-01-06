@@ -19,7 +19,7 @@ def fml(phenny, input):
         raise GrumbleError("I tried to use .fml, but it was broken. FML")
 
     doc = lxml.html.fromstring(req)
-    quote = doc.find_class('article')[0][0].text_content()
+    quote = doc.find_class('fmllink')[0][0].text_content()
     phenny.say(quote)
 fml.commands = ['fml']
 

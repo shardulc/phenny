@@ -10,37 +10,38 @@ http://inamidst.com/phenny/
 import time
 from tools import deprecated
 
-@deprecated
-def f_seen(self, origin, match, args): 
+def f_seen(phenny, input): 
     """.seen <nick> - Reports when <nick> was last seen."""
-    if origin.sender == '#talis': return
-    nick = match.group(2).lower()
-    if not hasattr(self, 'seen'): 
-        return self.msg(origin.sender, '?')
-    if nick in self.seen: 
-        channel, t = self.seen[nick]
+    if input.sender == '#talis': return
+    nick = input.group(2).lower()
+    if not hasattr(phenny, 'seen'): 
+        return self.msg(input.sender, '?')
+    if nick in phenny.seen: 
+        channel, t = phenny.seen[nick]
         t = time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(t))
 
         msg = "I last saw %s at %s on %s" % (nick, t, channel)
-        self.msg(origin.sender, str(origin.nick) + ': ' + msg)
-    else: self.msg(origin.sender, "Sorry, I haven't seen %s around." % nick)
+        phenny.reply(msg)
+    else: phenny.reply("Sorry, I haven't seen %s around." % nick)
+f_seen.name = 'seen'
+f_seen.example = '.seen firespeaker'
 f_seen.rule = (['seen'], r'(\S+)')
 
-@deprecated
-def f_note(self, origin, match, args): 
-    def note(self, origin, match, args): 
-        if not hasattr(self.bot, 'seen'): 
-            self.bot.seen = {}
-        if origin.sender.startswith('#'): 
+
+def f_note(phenny, input): 
+    def note(phenny, input): 
+        if not hasattr(phenny.bot, 'seen'): 
+            phenny.bot.seen = {}
+        if input.sender.startswith('#'): 
             # if origin.sender == '#inamidst': return
-            self.seen[origin.nick.lower()] = (origin.sender, time.time())
+            phenny.seen[input.nick.lower()] = (input.sender, time.time())
 
         # if not hasattr(self, 'chanspeak'): 
         #     self.chanspeak = {}
         # if (len(args) > 2) and args[2].startswith('#'): 
         #     self.chanspeak[args[2]] = args[0]
 
-    try: note(self, origin, match, args)
+    try: note(phenny, input)
     except Exception as e: print(e)
 f_note.rule = r'(.*)'
 f_note.priority = 'low'

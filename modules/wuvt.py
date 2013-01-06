@@ -16,6 +16,7 @@ r_play = re.compile(r'^(.*?) - (.*?)$')
 r_dj = re.compile(r'Current DJ: </span>\n(.+?)<')
 
 def wuvt(phenny, input) :
+    """Find out what radio station WUVT is currently playing."""
     try:
         playing = web.get('http://www.wuvt.vt.edu/playlists/latest_track.php')
         djpage = web.get('http://www.wuvt.vt.edu/playlists/current_dj.php')
@@ -31,4 +32,5 @@ def wuvt(phenny, input) :
                 .format(dj.strip(), song.strip(), artist.strip()))
     else:
         phenny.reply('Cannot connect to wuvt')
+wuvt.example = '.wuvt'
 wuvt.commands = ['wuvt']

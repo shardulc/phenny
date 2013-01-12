@@ -64,6 +64,7 @@ py.commands = ['py']
 py.example = '.py if not False: print "hello world!"'
 
 def wa(phenny, input): 
+    """Query Wolfram Alpha."""
     if not input.group(2):
         return phenny.reply("No search term.")
     query = input.group(2)
@@ -79,6 +80,7 @@ def wa(phenny, input):
         phenny.say(answer)
     else: phenny.reply('Sorry, no result.')
 wa.commands = ['wa']
+wa.example = '.wa answer to life'
 
 if __name__ == '__main__': 
     print(__doc__.strip())

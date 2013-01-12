@@ -25,7 +25,7 @@ TimeZones = {'KST': 9, 'CADT': 10.5, 'EETDST': 3, 'MESZ': 2, 'WADT': 9,
                  'EDT': -4, 'UT': 0, 'PST': -8, 'MEZ': 1, 'BST': 1, 
                  'ACS': 9.5, 'ATL': -4, 'ALA': -9, 'HAW': -10, 'AKDT': -8, 
                  'AKST': -9, 
-                 'BDST': 2}
+                 'BDST': 2, 'KGT': 6}
 
 TZ1 = {
  'NDT': -2.5, 

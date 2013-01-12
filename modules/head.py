@@ -114,7 +114,12 @@ def gettitle(phenny, uri):
     if not ':' in uri:
         uri = 'http://' + uri
     uri = uri.replace('#!', '?_escaped_fragment_=')
-
+    
+    parts = uri.split(".")
+    start = parts[0]
+    parts.pop(0)
+    uri = start + "." + urllib.parse.quote('.'.join(parts))
+    
     title = None
     localhost = [
         'http://localhost/', 'http://localhost:80/',

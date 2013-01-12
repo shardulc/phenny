@@ -20,7 +20,7 @@ def fight(phenny, input):
             phenny.say("ouch!")
 
     #### "hits %s", "punches %s", "kicks %s",, "stabs %s with a clean kitchen knife",  "hits %s with a rubber hose",
-    messages = [ "hurts himself by accident while trying to attack %s", "directs his Öflazers at %s", "is bored of violence against %s", "thinks you should talk it over with %s first", "cocks %s's beer", "east %s's hat"]
+    messages = [ "hurts himself by accident while trying to attack %s", "directs his Öflazers at %s", "is bored of violence against %s", "thinks you should talk it over with %s first", "cocks %s's beer", "eats %s's hat", "sets %s up the bomb"]
     response = random.choice(messages)
 
     if not already:

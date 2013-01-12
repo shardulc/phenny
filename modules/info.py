@@ -11,13 +11,13 @@ def doc(phenny, input):
     """Shows a command's documentation, and possibly an example."""
     name = input.group(1)
     name = name.lower()
-
     if name in phenny.doc: 
         phenny.reply(phenny.doc[name][0])
         if phenny.doc[name][1]: 
             phenny.say('e.g. ' + phenny.doc[name][1])
-doc.rule = ('$nick', '(?i)(?:help|doc) +([A-Za-z]+)(?:\?+)?$')
-doc.example = '$nickname: doc tell?'
+doc.name = 'help'
+doc.rule = ('$nick', '(?i)(?:help|doc) +([A-Za-z0-9]+)(?:\?+)?$')
+doc.example = '$nickname: help tell?'
 doc.priority = 'low'
 
 def commands(phenny, input): 
@@ -34,9 +34,9 @@ commands.priority = 'low'
 def help(phenny, input): 
     response = (
         "Hey there, I'm a friendly bot for this channel. Say \".commands\" " +
-        "to me in private for a list of my commands or check out my wiki " +
-        "page at %s. My owner is %s."
-    ) % (phenny.config.helpurl, phenny.config.owner)
+        "for a list of my commands or check out my wiki " +
+        "page at %s."
+    ) % ("http://wiki.apertium.org/wiki/Begiak")
     #phenny.reply(response)
     phenny.say(response)
 #help.rule = ('$nick', r'(?i)help(?:[?!]+)?$')

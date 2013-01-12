@@ -86,6 +86,7 @@ r_query = re.compile(
 )
 
 def gcs(phenny, input): 
+    """Compare the number of Google results for the specified paramters."""
     if not input.group(2):
         return phenny.reply("Nothing to compare.")
     queries = r_query.findall(input.group(2))
@@ -104,6 +105,7 @@ def gcs(phenny, input):
     reply = ', '.join('%s (%s)' % (t, formatnumber(n)) for (t, n) in results)
     phenny.say(reply)
 gcs.commands = ['gcs', 'comp']
+gcs.example = '.gcs Ronaldo Messi'
 
 r_bing = re.compile(r'<h3><a href="([^"]+)"')
 
@@ -145,6 +147,7 @@ def duck_search(query):
     if m: return web.decode(m.group(1))
 
 def duck(phenny, input): 
+    """Queries DuckDuckGo for specified input."""
     query = input.group(2)
     if not query: return phenny.reply('.ddg what?')
 
@@ -156,6 +159,7 @@ def duck(phenny, input):
         phenny.bot.last_seen_uri[input.sender] = uri
     else: phenny.reply("No results found for '%s'." % query)
 duck.commands = ['duck', 'ddg']
+duck.example = '.duck football'
 
 def search(phenny, input): 
     if not input.group(2): 

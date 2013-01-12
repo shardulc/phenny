@@ -26,21 +26,31 @@ whereis.example = '.whereis sushain'
 whereis.thread = False
 
 
-def update_status(phenny, input):
+def away(phenny, input):
+	"""Set your status to being away."""
 	nick = input.nick
 	if input.count(" ") == 0:
-		if input == ".away":
-			statuses[nick] = "I'm away right now"
-		else:
-			statuses[nick] = "I'm around at the minute"
+		statuses[nick] = "I'm away right now"
 	else:
 		message = str(" ".join(input.split(" ")[1:]))
 		statuses[nick] = message
+away.commands = ['away']
+away.example = '.away eating pie'
+away.priority = 'low'
+away.thread = False
 
-
-update_status.commands = ["away", "back"]
-update_status.priority = 'low'
-update_status.thread = False
+def back(phenny, input):
+	"""Set your status to being available."""
+	nick = input.nick
+	if input.count(" ") == 0:
+		statuses[nick] = "I'm around at the minute"
+	else:
+		message = str(" ".join(input.split(" ")[1:]))
+		statuses[nick] = message
+back.commands = ['back']
+back.example = '.back'
+back.priority = 'low'
+back.thread = False
 
 
 if __name__ == '__main__': 

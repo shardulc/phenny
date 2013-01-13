@@ -189,7 +189,6 @@ class Phenny(irc.Bot):
                 s.args = args
                 s.admin = s.nick in self.config.admins
                 s.owner = s.nick == self.config.owner
-                s.Repos = self.config.repositories
                 s.chans = self.config.channels
                 #s.bot = self.bot
                 return s

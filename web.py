@@ -11,7 +11,7 @@ import json as jsonlib
 
 class Grab(urllib.request.URLopener): 
     def __init__(self, *args): 
-        self.version = 'Mozilla/5.0 (Phenny)'
+        self.version = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.52 Safari/537.17'
         urllib.request.URLopener.__init__(self, *args)
     def http_error_default(self, url, fp, errcode, errmsg, headers): 
         return urllib.addinfourl(fp, [headers, errcode], "http:" + url)

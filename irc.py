@@ -191,10 +191,8 @@ class Bot(asynchat.async_chat):
         def safe(input): 
             if type(input) == str:
                 input = input.encode('utf-8')
-                input = input.replace(b'\n', b'')
-                return input.replace(b'\r', b'')
-            else:
-                return str(input)
+            input = input.replace(b'\n', b'')
+            return input.replace(b'\r', b'')
         self.__write((b'PRIVMSG', safe(recipient)), safe(text))
         self.stack.append((time.time(), text))
         self.stack = self.stack[-10:]

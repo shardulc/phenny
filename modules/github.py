@@ -21,7 +21,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 	
 	def generate_report(self, data):
 		msgs = []
-		self.phenny.say(data['commits'])
+		self.phenny.say(str(data['pusher']))
 		for commit in data['commits']:
 			self.phenny.say(commit['message'])
 			author = commit['author']['name']

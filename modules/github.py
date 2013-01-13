@@ -37,7 +37,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			first = False
 			for path in paths:
 				if count != 0 and first == False:
-					textPaths+=", "
+					textPaths += ", "
 				count += 1
 				if count < 3:
 					textPaths+=os.path.relpath(path, basepath)

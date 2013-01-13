@@ -33,6 +33,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			else:
 				comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
 			basepath = os.path.commonprefix(paths)
+			if basepath[-1] != "/":
+				basepath = basepath.split("/")
+				basepath.pop()
+				basepath = '/'.join(basepath)
 			textPaths = ""
 			count = 0
 			first = False
@@ -43,6 +47,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					count += 1
 					if count < 3:
 						textPaths += os.path.relpath(path, basepath)
+						if path in commit['added']:
+							textPaths += " (new)"
+						elif path in commit['removed']:
+							textPaths += " (removed)"
+						elif path in commit['modified']:
+							textPaths += " (modified)"
 					elif count >= 3 and first == False:
 						if (len(paths) - 2) > 1:
 							plural = "s"
@@ -54,6 +64,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					finalPath = "%s: %s" % (basepath, textPaths)
 				else:
 					finalPath = paths[0]
+					if path in commit['added']:
+						textPaths += " (new)"
+					elif path in commit['removed']:
+						textPaths += " (removed)"
+					elif path in commit['modified']:
+						textPaths += " (modified)"
 				msg = "%s: %s * %s: %s: %s" % (data['repository']['name'], author, rev, finalPath, comment.strip())
 				msgs.append(msg)
 		return msgs

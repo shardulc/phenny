@@ -21,10 +21,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 	
 	def generate_report(self, data):
 		msgs = []
-		self.phenny.say(str(data['pusher']))
+		#self.phenny.say(str(data['pusher']))
 		for commit in data['commits']:
-			self.phenny.say(commit['message'])
-			author = commit['author']['name']
+			#self.phenny.say(commit['message'])
+			author = data['pusher']['name']
 			comment = commit['message']
 			paths = commit['modified']
 			if comment is None:
@@ -59,7 +59,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 	def do_GET(self):
 		parsed_params = urllib.parse.urlparse(self.path)
 		query_parsed = urllib.parse.parse_qs(parsed_params.query)
-		self.phenny.say("GET request on port %s: %s" % (PORT, str(query_parsed)))
+		#self.phenny.say("GET request on port %s: %s" % (PORT, str(query_parsed)))
 		self.send_response(403)
 		
 	def do_POST(self):
@@ -72,7 +72,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			#self.phenny.say("Something went wrong with getting the data. WHAT.")
 			#self.send_response(403)
 			#return
-		self.phenny.say(post_data['payload'][0])
+		#self.phenny.say(post_data['payload'][0])
 		data = json.loads(post_data['payload'][0])
 		msgs = self.generate_report(data)
 		for msg in msgs:
@@ -89,10 +89,14 @@ def setup_server(phenny):
 	httpd.serve_forever()
 
 def github(phenny, input):
-	global Handler
+	global Handler, httpd
 	if input.admin:
-		if Handler is None:
-			setup_server(phenny)
+		if httpd is not None:
+			httpd.shutdown()
+			httpd = None
+		if Handler is not None:
+			Handler = None
+		setup_server(phenny)
 	else:
 		phenny.reply("That is an admin-only command.")
 github.name = 'startserver'
@@ -103,9 +107,10 @@ github.commands = ['startserver']
 def stopserver(phenny, input):
 	global Handler, httpd
 	if input.admin:
-		httpd.shutdown()
+		if httpd is not None:
+			httpd.shutdown()
+			httpd = None
 		Handler = None
-		httpd = None
 		phenny.say("Server has stopped on port %s" % PORT)
 	else:
 		phenny.reply("That is an admin-only command.")

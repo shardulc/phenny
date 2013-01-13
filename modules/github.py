@@ -54,7 +54,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					finalPath = "%s: %s" % (basepath, textPaths)
 				else:
 					finalPath = paths[0]
-				msg = "%s: %s * r%s: %s: %s" % (data['repository']['name'], author, rev, finalPath, comment.strip())
+				msg = "%s: %s * %s: %s: %s" % (data['repository']['name'], author, rev, finalPath, comment.strip())
 				msgs.append(msg)
 		return msgs
 

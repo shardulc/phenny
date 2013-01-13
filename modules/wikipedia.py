@@ -10,22 +10,33 @@ http://inamidst.com/phenny/
 import re, urllib.request, urllib.parse, urllib.error, gzip, io
 import wiki
 
-wikiapi = 'https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={0}&limit=1&prop=snippet&format=json'
-wikiuri = 'https://en.wikipedia.org/wiki/{0}'
-wikisearch = 'https://en.wikipedia.org/wiki/Special:Search?' \
+wikiapi = 'https://%s.wikipedia.org/w/api.php?action=query&list=search&srsearch={0}&limit=1&prop=snippet&format=json'
+wikiuri = 'https://%s.wikipedia.org/wiki/{0}'
+wikisearch = 'https://%s.wikipedia.org/wiki/Special:Search?' \
                           + 'search={0}&fulltext=Search'
+
+langs = ['ar', 'bg', 'ca', 'cs', 'da', 'de', 'en', 'es', 'eo', 'eu', 'fa', 'fr', 'ko', 'hi', 'hr', 'id', 'it', 'he', 'lt', 'hu', 'ms', 'nl', 'ja', 'no', 'pl', 'pt', 'kk', 'ro', 'ru', 'sk', 'sl', 'sr', 'fi', 'sv', 'tr', 'uk', 'vi', 'vo', 'war', 'zh']
 
 def wik(phenny, input): 
     """Search for something on Wikipedia"""
-    origterm = input.groups()[1]
+    origterm = input.groups()[1].split(' ')
+    
+    lang = "en"
+    if origterm[0] in langs:
+        lang = origterm[0]
+        origterm.pop(0)
+    
+    origterm = ' '.join(origterm)
+    
     if not origterm: 
         return phenny.say('Perhaps you meant ".wik Zen"?')
 
     term = urllib.parse.unquote(origterm)
+    term = urllib.parse.quote(origterm)
     term = term[0].upper() + term[1:]
     term = term.replace(' ', '_')
 
-    w = wiki.Wiki(wikiapi, wikiuri, wikisearch)
+    w = wiki.Wiki(wikiapi % lang, wikiuri % lang, wikisearch % lang)
 
     try:
         result = w.search(term)

@@ -32,7 +32,8 @@ def wik(phenny, input):
     except IOError: 
         error = "Can't connect to en.wikipedia.org ({0})".format(wikiuri.format(term))
         return phenny.say(error)
-
+        
+        
     if result is not None: 
         phenny.say(result)
     else:

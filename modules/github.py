@@ -42,7 +42,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 						textPaths += ", "
 					count += 1
 					if count < 3:
-						textPaths+=os.path.relpath(path, basepath)
+						textPaths += os.path.relpath(path, basepath)
 					elif count >= 3 and first == False:
 						if (len(paths) - 2) > 1:
 							plural = "s"

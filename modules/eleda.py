@@ -8,13 +8,44 @@ Any questions can go to Qasim Iqbal (nick: Qasim) (email: me@qas.im)
 import http.client
 import re, json
 import sys
-from apertium_translate import translate
+#from apertium_translate import translate
+import urllib.request, urllib.parse, urllib.error
+import web
+from tools import GrumbleError
 
 follows = []
 
 headers = {
    'User-Agent': 'Mozilla/5.0' + '(X11; U; Linux i686)' + 'Gecko/20071127 Firefox/2.0.0.11'
 }
+
+headers = [(
+	'User-Agent', 'Mozilla/5.0' + 
+	'(X11; U; Linux i686)' + 
+	'Gecko/20071127 Firefox/2.0.0.11'
+)]
+
+APIerrorData = 'Sorry, the apertium API did not return any data ?'
+APIerrorHttp = 'Sorry, the apertium API gave HTTP error %s: %s ?'
+
+
+def translate(translate_me, input_lang, output_lang='en'): 
+	opener = urllib.request.build_opener()
+	opener.addheaders = headers
+
+	input_lang, output_lang = urllib.parse.quote(input_lang), urllib.parse.quote(output_lang)
+	translate_me = urllib.parse.quote(translate_me)
+
+	response = opener.open('http://api.apertium.org/json/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
+
+	responseArray = json.loads(response.decode('utf-8'))
+	if int(responseArray['responseStatus']) != 200:
+		raise GrumbleError(APIerrorHttp % (responseArray['responseStatus'], responseArray['responseDetails']))
+	if responseArray['responseData']['translatedText'] == []:
+		raise GrumbleError(APIerrorData)
+
+	translated_text = responseArray['responseData']['translatedText']
+	return translated_text
 
 class Eleda(object):
 	sender = ""

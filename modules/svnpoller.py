@@ -7,10 +7,6 @@ from subprocess import Popen, PIPE
 from xml.etree.ElementTree import parse as xmlparse
 from io import StringIO
 
-Repos = {"apertium": "https://apertium.svn.sourceforge.net/svnroot/apertium",
-	"hfst": "https://hfst.svn.sourceforge.net/svnroot/hfst",
-	"vislcg3": "http://beta.visl.sdu.dk/svn/visl/tools/vislcg3"}
-
 def loadRevisions(fn): 
 	result = {}
 	with open(fn) as f:
@@ -198,9 +194,9 @@ def recentcommits(phenny, input):
 	"""List the most recent SVN commits."""
 	print("POLLING!!!!")
 	pollers = {}
-	for repo in Repos:
-		pollers[repo] = SVNPoller(repo, Repos[repo])
-	for repo in Repos:
+	for repo in input.Repos:
+		pollers[repo] = SVNPoller(repo, input.Repos[repo])
+	for repo in input.Repos:
 		#for (msg, revisions) in pollers[repo].check(phenny.revisions):
 		msg = pollers[repo].generateReport(pollers[repo].get_last_revision())
 		if len(msg) > 200:
@@ -214,9 +210,9 @@ def recentcommits(phenny, input):
 def pollsvn(phenny, input):
 	print("POLLING!!!!")
 	pollers = {}
-	for repo in Repos:
-		pollers[repo] = SVNPoller(repo, Repos[repo])
-	for repo in Repos:
+	for repo in input.Repos:
+		pollers[repo] = SVNPoller(repo, input.Repos[repo])
+	for repo in input.Repos:
 		for (msg, revisions) in pollers[repo].check(phenny.revisions):
 			#if phenny.revisions:
 			#	if revisions[repo] != phenny.revisions[repo]:

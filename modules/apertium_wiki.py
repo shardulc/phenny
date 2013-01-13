@@ -38,7 +38,7 @@ def awik(phenny, input):
       phenny.reply("A wiki page does not exist for that term.")
       return
    
-   sentences = re.split(r' *[\.\?!]['"\)\]]* *', lxml.html.fromstring(html).findall('.//p')[1].text_content())
+   sentences = lxml.html.fromstring(html).findall('.//p')[1].text_content().split(". ")
    
    sentence = '"' + sentences[0] + '"'
    

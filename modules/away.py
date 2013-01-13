@@ -8,10 +8,6 @@ import web
 
 statuses = {"alan": "boom bitchezzzz"}
 
-def debug(phenny, input):
-	phenny.say(str(statuses))
-debug.commands = ['debug']
-
 def whereis(phenny, input):
 	"""Tells you nick's current status."""
 	whereis_nick = input.split(" ")[1]
@@ -24,7 +20,6 @@ whereis.commands = ["whereis"]
 whereis.priority = 'low'
 whereis.example = '.whereis sushain'
 whereis.thread = False
-
 
 def away(phenny, input):
 	"""Set your status to being away."""

@@ -26,7 +26,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			#self.phenny.say(commit['message'])
 			author = data['pusher']['name']
 			comment = commit['message']
-			paths = commit['modified']
+			paths = commit['modified'] + commit['added'] + commit['removed']
+			rev = commit['id'][:7]
 			if comment is None:
 				comment = "Use comments people -_-"
 			else:
@@ -35,25 +36,26 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			textPaths = ""
 			count = 0
 			first = False
-			for path in paths:
-				if count != 0 and first == False:
-					textPaths += ", "
-				count += 1
-				if count < 3:
-					textPaths+=os.path.relpath(path, basepath)
-				elif count >= 3 and first == False:
-					if (len(paths) - 2) > 1:
-						plural = "s"
-					else:
-						plural = ""
-					textPaths+="and %s other file%s" % (str(len(paths) - 2), plural)
-					first = True
-			if len(paths) > 1:
-				finalPath = "%s: %s" % (basepath, textPaths)
-			else:
-				finalPath = paths[0]
-			msg = "%s: %s * r%s: %s: %s" % (data['repository']['name'], author, '0000', finalPath, comment.strip())
-			msgs.append(msg)
+			if len(paths) > 0:
+				for path in paths:
+					if count != 0 and first == False:
+						textPaths += ", "
+					count += 1
+					if count < 3:
+						textPaths+=os.path.relpath(path, basepath)
+					elif count >= 3 and first == False:
+						if (len(paths) - 2) > 1:
+							plural = "s"
+						else:
+							plural = ""
+						textPaths+="and %s other file%s" % (str(len(paths) - 2), plural)
+						first = True
+				if len(paths) > 1:
+					finalPath = "%s: %s" % (basepath, textPaths)
+				else:
+					finalPath = paths[0]
+				msg = "%s: %s * r%s: %s: %s" % (data['repository']['name'], author, rev, finalPath, comment.strip())
+				msgs.append(msg)
 		return msgs
 
 	def do_GET(self):

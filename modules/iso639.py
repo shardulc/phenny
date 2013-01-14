@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-urbandict.py - urban dictionary module
+iso639.py - ISO codes module
 author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 """
 

@@ -154,38 +154,51 @@ class SVNPoller:
 		comment = tree.find("//msg").text
 		#dir = tree.find("//path").text
 		paths = []
+		actions = []
 		for path in tree.findall("//path"):
 			paths.append(path.text)
+			actions.append(path.get('action'))
 
-		return author, comment, paths
+		return author, comment, paths, actions
 
 	def generateReport(self, rev):
-		author, comment, paths = self.revision_info(rev)
+		author, comment, paths, actions = self.revision_info(rev)
 		if comment is None:
 			comment = "Use comments people -_-"
 		else:
 			comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
 		basepath = os.path.commonprefix(paths)
+		if basepath[-1] != "/":
+			basepath = basepath.split("/")
+			basepath.pop()
+			basepath = '/'.join(basepath) + "/"
 		textPaths = ""
 		count = 0
 		first = False
-		for path in paths:
+		for path, action in zip(paths, actions):
 			if count != 0 and first == False:
 				textPaths+=", "
 			count += 1
-			if count < 3:
+			if count < 4:
 				textPaths+=os.path.relpath(path, basepath)
-			elif count >= 3 and first == False:
-				if (len(paths) - 2) > 1:
-					plural = "s"
-				else:
-					plural = ""
-				textPaths+="and %s other file%s" % (str(len(paths) - 2), plural)
+				if action == "A":
+					textPaths += " (+)"
+				elif action == "D":
+					textPaths += " (-)"
+			elif count >= 4 and first == False:
+				textPaths = textPaths.split(", ")
+				textPaths.pop()
+				textPaths = ', '.join(textPaths)
+				textPaths+="and %s other files" % (str(len(paths) - 2))
 				first = True
 		if len(paths) > 1:
 			finalPath = "%s: %s" % (basepath, textPaths)
 		else:
 			finalPath = paths[0]
+			if actions[0] == "A":
+				finalPath += " (+)"
+			elif actions[0] == "D":
+				finalPath += " (-)"
 		msg = "%s: %s * r%s: %s: %s\n" % (self.repo, author, rev, finalPath, comment.strip())
 		return msg
 

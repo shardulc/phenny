@@ -206,13 +206,13 @@ class SVNPoller:
 def recentcommits(phenny, input):
 	"""List the most recent SVN commits."""
 	print("POLLING!!!!")
-	if phenny.config.repositories is None:
+	if phenny.config.svn_repositories is None:
 		phenny.say("SVN module cannot function without repositories being set in the config file!")
 		return
 	pollers = {}
-	for repo in phenny.config.repositories:
-		pollers[repo] = SVNPoller(repo, phenny.config.repositories[repo])
-	for repo in phenny.config.repositories:
+	for repo in phenny.config.svn_repositories:
+		pollers[repo] = SVNPoller(repo, phenny.config.svn_repositories[repo])
+	for repo in phenny.config.svn_repositories:
 		#for (msg, revisions) in pollers[repo].check(phenny.revisions):
 		msg = pollers[repo].generateReport(pollers[repo].get_last_revision())
 		if len(msg) > 200:
@@ -225,13 +225,13 @@ def recentcommits(phenny, input):
 
 def pollsvn(phenny, input):
 	print("POLLING!!!!")
-	if phenny.config.repositories is None:
+	if phenny.config.svn_repositories is None:
 		phenny.say("SVN module cannot function without repositories being set in the config file!")
 		return
 	pollers = {}
-	for repo in phenny.config.repositories:
-		pollers[repo] = SVNPoller(repo, phenny.config.repositories[repo])
-	for repo in phenny.config.repositories:
+	for repo in phenny.config.svn_repositories:
+		pollers[repo] = SVNPoller(repo, phenny.config.svn_repositories[repo])
+	for repo in phenny.config.svn_repositories:
 		for (msg, revisions) in pollers[repo].check(phenny.revisions):
 			#if phenny.revisions:
 			#	if revisions[repo] != phenny.revisions[repo]:

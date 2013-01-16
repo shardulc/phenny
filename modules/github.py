@@ -11,57 +11,14 @@ import re
 import os
 import web
 from io import StringIO
+from tools import generate_report
+import time
 
 PORT = 1234
 
 Handler = None
 httpd = None
 
-def generate_report(repo, author, comment, modified_paths, added_paths, removed_paths, rev):
-	paths = modified_paths + added_paths + removed_paths
-
-	if comment is None:
-		comment = "Use comments people -_-"
-	else:
-		comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
-		
-	basepath = os.path.commonprefix(paths)
-	if basepath[-1] != "/":
-		basepath = basepath.split("/")
-		basepath.pop()
-		basepath = '/'.join(basepath) + "/"
-		
-	textPaths = ""
-	count = 0
-	first = False
-	if len(paths) > 0:
-		for path in paths:
-			if count != 0 and first == False:
-				textPaths += ", "
-			count += 1
-			if count < 4:
-				textPaths += os.path.relpath(path, basepath)
-				if path in added_paths:
-					textPaths += " (+)"
-				elif path in removed_paths:
-					textPaths += " (-)"
-			elif count >= 4 and first == False:
-				textPaths = textPaths.split(", ")
-				textPaths.pop()
-				textPaths = ', '.join(textPaths)
-				textPaths+="%sand %s other files" % " ", (str(len(paths) - 3))
-				first = True
-		if len(paths) > 1:
-			finalPath = "%s: %s" % (basepath, textPaths)
-		else:
-			finalPath = paths[0]
-			if path in added_paths:
-				finalPath += " (+)"
-			elif path in removed_paths:
-				finalPath += " (-)"
-		msg = "%s: %s * %s: %s: %s" % (repo, author, rev, finalPath, comment.strip())
-	return msg
-	
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	phenny = None
 	
@@ -102,18 +59,19 @@ def setup_server(phenny):
 
 def github(phenny, input):
 	global Handler, httpd
-	if input.admin:
-		if httpd is not None:
-			httpd.shutdown()
-			httpd = None
-		if Handler is not None:
-			Handler = None
-		setup_server(phenny)
-	else:
-		phenny.reply("That is an admin-only command.")
+	if Handler is None and httpd is None:
+		if input.admin:
+			if httpd is not None:
+				httpd.shutdown()
+				httpd = None
+			if Handler is not None:
+				Handler = None
+			setup_server(phenny)
+		else:
+			phenny.reply("That is an admin-only command.")
 github.name = 'startserver'
 github.commands = ['startserver']
-#github.event = 'JOIN'
+#github.event = 'PRIVMSG'
 #github.rule = r'.*'
 
 def stopserver(phenny, input):
@@ -146,15 +104,42 @@ def get_commit_info(phenny, repo, sha):
 		elif file['status'] == 'removed':
 			removed_paths.append(file['filename'])
 	rev = sha[:7]
-	return author, comment, modified_paths, added_paths, removed_paths, rev
+	date = time.strptime(data['commit']['committer']['date'], "%Y-%m-%dT%H:%M:%SZ")
+	date = time.strftime("%d %b %Y %H:%M:%S", date)
+	return author, comment, modified_paths, added_paths, removed_paths, rev, date
 
 def get_recent_commit(phenny, input):
 	for repo in phenny.config.git_repositories:
 		html = web.get(phenny.config.git_repositories[repo] + '/commits')
 		data = json.loads(html)
-		author, comment, modified_paths, added_paths, removed_paths, rev = get_commit_info(phenny, repo, data[0]['sha'])
-		msg = generate_report(repo, author, comment, modified_paths, added_paths, removed_paths, rev)
+		author, comment, modified_paths, added_paths, removed_paths, rev, date = get_commit_info(phenny, repo, data[0]['sha'])
+		msg = generate_report(repo, author, comment, modified_paths, added_paths, removed_paths, rev, date)
 		phenny.say(msg)
 get_recent_commit.rule = ('$nick', 'recent')
 get_recent_commit.priority = 'medium'
 get_recent_commit.thread = True
+
+def retrieve_commit(phenny, input):
+	data = input.group(1).split(' ')
+	
+	if len(data) != 2:
+		phenny.reply("Invalid number of parameters.")
+		return
+	
+	repo = data[0]
+	rev = data[1]
+	
+	if repo in phenny.config.svn_repositories:
+		return
+	
+	if repo not in phenny.config.git_repositories:
+		phenny.reply("That repository is not monitored by me!")
+		return
+	try:
+		author, comment, modified_paths, added_paths, removed_paths, rev, date = get_commit_info(phenny, repo, rev)
+	except:
+		phenny.reply("Invalid revision value!")
+		return
+	msg = generate_report(repo, author, comment, modified_paths, added_paths, removed_paths, rev, date)
+	phenny.say(msg)
+retrieve_commit.rule = ('$nick', 'info(?: +(.*))')

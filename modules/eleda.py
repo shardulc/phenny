@@ -11,41 +11,13 @@ import sys
 #from apertium_translate import translate
 import urllib.request, urllib.parse, urllib.error
 import web
-from tools import GrumbleError
+from tools import GrumbleError, translate
 
 follows = []
 
 headers = {
    'User-Agent': 'Mozilla/5.0' + '(X11; U; Linux i686)' + 'Gecko/20071127 Firefox/2.0.0.11'
 }
-
-headers = [(
-	'User-Agent', 'Mozilla/5.0' + 
-	'(X11; U; Linux i686)' + 
-	'Gecko/20071127 Firefox/2.0.0.11'
-)]
-
-APIerrorData = 'Sorry, the apertium API did not return any data ?'
-APIerrorHttp = 'Sorry, the apertium API gave HTTP error %s: %s ?'
-
-
-def translate(translate_me, input_lang, output_lang='en'): 
-	opener = urllib.request.build_opener()
-	opener.addheaders = headers
-
-	input_lang, output_lang = urllib.parse.quote(input_lang), urllib.parse.quote(output_lang)
-	translate_me = urllib.parse.quote(translate_me)
-
-	response = opener.open('http://api.apertium.org/json/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
-
-	responseArray = json.loads(response.decode('utf-8'))
-	if int(responseArray['responseStatus']) != 200:
-		raise GrumbleError(APIerrorHttp % (responseArray['responseStatus'], responseArray['responseDetails']))
-	if responseArray['responseData']['translatedText'] == []:
-		raise GrumbleError(APIerrorData)
-
-	translated_text = responseArray['responseData']['translatedText']
-	return translated_text
 
 class Eleda(object):
 	sender = ""
@@ -70,8 +42,8 @@ def follow(phenny, input): #follow a user
 		data = input.group(2).split(' ')
 		nick = data[0]
 		
-		if nick == phenny.nick:
-			phenny.reply(phenny.nick.upper() + " DOES NOT LIKE TO BE FOLLOWED.")
+		if nick.lower() == phenny.config.nick.lower():
+			phenny.reply(phenny.config.nick.upper() + " DOES NOT LIKE TO BE FOLLOWED.")
 			return
 			
 		try:
@@ -97,7 +69,7 @@ def follow(phenny, input): #follow a user
 			
 		for i in follows:
 			if i.nick == nick and i.dir == dir and i.sender == sender:
-				phenny.say(sender + " is already following that user with " + '-'.join(dir) + '.')
+				phenny.say(sender + " is already following " +  + " with " + '-'.join(dir) + '.')
 				return
 				
 		follows.append(Eleda(sender, nick, dir))
@@ -118,7 +90,7 @@ def unfollow(phenny, input): #unfollow a user
 	if following == True:
 		phenny.reply(input.groups()[1] + " is no longer being followed.")
 	else:
-		phenny.reply("That user isn't being followed.")
+		phenny.reply("Sorry, you aren't following that user!")
 
 def following(phenny, input): #list followed users
 	"""List people currently being followed."""
@@ -145,9 +117,9 @@ def test(phenny, input): #filter through each message in the channel
 					if translation == '':
 						#this user is being followed, translate them
 						direction = '-'.join(i.dir)
-						translation = translate(input.groups()[0], i.dir[0], i.dir[1])
+						translation = translate(input.group(0), i.dir[0], i.dir[1])
 						translation = translation.replace('*', '')
-					if translation != input.groups()[0]:
+					if translation != input.group(0):
 						#don't bother sending a notice if the input is the same as the output
 						phenny.write(['NOTICE', i.sender], i.nick + ': ' + translation)
 

@@ -6,7 +6,7 @@ apertium_translate.py - Phenny Translation Module
 
 import re, urllib.request, urllib.parse, urllib.error, json
 import web
-from tools import GrumbleError
+from tools import GrumbleError, translate
 
 headers = [(
    'User-Agent', 'Mozilla/5.0' + 
@@ -16,7 +16,6 @@ headers = [(
 
 APIerrorData = 'Sorry, the apertium API did not return any data ☹'
 APIerrorHttp = 'Sorry, the apertium API gave HTTP error %s: %s ☹'
-
 
 def translate(translate_me, input_lang, output_lang='en'): 
    opener = urllib.request.build_opener()

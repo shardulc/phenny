@@ -36,7 +36,7 @@ def decrease_hunger(current_hunger, food_value):
         return current_hunger + food_value
 
 def botsnack(phenny, input):
-
+    """reward me for being good"""
     now = time.time()
 
     # 0. Handle cooldown.
@@ -104,6 +104,14 @@ botsnack.priority = 'low'
 botsnack.hunger = 50.0
 botsnack.last_tick = time.time()
 botsnack.coolingdown = False
+
+def botslap(phenny, input):
+    """tell me I'm being a bad bot"""
+    messages = ["hides in corner", "eats own hat", "apologises", "stares at feet", "points at zfe", "didn't do anything", "doesn't deserve this", "hates you guys", "did it on purpose", "is an inconsistent sketchy little bot"]
+    phenny.do(random.choice(messages))
+
+botslap.commands = ['botslap', 'botsmack']
+botsnack.priority = 'low'
 
 if __name__ == '__main__':
     print(__doc__.strip())

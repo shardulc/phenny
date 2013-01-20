@@ -69,7 +69,7 @@ def follow(phenny, input): #follow a user
 			
 		for i in follows:
 			if i.nick == nick and i.dir == dir and i.sender == sender:
-				phenny.say(sender + " is already following " +  + " with " + '-'.join(dir) + '.')
+				phenny.say(sender + " is already following " + nick + " with " + '-'.join(dir) + '.')
 				return
 				
 		follows.append(Eleda(sender, nick, dir))
@@ -110,18 +110,16 @@ def test(phenny, input): #filter through each message in the channel
 			#do not translate if it is a begiak function
 			return
 		
-		translation = ''
 		for i in follows:
 			if i.nick != '':
 				if i.nick == input.nick:
-					if translation == '':
-						#this user is being followed, translate them
-						direction = '-'.join(i.dir)
-						translation = translate(input.group(0), i.dir[0], i.dir[1])
-						translation = translation.replace('*', '')
+					#this user is being followed, translate them
+					direction = '-'.join(i.dir)
+					translation = translate(input.group(0), i.dir[0], i.dir[1])
+					translation = translation.replace('*', '')
 					if translation != input.group(0):
 						#don't bother sending a notice if the input is the same as the output
-						phenny.write(['NOTICE', i.sender], i.nick + ': ' + translation)
+						phenny.write(['NOTICE', i.sender], i.nick + ' (' + '-'.join(i.dir) + '): ' + translation)
 
 follow.commands = ['follow']
 follow.example = '.follow Qasim en-es'

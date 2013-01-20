@@ -6,6 +6,11 @@ import os
 from subprocess import Popen, PIPE
 from xml.etree.ElementTree import parse as xmlparse
 from io import StringIO
+import time
+from tools import generate_report
+
+global_revisions = None
+global_filename = None
 
 def loadRevisions(fn): 
 	result = {}
@@ -15,7 +20,7 @@ def loadRevisions(fn):
 			if line: 
 				try: repo, rev = line.split('\t', 2)
 				except ValueError: continue # @@ hmm
-				result.setdefault(repo, rev) #[]).append((teller, verb, timenow, msg))
+				result.setdefault(repo, int(rev)) #[]).append((teller, verb, timenow, msg))
 	return result
 
 def dumpRevisions(fn, data): 
@@ -26,106 +31,51 @@ def dumpRevisions(fn, data):
 			except IOError: break
 	return True
 
-def setup(self): 
+def setup(self):
+	global global_revisions, global_filename
 	fn = self.nick + '-' + self.config.host + '.repos.db'
-	self.repos_filename = os.path.join(os.path.expanduser('~/.phenny'), fn)
-	if not os.path.exists(self.repos_filename): 
-		try: f = open(self.repos_filename, 'w')
+	global_filename = os.path.join(os.path.expanduser('~/.phenny'), fn)
+	if not os.path.exists(global_filename): 
+		try: f = open(global_filename, 'w')
 		except OSError: pass
 		else: 
 			f.write('')
 			f.close()
-	self.revisions = loadRevisions(self.repos_filename) # @@ tell
-
-
+	global_revisions = loadRevisions(global_filename) # @@ tell
+	#self.say(str(global_revisions))
+	
 
 class SVNPoller:
 	def __init__(self, repo, root):
 		self.pre = ["svn", "--xml"]
 		self.root = root
-		#self.repo = root.rpartition("/")[2]
 		self.repo = repo
-
-		#if os.path.exists("svn_data/"+self.repo+"_current_rev"):
-		#	self.last_revision = int(open("svn_data/"+self.repo+"_current_rev").read())
-		#	print((str(self.last_revision)+" gotten from file."))
-		#else:
-		#	self.last_revision = self.get_last_revision()
-		#	repo_file = open("svn_data/"+self.repo+"_current_rev", 'w')
-		#	repo_file.write(str(self.last_revision))
-		#	repo_file.close()
-		#	print((str(self.last_revision)+" gotten from self.get_last_revision()"))
 		self.last_revision = None
-		self.revisions = {}
+		self.latest_revision = None
 
 	def __str__(self):
 		return "(%s) %s %s" % (self.repo, self.root, self.last_revision)
 
 	def check(self, revisions):
-		#try:
-		#	self.last_revision = revisions[self.repo]
-		#	phenny.say(str(self.last_revision))
-		#	last_revision = self.get_last_revision()
-		#	phenny.say(str(last_revision))
-		#	last_revision = self.get_last_revision()
-		#	if (not last_revision) or (last_revision == self.last_revision) or (last_revision == -1):
-		#		return revisions
-		#
-		#	for rev in range(self.last_revision + 1, last_revision + 1):
-		#		author, comment, dir = self.revision_info(rev)
-		#		if comment is None:
-		#			comment = "Use comments people -_-"
-		#		#outfile = open("svn_data/"+self.repo+"_output", 'w')
-		#		#outfile.write("%s: %s * r%s: %s: %s\n" % (self.repo, author, rev, dir, comment.strip()))
-		#		#outfile.close()
-		#
-		#	self.last_revision = last_revision
-		#	revisions[self.repo] = self.last_revision
-		#	
-		#	#repo_file = open("svn_data/"+self.repo+"_current_rev", 'w')
-		#	#repo_file.write(str(self.last_revision))
-		#	#repo_file.close()
-		#	print("REPO UPDATE: "+self.repo+" -> "+str(self.last_revision))
-		#	return revisions
-		#
-		#except Exception as e:
-		#	print(("check: ERROR: %s" % e))
-		#	return
+		global global_revisions
 		if self.repo not in revisions:
 			revisions[self.repo] = 0
-		self.revisions = revisions
-		self.last_revision = int(self.revisions[self.repo])
-		last_revision = self.get_last_revision()
-		print(str(last_revision), str(self.last_revision), str(self.revisions))
+		self.last_revision = global_revisions[self.repo]
+		self.latest_revision = self.get_last_revision()
+		print(str(self.latest_revision), str(self.last_revision), str(global_revisions))
 		## if successfully polled and a new revision ##
-		if last_revision > self.last_revision:
-			for msg in self.newReport(last_revision):
-				yield (msg, self.revisions)
-		## if nothing set yet ##
-		## if changed ##
-		#if self.last_revision == 0 or self.last_revision == None:
-		#	print(str(self.last_revision))
-		#	for msg in self.newReport(0):
-		#		yield (msg, self.revisions)
-		#elif (last_revision > self.last_revision):
-		#	print(str(self.last_revision))
-		#	for msg in self.newReport(self.last_revision):
-		#		yield (msg, self.revisions)
-		#else:
-		#	print(str(last_revision), str(self.last_revision))
+		if self.latest_revision > self.last_revision:
+			for msg in self.newReport(self.latest_revision):
+				yield (msg, global_revisions)
 
-	def newReport(self, last_revision):
+	def newReport(self, something_else):
 		if self.last_revision == 0 or self.last_revision == None:
-			self.last_revision = last_revision -1
-		#else:
-		#	print(self.last_revision, last_revision)
-		#print("newReport", str(last_revision), str(self.last_revision))
-
-		for rev in range(self.last_revision+1, last_revision+1):
+			self.last_revision = self.latest_revision - 1
+		for rev in range(self.last_revision+1, self.latest_revision+1):
 			msg = self.generateReport(rev)
-		if not msg:
-			msg = ":("
-		yield msg
+			if not msg:
+				msg = ":("
+			yield msg
 
 
 	def svn(self, *cmd):
@@ -141,10 +91,10 @@ class SVNPoller:
 
 
 	def get_last_revision(self):
+		global global_revisions
 		tree = self.svn("info")
 		revision = tree.find("//commit").get("revision")
-		#phenny.say(str(revision))
-		self.revisions[self.repo] = int(revision)
+		global_revisions[self.repo] = int(revision)
 		return int(revision)
 
 
@@ -152,54 +102,27 @@ class SVNPoller:
 		tree = self.svn("log", "-r", str(revision), "--verbose")
 		author = tree.find("//author").text
 		comment = tree.find("//msg").text
-		#dir = tree.find("//path").text
-		paths = []
-		actions = []
+		modified_paths = []
+		added_paths = []
+		removed_paths = []
 		for path in tree.findall("//path"):
-			paths.append(path.text)
-			actions.append(path.get('action'))
+			if path.get('action') == "A":
+				added_paths.append(path.text)
+			elif path.get('action') == "D":
+				removed_paths.append(path.text)
+			else:
+				modified_paths.append(path.text)
+		date = time.strptime(tree.find("//date").text, "%Y-%m-%dT%H:%M:%S.%fZ")
+		date = time.strftime("%d %b %Y %H:%M:%S", date)
+		return self.repo, author, comment, modified_paths, added_paths, removed_paths, date, str(revision)
 
-		return author, comment, paths, actions
 
-	def generateReport(self, rev):
-		author, comment, paths, actions = self.revision_info(rev)
-		if comment is None:
-			comment = "Use comments people -_-"
+	def generateReport(self, rev, showDate=False):
+		repo, author, comment, modified_paths, added_paths, removed_paths, date, rev = self.revision_info(rev)
+		if showDate == True:
+			msg = generate_report(repo, author, comment, modified_paths, added_paths, removed_paths, rev, date)
 		else:
-			comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
-		basepath = os.path.commonprefix(paths)
-		if basepath[-1] != "/":
-			basepath = basepath.split("/")
-			basepath.pop()
-			basepath = '/'.join(basepath) + "/"
-		textPaths = ""
-		count = 0
-		first = False
-		for path, action in zip(paths, actions):
-			if count != 0 and first == False:
-				textPaths+=", "
-			count += 1
-			if count < 4:
-				textPaths+=os.path.relpath(path, basepath)
-				if action == "A":
-					textPaths += " (+)"
-				elif action == "D":
-					textPaths += " (-)"
-			elif count >= 4 and first == False:
-				textPaths = textPaths.split(", ")
-				textPaths.pop()
-				textPaths = ', '.join(textPaths)
-				textPaths+="and %s other files" % (str(len(paths) - 2))
-				first = True
-		if len(paths) > 1:
-			finalPath = "%s: %s" % (basepath, textPaths)
-		else:
-			finalPath = paths[0]
-			if actions[0] == "A":
-				finalPath += " (+)"
-			elif actions[0] == "D":
-				finalPath += " (-)"
-		msg = "%s: %s * r%s: %s: %s\n" % (self.repo, author, rev, finalPath, comment.strip())
+			msg = generate_report(repo, author, comment, modified_paths, added_paths, removed_paths, rev, "")
 		return msg
 
 
@@ -214,69 +137,11 @@ def recentcommits(phenny, input):
 		pollers[repo] = SVNPoller(repo, phenny.config.svn_repositories[repo])
 	for repo in phenny.config.svn_repositories:
 		#for (msg, revisions) in pollers[repo].check(phenny.revisions):
-		msg = pollers[repo].generateReport(pollers[repo].get_last_revision())
+		msg = pollers[repo].generateReport(pollers[repo].get_last_revision(), True)
 		if len(msg) > 200:
-			while len(msg) > 80:
-				phenny.say(msg[:80])
-				msg = msg[80:]
+			phenny.say(msg[:len(msg)-5] + "[...]")
 		else:
 			phenny.say(msg)
-
-
-def pollsvn(phenny, input):
-	print("POLLING!!!!")
-	if phenny.config.svn_repositories is None:
-		phenny.say("SVN module cannot function without repositories being set in the config file!")
-		return
-	pollers = {}
-	for repo in phenny.config.svn_repositories:
-		pollers[repo] = SVNPoller(repo, phenny.config.svn_repositories[repo])
-	for repo in phenny.config.svn_repositories:
-		for (msg, revisions) in pollers[repo].check(phenny.revisions):
-			#if phenny.revisions:
-			#	if revisions[repo] != phenny.revisions[repo]:
-			#		phenny.revisions = revisions
-			#		phenny.say("New revisions!"+msg)
-			#	else:
-			#		phenny.say("No new revisions!")
-			#	print(repo, str(phenny.revisions))
-			#else:
-			#	phenny.say("First revisions!")
-			#	phenny.revisions = revisions
-			if msg is not None:
-				print("msg: %s" % msg)
-				#print(str(input.sender), str(input.nick))
-				for chan in input.chans:
-					#phenny.say(msg)
-					print("chan, msg: %s, %s" % (chan, msg))
-					phenny.bot.msg(chan, msg)
-			#phenny.say("rev data: "+str(pollers[repo]))
-			if phenny.revisions:
-				if len(phenny.revisions)>0:
-					print("dumping revisions")
-					dumpRevisions(phenny.repos_filename, phenny.revisions)
-		
-		
-	#poller1 = SVNPoller("https://apertium.svn.sourceforge.net/svnroot/apertium")
-	#poller2 = SVNPoller("https://hfst.svn.sourceforge.net/svnroot/hfst")
-	#poller3 = SVNPoller("http://beta.visl.sdu.dk/svn/visl/tools/vislcg3")
-	#
-	#poller1_return = poller1.check()
-	#poller2_return = poller2.check()
-	#poller3_return = poller3.check()
-
-	print("POLLED")
-
-pollsvn.name = 'SVN poll'
-#pollsvn.rule = ('$nick', ['esan!'], r'(\S+)?')
-#pollsvn.rule = ('$nick', 'esan!', '')
-#pollsvn.rule = ('$nick', 'esan!')
-#pollsvn.event = '262'  # 246, 262
-pollsvn.event = "PONG"
-pollsvn.rule = r'.*'
-pollsvn.priority = 'medium'
-#pollsvn.thread = True
-
 recentcommits.name = 'recent'
 recentcommits.rule = ('$nick', 'recent')
 recentcommits.example = 'begiak: recent'
@@ -284,3 +149,66 @@ recentcommits.example = 'begiak: recent'
 #recentcommits.rule = r'.*'
 recentcommits.priority = 'medium'
 recentcommits.thread = True
+			
+def retrieve_commit(phenny, input):
+	data = input.group(1).split(' ')
+	
+	if len(data) != 2:
+		phenny.reply("Invalid number of parameters.")
+		return
+		
+	repo = data[0]
+	rev = data[1]
+	
+	if repo in phenny.config.git_repositories:
+		return
+	
+	if repo not in phenny.config.svn_repositories:
+		phenny.reply("That repository is not monitored by me!")
+		return
+	
+	poller = SVNPoller(repo, phenny.config.svn_repositories[repo])
+	msg = poller.generateReport(rev, True)
+	phenny.say(msg)
+retrieve_commit.rule = ('$nick', 'info(?: +(.*))')
+
+
+def pollsvn(phenny, input):
+	global global_revisions, global_filename
+	results = False
+	#phenny.say("POLLING!!!!")
+	print("POLLING!!!!")
+	if phenny.config.svn_repositories is None:
+		phenny.say("SVN module cannot function without repositories being set in the config file!")
+		return
+	pollers = {}
+	#phenny.say("OLD REVISION NUMBERS: " + str(global_revisions))
+	for repo in phenny.config.svn_repositories:
+		pollers[repo] = SVNPoller(repo, phenny.config.svn_repositories[repo])
+	for repo in phenny.config.svn_repositories:
+		for (msg, revisions) in pollers[repo].check(global_revisions):
+			#phenny.say("NEW REVISION NUMBERS: " + str(global_revisions))
+			if msg is not None:
+				results = True
+				print("msg: %s" % msg)
+				for chan in input.chans:
+					print("chan, msg: %s, %s" % (chan, msg))
+					phenny.bot.msg(chan, msg)
+			if global_revisions:
+				if len(global_revisions) > 0:
+					print("dumping revisions")
+					dumpRevisions(global_filename, global_revisions)
+	#phenny.say("done")
+	print("POLLED")
+	return results
+pollsvn.name = 'SVN poll'
+pollsvn.event = "PONG"
+pollsvn.rule = r'.*'
+pollsvn.priority = 'medium'
+
+def esan(phenny, input):
+	phenny.reply("Hold on a second, I'm polling!")
+	results = pollsvn(phenny, input)
+	if results == False:
+		phenny.reply("Sorry, there was nothing to report.")
+esan.rule = ('$nick', 'esan!')

@@ -45,29 +45,34 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 		for commit in data['commits']:
 			msgs.append(generate_report('phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
 		for msg in msgs:
-			self.phenny.say(msg)
+			self.phenny.bot.msg('#apertium', msg)
 		
 		self.send_response(200)
 
-def setup(self):
+def setup_server(phenny):
 	global Handler, httpd
-	if Handler is None and httpd is None:
-		if httpd is not None:
-			httpd.shutdown()
-			httpd = None
-		if Handler is not None:
-			Handler = None
-		Handler = MyHandler
-		Handler.phenny = self
-		httpd = socketserver.TCPServer(("", PORT), Handler)
-		httpd.serve_forever()
+	Handler = MyHandler
+	Handler.phenny = phenny
+	httpd = socketserver.TCPServer(("", PORT), Handler)
+	phenny.say("Server is up and running on port %s" % PORT)
+	httpd.serve_forever()
 
 def github(phenny, input):
 	global Handler, httpd
-	if Handler is not None and httpd is not None:
-		Handler.phenny = phenny
-github.event = 'PRIVMSG'
-github.rule = r'.*'
+	if Handler is None and httpd is None:
+		if input.admin:
+			if httpd is not None:
+				httpd.shutdown()
+				httpd = None
+			if Handler is not None:
+				Handler = None
+			setup_server(phenny)
+		else:
+			phenny.reply("That is an admin-only command.")
+github.name = 'startserver'
+github.commands = ['startserver']
+#github.event = 'PRIVMSG'
+#github.rule = r'.*'
 
 def stopserver(phenny, input):
 	global Handler, httpd

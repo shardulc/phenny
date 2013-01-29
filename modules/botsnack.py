@@ -111,6 +111,7 @@ def botslap(phenny, input):
     phenny.do(random.choice(messages))
 
 botslap.commands = ['botslap', 'botsmack']
+botslap.rule = r'(?i)(you suck|I hate you|you ruin everything|you spoil all the fun) $nickname[ \t]*$'
 botsnack.priority = 'low'
 
 if __name__ == '__main__':

@@ -197,5 +197,14 @@ def suggest(phenny, input):
     else: phenny.reply('Sorry, no result.')
 suggest.commands = ['suggest']
 
+def lmgtfy(phenny, input):
+    if not input.group(2):
+        phenny.reply('.lmg what f who?')
+    response = "%s: http://lmgtfy.com/?q=%s"
+    (who, what) = input.group(2).split(' ', 1)
+    what = web.quote(what)
+    phenny.say(response % (who, what))
+lmgtfy.commands = ['lmgtfy']
+
 if __name__ == '__main__': 
     print(__doc__.strip())

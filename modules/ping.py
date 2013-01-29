@@ -8,10 +8,10 @@ About: http://inamidst.com/phenny/
 import random
 
 def hello(phenny, input): 
-    greeting = random.choice(('Hi', 'Hey', 'Hello', 'What\'s kicking', 'What\'s good', 'Top of the morning', 'Yo', 'What up'))
+    greeting = random.choice(('Hi', 'Hey', 'Hello', 'What\'s kicking', 'What\'s the good word', 'Top of the morning', 'Yo', 'What up', "What's hanging", "In the hood", "Kaixo", "Zer moduz"))
     punctuation = random.choice(('', '!'))
     phenny.say(greeting + ' ' + input.nick + punctuation)
-hello.rule = r'(?i)(hi|hello|hey|what\'s kickin|how you been|what\'s good|top o\' the mornin|yo) $nickname[ \t]*$'
+hello.rule = r'(?i)(hi|hello|hey|what\'s kickin[\'g]*|how you been|what\'s (.*)good(.*)|top o[\'f]* the mornin[\'g]*|what\'s hangin[\'g]*|yo|in the hood|in da hoodi|kaixo|zer moduz) $nickname[ \t]*$'
 
 def interjection(phenny, input): 
     phenny.say(input.nick + '!')

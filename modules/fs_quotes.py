@@ -10,38 +10,39 @@ from tools import GrumbleError
 import web
 import json
 
-def quote(phenny, input):
-    """.quote <id> - Get a quote from quotes.firespeaker.org."""
-
-    word = input.group(2)
-    if not word:
-        phenny.say(fs_quotes.__doc__.strip())
-        return
-    # create opener
-    opener = urllib.request.build_opener()
-    opener.addheaders = [
-        ('User-agent', web.Grab().version),
-        ('Referer', "http://quotes.firespeaker.org"),
-    ]
-
-    try:
-        req = opener.open("http://api.urbandictionary.com/v0/define?term={0}"
-                .format(web.quote(word)))
-        data = req.read().decode('utf-8')
-        data = json.loads(data)
-    except (HTTPError, IOError, ValueError):
-        raise GrumbleError(
-                "Urban Dictionary slemped out on me. Try again in a minute.")
-
-    if data['result_type'] == 'no_results':
-        phenny.say("No results found for {0}".format(word))
-        return
-
-    result = data['list'][0]
-    url = 'http://www.urbandictionary.com/define.php?term={0}'.format(web.quote(word))
-
-    response = "{0} - {1}".format(result['definition'].strip()[:256], url)
-    phenny.say(response)
+#FIXME: need to implement
+#def quote(phenny, input):
+#    """.quote <id> - Get a quote from quotes.firespeaker.org."""
+#
+#    word = input.group(2)
+#    if not word:
+#        phenny.say(fs_quotes.__doc__.strip())
+#        return
+#    # create opener
+#    opener = urllib.request.build_opener()
+#    opener.addheaders = [
+#        ('User-agent', web.Grab().version),
+#        ('Referer', "http://quotes.firespeaker.org"),
+#    ]
+#
+#    try:
+#        req = opener.open("http://api.urbandictionary.com/v0/define?term={0}"
+#                .format(web.quote(word)))
+#        data = req.read().decode('utf-8')
+#        data = json.loads(data)
+#    except (HTTPError, IOError, ValueError):
+#        raise GrumbleError(
+#                "Urban Dictionary slemped out on me. Try again in a minute.")
+#
+#    if data['result_type'] == 'no_results':
+#        phenny.say("No results found for {0}".format(word))
+#        return
+#
+#    result = data['list'][0]
+#    url = 'http://www.urbandictionary.com/define.php?term={0}'.format(web.quote(word))
+#
+#    response = "{0} - {1}".format(result['definition'].strip()[:256], url)
+#    phenny.say(response)
 
 def randquote(phenny, input):
     """.randquote (<topic>) - Get a random short quote from quotes.firespeaker.org (about topic)."""

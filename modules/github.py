@@ -21,6 +21,7 @@ httpd = None
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	phenny = None
+	phInput = None
 	
 	def do_GET(self):
 		parsed_params = urllib.parse.urlparse(self.path)
@@ -30,7 +31,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 		
 	def do_POST(self):
 		length = int(self.headers['Content-Length'])
-		post_data = urllib.parse.parse_qs(self.rfile.read(length).decode('utf-8'))
+		indata = self.rfile.read(length)
+		#print("indata: "+str(indata))
+		#print("headers: "+str(self.headers))
+		post_data = urllib.parse.parse_qs(indata.decode('utf-8'))
+		if len(post_data) == 0:
+			post_data = indata.decode('utf-8')
 		
 		#try:
 		#	payload = query_parsed['payload'][0]
@@ -39,20 +45,31 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			#self.send_response(403)
 			#return
 		#self.phenny.say(post_data['payload'][0])
-		data = json.loads(post_data['payload'][0])
+		if "payload" in post_data:
+			data = json.loads(post_data['payload'][0])
+		else:
+			#print(post_data)
+			data = json.loads(post_data)
+		#print(data)
 		
 		msgs = []
-		for commit in data['commits']:
-			msgs.append(generate_report('phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
+		if "commits" in data:
+			for commit in data['commits']:
+				msgs.append(generate_report('phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
+		elif "revisions" in data:
+			for commit in data['revisions']:
+				msgs.append(generate_report(data['project_name'], commit['author'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['revision']))
 		for msg in msgs:
-			self.phenny.bot.msg('#apertium', msg)
+			for chan in self.phInput.chans:
+				self.phenny.bot.msg(chan, msg)
 		
 		self.send_response(200)
 
-def setup_server(phenny):
+def setup_server(phenny, input):
 	global Handler, httpd
 	Handler = MyHandler
 	Handler.phenny = phenny
+	Handler.phInput = input
 	httpd = socketserver.TCPServer(("", PORT), Handler)
 	phenny.say("Server is up and running on port %s" % PORT)
 	httpd.serve_forever()
@@ -60,19 +77,24 @@ def setup_server(phenny):
 def github(phenny, input):
 	global Handler, httpd
 	if Handler is None and httpd is None:
-		if input.admin:
-			if httpd is not None:
-				httpd.shutdown()
-				httpd = None
-			if Handler is not None:
-				Handler = None
-			setup_server(phenny)
-		else:
-			phenny.reply("That is an admin-only command.")
-github.name = 'startserver'
-github.commands = ['startserver']
-#github.event = 'PRIVMSG'
-#github.rule = r'.*'
+		#if input.admin:
+		if httpd is not None:
+			httpd.shutdown()
+			httpd = None
+		if Handler is not None:
+			Handler = None
+		setup_server(phenny, input)
+		#else:
+		#	phenny.reply("That is an admin-only command.")
+#github.name = 'startserver'
+#github.commands = ['startserver']
+##github.event = 'PRIVMSG'
+##github.rule = r'.*'
+github.name = 'start githook server'
+github.event = "PONG"
+github.rule = r'.*'
+github.priority = 'medium'
+
 
 def stopserver(phenny, input):
 	global Handler, httpd

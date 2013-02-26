@@ -55,15 +55,39 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 		msgs = []
 		if "commits" in data:
 			for commit in data['commits']:
-				msgs.append(generate_report('phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
-		elif "revisions" in data:
-			for commit in data['revisions']:
-				msgs.append(generate_report(data['project_name'], commit['author'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['revision']))
+				try:
+					if "committer" in commit:
+					## For github
+						msgs.append(generate_report('phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
+					elif "pusher" in data:
+					# for google code
+						for commit in data['revisions']:
+							msgs.append(generate_report(data['project_name'], commit['author'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['revision']))
+
+					elif "author" in commit:
+					## For bitbucket
+						#msgs.append("unsupported data: "+str(commit))
+						files = self.getBBFiles(commit['files'])
+						msgs.append(generate_report('turkiccorpora', commit['author'], commit['message'], files['modified'], files['added'], files['removed'], commit['node']))
+					else:
+						msgs.append("unsupported data: "+str(commit))
+				except Exception:
+					#msgs.append("unsupported data: "+str(commit))
+					print("unsupported data: "+str(commit))
+
+		if len(msgs)==0:
+			msgs = ["Something went wrong: "+str(data)]
 		for msg in msgs:
 			for chan in self.phInput.chans:
 				self.phenny.bot.msg(chan, msg)
 		
 		self.send_response(200)
+
+	def getBBFiles(self, filelist):
+		toReturn = {"added": [], "modified": [], "removed": []}
+		for onefile in filelist:
+			toReturn[onefile['type']].append(onefile['file'])
+		return toReturn
 
 def setup_server(phenny, input):
 	global Handler, httpd
@@ -108,8 +132,42 @@ def stopserver(phenny, input):
 		phenny.reply("That is an admin-only command.")
 stopserver.commands = ['stopserver']
 
+def gitserver(phenny, input):
+	''' control git server '''
+	global Handler, httpd
+	command = input.group(1).strip()
+	if input.admin:
+		if command=="stop":
+			if httpd is not None:
+				httpd.shutdown()
+				httpd = None
+			Handler = None
+			phenny.say("Server has stopped on port %s" % PORT)
+		if command=="start":
+			if httpd is None:
+				Handler = MyHandler
+				Handler.phenny = phenny
+				Handler.phInput = input
+				httpd = socketserver.TCPServer(("", PORT), Handler)
+				phenny.say("Server is up and running on port %s" % PORT)
+				httpd.serve_forever()
+
+	else:
+		phenny.reply("Only admins control gitserver.")
+gitserver.name = "gitserver"
+gitserver.rule = ('.gitserver', '(.*)')
+
 def get_commit_info(phenny, repo, sha):
-	html = web.get(phenny.config.git_repositories[repo] + '/commits/%s' % sha)
+	repoUrl = phenny.config.git_repositories[repo]
+	#print(repoUrl)
+	if repoUrl.find("code.google.com") >= 0:
+		locationurl = '/source/detail?r=%s'
+	elif repoUrl.find("api.github.com") >= 0:
+		locationurl = '/commits/%s'
+	elif repoUrl.find("bitbucket.org") >=0:
+		locationurl = ''
+	#print(locationurl)
+	html = web.get(repoUrl + locationurl % sha)
 	data = json.loads(html)
 	author = data['commit']['committer']['name']
 	comment = data['commit']['message']

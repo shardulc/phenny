@@ -31,3 +31,10 @@ harglebargle.priority = 'low'
 
 if __name__ == '__main__':
    print(__doc__.strip())
+
+def udmurt(phenny, input):
+   """expresses joy over mention of Udmurt"""
+   phenny.say("\o/ \o/ \o/ U D M U R T \o/ \o/ \o/")
+
+udmurt.rule = r'.*(?i)(udmurt).*$'
+udmurt.priority = 'low'

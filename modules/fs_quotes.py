@@ -44,6 +44,35 @@ import json
 #    response = "{0} - {1}".format(result['definition'].strip()[:256], url)
 #    phenny.say(response)
 
+topics = {"particles": "\"particle\" stands for \"defeat\" -spectie",
+	"installing apertium": "try \"installing apertium on <operating system>\"",
+	"installing apertium on ubuntu": "http://wiki.apertium.org/wiki/Apertium_on_Ubuntu",
+	"installing apertium on linux": "http://wiki.apertium.org/wiki/Apertium_on_Ubuntu",
+	"installing apertium on windows": "http://wiki.apertium.org/wiki/Apertium_on_Windows",
+	"google summer of code": "http://wiki.apertium.org/wiki/Google_Summer_of_Code",
+	"gsoc": "http://wiki.apertium.org/wiki/Google_Summer_of_Code",
+	"spectie": "http://wiki.apertium.org/wiki/User:Francis_Tyers",
+	"firespeaker": "http://wiki.apertium.org/wiki/User:Firespeaker",
+	"zfe": "http://quotes.firespeaker.org/?who=zfe"
+	}
+
+def information(phenny, input):
+	""".information (<topic>) get information on a topic"""
+	global topics
+
+	topic = input.group(2)
+
+	if topic.lower() in topics:
+		phenny.say(topics[topic.lower()])
+	else:
+		phenny.say("Sorry, no information on %s is currently available ☹")
+
+information.name = 'information'
+information.commands = ['information']
+information.example = '.information (installing apertium)'
+information.priority = 'low'
+
+
 def randquote(phenny, input):
     """.randquote (<topic>) - Get a random short quote from quotes.firespeaker.org (about topic)."""
 

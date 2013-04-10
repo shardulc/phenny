@@ -6,15 +6,17 @@ author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 
 def noexceptions(phenny, input):
    """Tells someone there aren't ever any exceptions"""
-   whouser = input.groups()[1]
+   #whouser = input.groups()[1]
+   whouser = input.nick
    if not whouser:
       return phenny.say('NO EXCEPTIONS!')
 
    response = "NO EXCEPTIONS, %s!"
    phenny.say(response % whouser)
 
-noexceptions.commands = ['noexceptions']
-noexceptions.example = '.noexceptions firespeaker'
+#noexceptions.commands = ['noexceptions']
+#noexceptions.example = '.noexceptions firespeaker'
+noexceptions.rule = r'.*(?i)(no exceptions).*$'
 noexceptions.priority = 'low'
 
 def harglebargle(phenny, input):

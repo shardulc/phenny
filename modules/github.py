@@ -19,10 +19,42 @@ PORT = 1234
 Handler = None
 httpd = None
 
+
 class MyHandler(http.server.SimpleHTTPRequestHandler):
 	phenny = None
 	phInput = None
 	
+	def return_data(self, site, data, commit):
+		#hrm, if I'm storing fields in a list in python, but I have something that has complex fields (e.g., data['foo']['bar']), is there some way to write a function that'll 
+		#fields['github'] = ['phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
+		if site=="github":
+			name = "phenny"
+			author = data['pusher']['name']
+			message = commit['message']
+			modified = commit['modified']
+			added = commit['added']
+			removed = commit['removed']
+			rev = commit['id'][:7]
+		elif site=="googlecode":
+			name = data['project_name']
+			author = commit['author']
+			message = commit['message']
+			modified = commit['modified']
+			added = commit['added']
+			removed = commit['removed']
+			rev = commit['revision']
+		elif site=="bitbucket":
+			files = self.getBBFiles(commit['files'])
+			name = 'turkiccorpora'
+			author = commit['author']
+			message = commit['message']
+			modified = files['modified']
+			added = files['added']
+			removed = files['removed']
+			rev = commit['node']
+		return generate_report(name, author, message, modified, added, removed, rev)
+
+
 	def do_GET(self):
 		parsed_params = urllib.parse.urlparse(self.path)
 		query_parsed = urllib.parse.parse_qs(parsed_params.query)
@@ -58,11 +90,13 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				try:
 					if "committer" in commit:
 					## For github
-						msgs.append(generate_report('phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
-					elif "pusher" in data:
-					# for google code
-						for commit in data['revisions']:
-							msgs.append(generate_report(data['project_name'], commit['author'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['revision']))
+					#	msgs.append(generate_report('phenny', data['pusher']['name'], commit['message'], commit['modified'], commit['added'], commit['removed'], commit['id'][:7]))
+						msgs.append(self.return_data("github", data, commit))
+					#elif "pusher" in data:
+					## for google code
+					#	for commit in data['revisions']:
+					#		msgs.append(self.return_data(self, "github", data, commit))
+					#		#msgs.append()
 
 					elif "author" in commit:
 					## For bitbucket
@@ -74,9 +108,14 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 				except Exception:
 					#msgs.append("unsupported data: "+str(commit))
 					print("unsupported data: "+str(commit))
+		elif "project_name" in data:
+			# for google code
+			for commit in data['revisions']:
+				msgs.append(self.return_data("googlecode", data, commit))
+				#msgs.append()
 
 		if len(msgs)==0:
-			msgs = ["Something went wrong: "+str(data)]
+			msgs = ["Something went wrong: "+str(data.keys())]
 		for msg in msgs:
 			for chan in self.phInput.chans:
 				self.phenny.bot.msg(chan, msg)
@@ -140,6 +179,7 @@ def gitserver(phenny, input):
 		if command=="stop":
 			if httpd is not None:
 				httpd.shutdown()
+				httpd.socket.close()				
 				httpd = None
 			Handler = None
 			phenny.say("Server has stopped on port %s" % PORT)

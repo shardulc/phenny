@@ -7,12 +7,11 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import time
+import time, os, shelve
 from tools import deprecated
 
 def f_seen(phenny, input): 
     """.seen <nick> - Reports when <nick> was last seen."""
-    if input.sender == '#talis': return
     nick = input.group(2).lower()
     if not hasattr(phenny, 'seen'): 
         return self.msg(input.sender, '?')
@@ -27,19 +26,16 @@ f_seen.name = 'seen'
 f_seen.example = '.seen firespeaker'
 f_seen.rule = (['seen'], r'(\S+)')
 
-
-def f_note(phenny, input): 
-    def note(phenny, input): 
-        if not hasattr(phenny.bot, 'seen'): 
-            phenny.bot.seen = {}
-        if input.sender.startswith('#'): 
-            # if origin.sender == '#inamidst': return
-            phenny.seen[input.nick.lower()] = (input.sender, time.time())
-
-        # if not hasattr(self, 'chanspeak'): 
-        #     self.chanspeak = {}
-        # if (len(args) > 2) and args[2].startswith('#'): 
-        #     self.chanspeak[args[2]] = args[0]
+@deprecated
+def f_note(self, origin, match, args): 
+    def note(self, origin, match, args): 
+        if not hasattr(self.bot, 'seen'): 
+            fn = self.nick + '-' + self.config.host + '.seen'
+            path = os.path.join(os.path.expanduser('~/.phenny'), fn)
+            self.bot.seen = shelve.open(path)
+        if origin.sender.startswith('#'): 
+            self.seen[origin.nick.lower()] = (origin.sender, time.time())
+            self.seen.sync()
 
     try: note(phenny, input)
     except Exception as e: print(e)

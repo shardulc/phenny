@@ -55,6 +55,7 @@ def setup(phenny):
 def startup(phenny, input): 
     if hasattr(phenny.config, 'serverpass'): 
         phenny.write(('PASS', phenny.config.serverpass))
+        print(phenny.config.serverpass)
 
     if hasattr(phenny.config, 'password'): 
         phenny.msg('NickServ', 'IDENTIFY %s' % phenny.config.password)
@@ -63,6 +64,7 @@ def startup(phenny, input):
     # Cf. http://swhack.com/logs/2005-12-05#T19-32-36
     for channel in phenny.channels: 
         phenny.write(('JOIN', channel))
+        print(channel)
         time.sleep(0.5)
 startup.rule = r'(.*)'
 startup.event = '251'

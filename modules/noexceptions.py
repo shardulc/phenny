@@ -19,7 +19,7 @@ def noexceptions(phenny, input):
 noexceptions.rule = r'.*(?i)(no exceptions).*$'
 noexceptions.priority = 'low'
 
-def harglebargle(phenny, input):
+def harglebargleP(phenny, input):
    """Tells someone hargle bargle (cf. http://nedroidcomics.livejournal.com/224029.html , http://quotes.firespeaker.org/?id=1415)"""
    whouser = input.groups()[1]
    if not whouser:
@@ -27,9 +27,26 @@ def harglebargle(phenny, input):
    response = "HARGLE BARGLE, %s!"
    phenny.say(response % whouser)
 
-harglebargle.commands = ['harglebargle']
+harglebargleP.commands = ['harglebargle']
+harglebargleP.example = '.harglebargle firespeaker'
+harglebargleP.priority = 'low'
+
+def bargle(phenny, input):
+   """Says bargle if someone says hargle (cf. http://nedroidcomics.livejournal.com/224029.html , http://quotes.firespeaker.org/?id=1415)"""
+   if input != "hargle bargle" and input != "harglebargle":
+      phenny.say("bargle!")
+
+bargle.rule = r'.*(?i)(hargle).*$'
+bargle.priority = 'low'
+
+
+def harglebargle(phenny, input):
+   """Says hargle bargle if someone says hargle bargle (cf. http://nedroidcomics.livejournal.com/224029.html , http://quotes.firespeaker.org/?id=1415)"""
+   phenny.say('HARGLE BARGLE!')
+
 harglebargle.example = '.harglebargle firespeaker'
 harglebargle.priority = 'low'
+harglebargle.rule = r'.*(?i)(hargle[\s]*bargle).*$'
 
 if __name__ == '__main__':
    print(__doc__.strip())

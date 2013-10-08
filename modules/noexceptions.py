@@ -16,7 +16,7 @@ def noexceptions(phenny, input):
 
 #noexceptions.commands = ['noexceptions']
 #noexceptions.example = '.noexceptions firespeaker'
-noexceptions.rule = r'.*(?i)(no exceptions).*$'
+noexceptions.rule = r'.*(?i)((no|any) exceptions).*$'
 noexceptions.priority = 'low'
 
 def harglebargleP(phenny, input):
@@ -38,6 +38,15 @@ def bargle(phenny, input):
 
 bargle.rule = r'.*(?i)(hargle).*$'
 bargle.priority = 'low'
+
+def hargle(phenny, input):
+   """Says harglebargle if someone says bargle (cf. http://nedroidcomics.livejournal.com/224029.html , http://quotes.firespeaker.org/?id=1415)"""
+   if input != "hargle bargle" and input != "harglebargle":
+      phenny.say("HARGLE BARGLE!")
+
+hargle.rule = r'.*(?i)(bargle).*$'
+hargle.priority = 'low'
+
 
 
 def harglebargle(phenny, input):

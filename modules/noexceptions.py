@@ -16,7 +16,7 @@ def noexceptions(phenny, input):
 
 #noexceptions.commands = ['noexceptions']
 #noexceptions.example = '.noexceptions firespeaker'
-noexceptions.rule = r'.*(?i)((no|any) exceptions).*$'
+noexceptions.rule = r'.*(?i)((no|any|most|some|other|many|lot of|few|several|certain) exceptions).*$'
 noexceptions.priority = 'low'
 
 def harglebargleP(phenny, input):

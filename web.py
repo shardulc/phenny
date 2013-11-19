@@ -21,9 +21,14 @@ def get(uri):
     if not uri.startswith('http'): 
         return
     u = urllib.request.urlopen(uri)
-    bytes = u.read()
+    try:
+        bytes = u.read()
+    except httpclient.IncompleteRead as e:
+        bytes = e.partial
     try:
         bytes = bytes.decode('utf-8')
+    except UnicodeDecodeError:
+        bytes = bytes.decode('windows-1251')
     except UnicodeDecodeError:
         bytes = bytes.decode('ISO-8859-1')
     u.close()

@@ -12,10 +12,10 @@ from string import ascii_lowercase
 import os
 
 def shorten_num(n):
-    if n < 100000:
+    if n < 1000:
         return '{:,}'.format(n)
     elif n < 1000000:
-        return '{}K'.format(round(n/1000))
+        return '{}K'.format(round(n/1000, 1))
     elif n < 1000000000:
         return '{}M'.format(round(n/1000000, 1))
 
@@ -23,11 +23,11 @@ def scrape_ethnologue_codes():
     data = {}
     base_url = 'http://www.ethnologue.com/browse/codes/'
     for letter in ascii_lowercase:
-        resp = urllib.request.urlopen(url + letter).read()
+        resp = urllib.request.urlopen(base_url + letter).read()
         h = html.document_fromstring(resp)
         for e in h.find_class('views-field-field-iso-639-3'):
             code = e.find('div/a').text
-            name = e.find('div.a').attrib['title']
+            name = e.find('div/a').attrib['title']
             data[code] = name
     return data
 
@@ -66,6 +66,8 @@ def parse_num_speakers(s):
         if len(i) <= 3 or ',' in i:
             if i.replace(',', '').replace('.', '').isdigit():
                 hits.append(int(i.replace(',', '').replace('.', '')))
+    if 'ethnic population' in s.lower():
+        return shorten_num(hits[0])
     return shorten_num(hits[-1])
 
 def ethnologue(phenny, input):
@@ -97,12 +99,16 @@ def ethnologue(phenny, input):
             if len(where_spoken_cont) > 98:
                 where_spoken_cont += '...'
             where_spoken += ', ' + where_spoken_cont
+        if where_spoken[-1] != '.':
+            where_spoken += '.'
         num_speakers_field = h.find_class('field-name-field-population')[0].find('div/div/p').text
         num_speakers = parse_num_speakers(num_speakers_field)
+        language_status = h.find_class('field-name-language-status')[0].find('div/div/p').text.split(' ')[0] + '.'
 
-        response = "Ethnologue results for {} (ISO-639 code {}): spoken in {}. {} L1 speakers. Src: {}".format(name, iso_code, where_spoken, num_speakers, url)
+        response = "Ethnologue results for {} (ISO-639: {}): spoken in {} {} speakers. Status: {} Src: {}".format(
+            name, iso_code, where_spoken, num_speakers, language_status, url)
     elif len(iso) > 1:
-        did_you_mean = ['{} ({})'.format(i, ISOcodes[i]) for i in iso if len(i) == 3]
+        did_you_mean = ['{} ({})'.format(i, phenny.ethno_data[i]) for i in iso if len(i) == 3]
         response = "Did you mean: " + ', '.join(did_you_mean) + "? Use iso639 code for better results."
     else:
         response = "That ISO code wasn't found. (Hint: use .iso639 for better results)"
@@ -110,13 +116,13 @@ def ethnologue(phenny, input):
     phenny.say(response)
 
 ethnologue.name = 'ethnologue'
-ethnologue.commands = ['ethnologue']
+ethnologue.commands = ['ethnologue', 'ethno', 'logue', 'lg', 'eth']
 ethnologue.example = '.ethnologue khk'
 ethnologue.priority = 'low'
 
 def setup(phenny):
     file = filename(phenny)
     if os.path.exists(file):
-        ethnologue_read_codes(phenny)
+        read_ethnologue_codes(phenny)
     else:
-        ethnologue_write_codes(phenny)
+        write_ethnologue_codes(phenny)

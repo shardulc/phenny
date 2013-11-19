@@ -14,7 +14,7 @@ def f_seen(phenny, input):
     """.seen <nick> - Reports when <nick> was last seen."""
     nick = input.group(2).lower()
     if not hasattr(phenny, 'seen'): 
-        return self.msg(input.sender, '?')
+        return phenny.msg(input.sender, '?')
     if nick in phenny.seen: 
         channel, t = phenny.seen[nick]
         t = time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(t))

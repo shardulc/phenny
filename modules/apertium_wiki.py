@@ -67,8 +67,7 @@ def awik(phenny, input):
       words = sentence[:-5].split(' ')
       words.pop()
       sentence = ' '.join(words) + ' [...]'
-   
-   print(sentence + ' - ' + wikiuri % (format_term_display(term)))
+
    phenny.say(sentence + ' - ' + wikiuri % (format_term_display(term)))
 
 awik.commands = ['awik']

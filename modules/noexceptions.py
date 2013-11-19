@@ -16,7 +16,7 @@ def noexceptions(phenny, input):
 
 #noexceptions.commands = ['noexceptions']
 #noexceptions.example = '.noexceptions firespeaker'
-noexceptions.rule = r'.*(?i)((no|any|most|some|other|many|lot of|few|several|certain) exceptions).*$'
+noexceptions.rule = r'.*(?i)((no|any|most|some|other|many|lot of|few|several|certain) exception).*$'
 noexceptions.priority = 'low'
 
 def harglebargleP(phenny, input):
@@ -66,3 +66,15 @@ def udmurt(phenny, input):
 
 udmurt.rule = r'.*(?i)(udmurt).*$'
 udmurt.priority = 'low'
+
+def particles(phenny, input):
+   """expresses sadness over mention of particles"""
+   message = "this is my particles face :((((("
+   whouser = input.nick
+   if not whouser:
+      phenny.say(message)
+   else:
+      phenny.say("%s: %s" % (whouser, message))
+
+particles.rule = r'.*(?i)(particle|частиц).*$'
+particles.priority = 'low'

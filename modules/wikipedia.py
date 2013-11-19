@@ -50,6 +50,8 @@ def parse_wiki_page(url, term, section = None):
         if text is None:
             return "That subsection does not exist."
         text = text.getparent().getnext()
+
+        #a div tag may come before the text
         if text.tag == "div":
             text = text.getnext()
     else:
@@ -84,7 +86,7 @@ def wikipedia(phenny, origterm, lang):
 
     if "#" in origterm:
         origterm, section = origterm.split("#")[:2]
-    section = format_subsection(section)
+        section = format_subsection(section)
     term = format_term(origterm)
 
     w = wiki.Wiki(wikiapi % lang, wikiuri % lang, wikisearch % lang)

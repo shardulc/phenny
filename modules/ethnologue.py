@@ -36,15 +36,18 @@ def filename(phenny):
     return os.path.join(os.path.expanduser('~/.phenny'), name)
 
 def write_ethnologue_codes(phenny, raw=None):
-    file = filename(phenny)
-    data = scrape_ethnologue_codes()
-    with open(file, 'w') as f:
-        for k, v in data.items():
-            f.write('{}${}\n'.format(k, v))
-    phenny.ethno_data = data
-    print('Ethnologue iso-639 code fetch successful')
-    if raw:
-        phenny.say('Ethnologue iso-639 code fetch successful')
+    if raw is None or raw.admin:
+        file = filename(phenny)
+        data = scrape_ethnologue_codes()
+        with open(file, 'w') as f:
+            for k, v in data.items():
+                f.write('{}${}\n'.format(k, v))
+        phenny.ethno_data = data
+        print('Ethnologue iso-639 code fetch successful')
+        if raw:
+            phenny.say('Ethnologue iso-639 code fetch successful')
+    else:
+        phenny.say('Only admins can execute that command!')
 
 write_ethnologue_codes.name = 'write_ethnologue_codes'
 write_ethnologue_codes.commands = ['write-ethno-codes']
@@ -105,7 +108,7 @@ def ethnologue(phenny, input):
         num_speakers = parse_num_speakers(num_speakers_field)
         language_status = h.find_class('field-name-language-status')[0].find('div/div/p').text.split(' ')[0] + '.'
 
-        response = "Ethnologue results for {} (ISO-639: {}): spoken in {} {} speakers. Status: {} Src: {}".format(
+        response = "{} (ISO-639: {}): spoken in {} {} speakers. Status: {} Src: {}".format(
             name, iso_code, where_spoken, num_speakers, language_status, url)
     elif len(iso) > 1:
         did_you_mean = ['{} ({})'.format(i, phenny.ethno_data[i]) for i in iso if len(i) == 3]

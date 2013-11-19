@@ -10,11 +10,11 @@ import urllib.request
 from urllib.error import HTTPError
 
 def shorten_num(n):
-    if n < 99999:
+    if n < 100000:
         return '{:,}'.format(n)
-    elif n < 999999:
+    elif n < 1000000:
         return '{}K'.format(round(n/1000))
-    elif n < 999999999:
+    elif n < 1000000000:
         return '{}M'.format(round(n/1000000, 1))
 
 def parse_num_speakers(s):

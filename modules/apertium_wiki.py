@@ -49,7 +49,6 @@ def awik(phenny, input):
 
    if "#" in origterm:
       section = format_subsection(origterm.split("#")[1])
-      print(section)
       text = page.find(".//span[@id='%s']" % section)
       if text is None:
          phenny.reply("That subsection does not exist.")

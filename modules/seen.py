@@ -37,7 +37,7 @@ def f_note(self, origin, match, args):
             self.seen[origin.nick.lower()] = (origin.sender, time.time())
             self.seen.sync()
 
-    try: note(phenny, input)
+    try: note(self, origin, match, args)
     except Exception as e: print(e)
 f_note.rule = r'(.*)'
 f_note.priority = 'low'

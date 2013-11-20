@@ -15,9 +15,9 @@ def shorten_num(n):
     if n < 1000:
         return '{:,}'.format(n)
     elif n < 1000000:
-        return '{:.0f}K'.format(round(n/1000, 1))
+        return '{}K'.format(str(round(n/1000, 1)).rstrip('0').rstrip('.'))
     elif n < 1000000000:
-        return '{:.0f}M'.format(round(n/1000000, 1))
+        return '{}M'.format(str(round(n/1000000, 1)).rstrip('0').rstrip('.'))
 
 def scrape_ethnologue_codes():
     data = {}

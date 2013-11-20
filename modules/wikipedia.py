@@ -37,6 +37,7 @@ def format_subsection(section):
    section = section.replace(' ', '_')
    section = urllib.parse.quote(section)
    section = section.replace('%', '.')
+   section = section.replace(".3A", ":")
    return section
 
 def parse_wiki_page(url, term, section = None):
@@ -48,6 +49,7 @@ def parse_wiki_page(url, term, section = None):
     page = lxml.html.fromstring(html)
     if section is not None:
         text = page.find(".//span[@id='%s']" % section)
+
         if text is None:
             return "That subsection does not exist."
         text = text.getparent().getnext()

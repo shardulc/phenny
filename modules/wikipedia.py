@@ -35,7 +35,7 @@ def format_term_display(term):
 
 def format_subsection(section):
    section = section.replace(' ', '_')
-   section = urllib.parse.quote(section)
+   section = urllib.parse.quote_plus(section)
    section = section.replace('%', '.')
    section = section.replace(".3A", ":")
    return section

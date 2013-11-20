@@ -218,14 +218,19 @@ def gitserver_info(phenny, input):
 				phenny.say("Server is up and running on port %s" % PORT)
 				httpd.serve_forever()
 
+	if httpd is None:
+		if input.admin:
+			phenny.say("Server is down! Start using '.gitserver start'")
+		else:
+			phenny.say("Server is down! {only admin can start it}")
 	else:
-		if httpd is None:	
-			phenny.say("Server is down")
-		else:	
+		if input.admin:
+			phenny.say("Server is up! Stop using '.gitserver stop'")
+		else:
 			phenny.say("Server is up and running {only admins can shut it down}")
                 
 gitserver_info.name = "gitserver_info"
-gitserver_info.rule = ('.gitserver_info', '(*)')
+gitserver_info.rule = ('.gitserver_info', '(.*)')
 
 def get_commit_info(phenny, repo, sha):
 	repoUrl = phenny.config.git_repositories[repo]

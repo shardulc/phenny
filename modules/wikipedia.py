@@ -41,7 +41,8 @@ def format_subsection(section):
 
 def parse_wiki_page(url, term, section = None):
     try:
-        html = str(web.get(url))
+        web_url = urllib.parse.quote(url).replace("%3A", ":", 1)
+        html = str(web.get(web_url))
     except:
         return "A wiki page does not exist for that term."
     page = lxml.html.fromstring(html)
@@ -52,11 +53,13 @@ def parse_wiki_page(url, term, section = None):
         text = text.getparent().getnext()
 
         #a div tag may come before the text
-        if text.tag == "div":
+        while text.tag is not None and text.tag != "p":
             text = text.getnext()
+        url += "#" + format_term_display(section)
     else:
         #Get first 3 paragraphs and find the one most
         #likely to actually contain text.
+
         texts = page.findall('.//p')[:4]
         if len(texts) == 0:
             return "Unable to find content. Search may be too broad."
@@ -65,7 +68,7 @@ def parse_wiki_page(url, term, section = None):
 
     sentences = text.text_content().split(". ")   
     sentence = '"' + sentences[0] + '"'
-   
+
     maxlength = 440 - len(' - ' + url)
     if len(sentence.encode('utf-8')) > maxlength: 
         sentence = sentence[:maxlength]
@@ -99,7 +102,7 @@ def wikipedia(phenny, origterm, lang):
 
     if result is not None: 
         #Disregarding [0], the snippet
-        url = result.split("-")[1]
+        url = result.split("|")[-1]
         phenny.say(parse_wiki_page(url, term, section))
             
     else:

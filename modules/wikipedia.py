@@ -7,8 +7,11 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import re, urllib.request, urllib.parse, urllib.error, gzip, io
-import wiki
+import re, urllib.request, urllib.parse, urllib.error, gzip, io, wiki
+from lxml import etree
+import lxml.html
+import lxml.html.clean
+import web
 
 wikiapi = 'https://%s.wikipedia.org/w/api.php?action=query&list=search&srsearch={0}&limit=1&prop=snippet&format=json'
 wikiuri = 'https://%s.wikipedia.org/wiki/{0}'
@@ -24,13 +27,66 @@ def format_term(term):
     term = term.replace(' ', '_')
     return term
 
+def format_term_display(term):
+   term = urllib.parse.unquote(term)
+   term = term[0].upper() + term[1:]
+   term = term.replace(' ', '_')
+   return term
+
+def format_subsection(section):
+   section = section.replace(' ', '_')
+   section = urllib.parse.quote(section)
+   section = section.replace('%', '.')
+   return section
+
+def parse_wiki_page(url, term, section = None):
+    try:
+        html = str(web.get(url))
+    except:
+        return "A wiki page does not exist for that term."
+    page = lxml.html.fromstring(html)
+    if section is not None:
+        text = page.find(".//span[@id='%s']" % section)
+        if text is None:
+            return "That subsection does not exist."
+        text = text.getparent().getnext()
+
+        #a div tag may come before the text
+        if text.tag == "div":
+            text = text.getnext()
+    else:
+        #Get first 3 paragraphs and find the one most
+        #likely to actually contain text.
+        texts = page.findall('.//p')[:4]
+        if len(texts) == 0:
+            return "Unable to find content. Search may be too broad."
+        texts.sort(key=len, reverse=True)
+        text = texts[0]
+
+    sentences = text.text_content().split(". ")   
+    sentence = '"' + sentences[0] + '"'
+   
+    maxlength = 440 - len(' - ' + url)
+    if len(sentence.encode('utf-8')) > maxlength: 
+        sentence = sentence[:maxlength]
+        words = sentence[:-5].split(' ')
+        words.pop()
+        sentence = ' '.join(words) + ' [...]'
+
+    return sentence + ' - ' + url
+
 def wikipedia(phenny, origterm, lang):
     origterm = origterm.strip()
     lang = lang.strip()
 
     if not origterm: 
         return phenny.say('Perhaps you meant ".wik Zen"?')
+    
+    section = None
 
+    if "#" in origterm:
+        origterm, section = origterm.split("#")[:2]
+        section = format_subsection(section)
     term = format_term(origterm)
 
     w = wiki.Wiki(wikiapi % lang, wikiuri % lang, wikisearch % lang)
@@ -40,10 +96,12 @@ def wikipedia(phenny, origterm, lang):
     except IOError: 
         error = ("Can't connect to %s.wikipedia.org ({0})" % lang).format((wikiuri % lang).format(urllib.parse.unquote(term)))
         return phenny.say(error)
-        
-        
+
     if result is not None: 
-        phenny.say(result)
+        #Disregarding [0], the snippet
+        url = result.split("-")[1]
+        phenny.say(parse_wiki_page(url, term, section))
+            
     else:
         phenny.say('Can\'t find anything in Wikipedia for "{0}".'.format(origterm))
 
@@ -56,7 +114,7 @@ def wik(phenny, input):
     if m:
         lang = m.group(1)
         origterm = m.group(2)
-        
+
     wikipedia(phenny, origterm, lang)
 wik.rule = r'\.wik(?:(.*))'
 wik.priority = 'high'

@@ -112,7 +112,7 @@ def ethnologue(phenny, input):
             name, iso_code, where_spoken, num_speakers, language_status, url)
     elif len(iso) > 1:
         did_you_mean = ['{} ({})'.format(i, phenny.ethno_data[i]) for i in iso if len(i) == 3]
-        response = "Did you mean: " + ', '.join(did_you_mean) + "? Use iso639 code for better results."
+        response = "Try .iso639 for better results. Did you mean: " + ', '.join(did_you_mean) + "?"
     else:
         response = "That ISO code wasn't found. (Hint: use .iso639 for better results)"
 

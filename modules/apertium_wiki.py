@@ -22,10 +22,17 @@ def format_term_display(term):
    term = term[0].upper() + term[1:]
    term = term.replace(' ', '_')
    return term
-   
+
+def format_subsection(section):
+   section = section.replace(' ', '_')
+   section = urllib.parse.quote(section)
+   section = section.replace('%', '.')
+   return section
+
 def awik(phenny, input):
    """Search for something on Apertium wiki."""
    origterm = input.groups()[1]
+
    if not origterm: 
       return phenny.say('Perhaps you meant ".wik Zen"?')
    #origterm = origterm.encode('utf-8')
@@ -38,8 +45,20 @@ def awik(phenny, input):
       phenny.reply("A wiki page does not exist for that term.")
       return
    
-   sentences = lxml.html.fromstring(html).findall('.//p')[1].text_content().split(". ")
-   
+   page = lxml.html.fromstring(html)
+
+   if "#" in origterm:
+      section = format_subsection(origterm.split("#")[1])
+      print(section)
+      text = page.find(".//span[@id='%s']" % section)
+      if text is None:
+         phenny.reply("That subsection does not exist.")
+         return
+      text = text.getparent().getnext()
+   else:
+      text = page.findall('.//p')[1]
+
+   sentences = text.text_content().split(". ")   
    sentence = '"' + sentences[0] + '"'
    
    maxlength = 440 - len(' - ' + wikiuri % (format_term_display(term)))
@@ -48,7 +67,7 @@ def awik(phenny, input):
       words = sentence[:-5].split(' ')
       words.pop()
       sentence = ' '.join(words) + ' [...]'
-   
+
    phenny.say(sentence + ' - ' + wikiuri % (format_term_display(term)))
 
 awik.commands = ['awik']

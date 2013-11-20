@@ -197,6 +197,36 @@ def gitserver(phenny, input):
 gitserver.name = "gitserver"
 gitserver.rule = ('.gitserver', '(.*)')
 
+def gitserver_info(phenny, input):
+	''' provides git server info '''
+	global Handler, httpd
+	command =  input.group(1).strip()
+	if input.admin:
+		if command=="stop":
+			if httpd is not None:
+				httpd.shutdown()
+				httpd.socket.close()				
+				httpd = None
+			Handler = None
+			phenny.say("Server has stopped on port %s" % PORT)
+		if command=="start":
+			if httpd is None:
+				Handler = MyHandler
+				Handler.phenny = phenny
+				Handler.phInput = input
+				httpd = socketserver.TCPServer(("", PORT), Handler)
+				phenny.say("Server is up and running on port %s" % PORT)
+				httpd.serve_forever()
+
+	else:
+		if httpd is None:	
+			phenny.say("Server is down")
+		else:	
+			phenny.say("Server is up and running {only admins can shut it down}")
+                
+gitserver_info.name = "gitserver_info"
+gitserver_info.rule = ('.gitserver_info', '(*)')
+
 def get_commit_info(phenny, repo, sha):
 	repoUrl = phenny.config.git_repositories[repo]
 	#print(repoUrl)

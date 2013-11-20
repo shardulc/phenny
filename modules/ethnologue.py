@@ -15,9 +15,9 @@ def shorten_num(n):
     if n < 1000:
         return '{:,}'.format(n)
     elif n < 1000000:
-        return '{}K'.format(round(n/1000, 1))
+        return '{:.0f}K'.format(round(n/1000, 1))
     elif n < 1000000000:
-        return '{}M'.format(round(n/1000000, 1))
+        return '{:.0f}M'.format(round(n/1000000, 1))
 
 def scrape_ethnologue_codes():
     data = {}
@@ -106,9 +106,9 @@ def ethnologue(phenny, input):
             where_spoken += '.'
         num_speakers_field = h.find_class('field-name-field-population')[0].find('div/div/p').text
         num_speakers = parse_num_speakers(num_speakers_field)
-        language_status = h.find_class('field-name-language-status')[0].find('div/div/p').text.split(' ')[0] + '.'
+        language_status = h.find_class('field-name-language-status')[0].find('div/div/p').text.split('.')[0] + '.'
 
-        response = "{} (ISO-639: {}): spoken in {} {} speakers. Status: {} Src: {}".format(
+        response = "{} ({}): spoken in {} {} speakers. Status: {} Src: {}".format(
             name, iso_code, where_spoken, num_speakers, language_status, url)
     elif len(iso) > 1:
         did_you_mean = ['{} ({})'.format(i, phenny.ethno_data[i]) for i in iso if len(i) == 3]

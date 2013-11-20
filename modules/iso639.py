@@ -44,18 +44,22 @@ def scrape_wiki_codes():
     #639-1
     resp = urllib.request.urlopen(base_url + '-1_codes').read()
     h = html.document_fromstring(resp)
-    table = h.find_class('wikitable')[0].find('tbody')
-    for row in table.findall('tr'):
+    table = h.find_class('wikitable')[0]
+    for row in table.findall('tr')[1:]:
         name = row.findall('td')[2].find('a').text
         code = row.findall('td')[4].text
         data[code] = name
     #639-2
     resp = urllib.request.urlopen(base_url + '-2_codes').read()
     h = html.document_fromstring(resp)
-    table = h.find_class('wikitable')[0].find('tbody')
-    for row in table.findall('tr'):
-        name = row.findall('td')[3].find('a').text
-        code_list = row.findall('td')[0].split(' ')
+    table = h.find_class('wikitable')[0]
+    for row in table.findall('tr')[1:]:
+        name = row.findall('td')[3].find('a')
+        if name:
+            name = name.text
+        else:
+            continue
+        code_list = row.findall('td')[0].text.split(' ')
         if len(code_list) == 1:
             code = code_list[0]
         else:
@@ -72,13 +76,13 @@ def iso_filename(phenny):
     return os.path.join(os.path.expanduser('~/.phenny'), name)
 
 def write_dict(filename, data):
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding="utf-8") as f:
         for k, v in data.items():
             f.write('{}${}\n'.format(k, v))
 
 def read_dict(filename):
     data = {}
-    with open(filename, 'r') as f:
+    with open(filename, 'r', encoding="utf-8") as f:
         for line in f.readlines():
             code, name = line.split('$')
             data[code] = name
@@ -88,7 +92,8 @@ def refresh_database(phenny, raw=None):
     if raw.admin or raw is None:
         f = iso_filename(phenny)
         write_ethnologue_codes(phenny)
-        phenny.iso_data = phenny.ethno_data + scrape_wiki_codes()
+        phenny.iso_data = scrape_wiki_codes()
+        phenny.iso_data.update(phenny.ethno_data)
         write_dict(f, phenny.iso_data)
         phenny.say('ISO code database successfully written')
     else:
@@ -103,7 +108,8 @@ def setup(phenny):
     if os.path.exists(f):
         phenny.iso_data = read_dict(f)
     else:
-        phenny.iso_data = phenny.ethno_data + scrape_wiki_codes()
+        phenny.iso_data = scrape_wiki_codes()
+        phenny.iso_data.update(phenny.ethno_data)
         write_dict(f, phenny.iso_data)
 
 

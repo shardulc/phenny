@@ -233,7 +233,7 @@ class Phenny(irc.Bot):
 
                         if func.thread: 
                             targs = (func, origin, phenny, input)
-                            t = threading.Thread(target=self.call, args=targs)
+                            t = threading.Thread(target=self.call, args=targs, name=func.name)
                             t.start()
                         else: self.call(func, origin, phenny, input)
 

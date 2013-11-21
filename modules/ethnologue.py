@@ -89,7 +89,7 @@ def ethnologue(phenny, input):
         try:
             resp = urllib.request.urlopen(url).read()
         except HTTPError as e:
-            phenny.say('Oh noes! Ethnologue responded with ' + e)
+            phenny.say('Oh noes! Ethnologue responded with ' + str(e.code) + ' ' + e.msg)
             return
         h = html.document_fromstring(resp)
 

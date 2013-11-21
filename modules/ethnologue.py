@@ -89,27 +89,36 @@ def ethnologue(phenny, input):
         try:
             resp = urllib.request.urlopen(url).read()
         except HTTPError as e:
-            phenny.say('Oh noes! Ethnologue responded with ', e)
+            phenny.say('Oh noes! Ethnologue responded with ' + str(e.code) + ' ' + e.msg)
             return
         h = html.document_fromstring(resp)
 
-        name = h.get_element_by_id('page-title').text
-        iso_code = h.find_class('field-name-language-iso-link-to-sil-org')[0].find('div/div/a').text
-        where_spoken = h.find_class('field-name-a-language-of')[0].find('div/div/h2/a').text
-        where_spoken_cont = h.find_class('field-name-field-region')
-        if where_spoken_cont:
-            where_spoken_cont = where_spoken_cont[0].find('div/div/p').text[:100]
-            if len(where_spoken_cont) > 98:
-                where_spoken_cont += '...'
-            where_spoken += ', ' + where_spoken_cont
-        if where_spoken[-1] != '.':
-            where_spoken += '.'
-        num_speakers_field = h.find_class('field-name-field-population')[0].find('div/div/p').text
-        num_speakers = parse_num_speakers(num_speakers_field)
-        language_status = h.find_class('field-name-language-status')[0].find('div/div/p').text.split('.')[0] + '.'
+        if "macrolanguage" in h.find_class('field-name-a-language-of')[0].find('div/div/h2').text:
+            name = h.get_element_by_id('page-title').text
+            iso_code = h.find_class('field-name-language-iso-link-to-sil-org')[0].find('div/div/a').text
+            num_speakers_field = h.find_class('field-name-field-population')[0].find('div/div/p').text
+            num_speakers = parse_num_speakers(num_speakers_field)
+            child_langs = map(lambda e:e.text[1:-1], h.find_class('field-name-field-comments')[0].findall('div/div/p/a'))
+            response = "{} ({}) is a macrolanguage with {} speakers and the following languages: {}. Src: {}".format(
+                name, iso_code, num_speakers, ', '.join(child_langs), url)
+        else:
+            name = h.get_element_by_id('page-title').text
+            iso_code = h.find_class('field-name-language-iso-link-to-sil-org')[0].find('div/div/a').text
+            where_spoken = h.find_class('field-name-a-language-of')[0].find('div/div/h2/a').text
+            where_spoken_cont = h.find_class('field-name-field-region')
+            if where_spoken_cont:
+                where_spoken_cont = where_spoken_cont[0].find('div/div/p').text[:100]
+                if len(where_spoken_cont) > 98:
+                    where_spoken_cont += '...'
+                where_spoken += ', ' + where_spoken_cont
+            if where_spoken[-1] != '.':
+                where_spoken += '.'
+            num_speakers_field = h.find_class('field-name-field-population')[0].find('div/div/p').text
+            num_speakers = parse_num_speakers(num_speakers_field)
+            language_status = h.find_class('field-name-language-status')[0].find('div/div/p').text.split('.')[0] + '.'
 
-        response = "{} ({}): spoken in {} {} speakers. Status: {} Src: {}".format(
-            name, iso_code, where_spoken, num_speakers, language_status, url)
+            response = "{} ({}): spoken in {} {} speakers. Status: {} Src: {}".format(
+                name, iso_code, where_spoken, num_speakers, language_status, url)
     elif len(iso) > 1:
         did_you_mean = ['{} ({})'.format(i, phenny.ethno_data[i]) for i in iso if len(i) == 3]
         response = "Try .iso639 for better results. Did you mean: " + ', '.join(did_you_mean) + "?"

@@ -105,7 +105,9 @@ def read_dict(filename):
     data = {}
     with open(filename, 'r', encoding="utf-8") as f:
         for line in f.readlines():
-            code, name = line.split('$')
+            if line == '\n':
+                continue
+            code, name = line.replace('\n', '').split('$')
             data[code] = name
     return data
 
@@ -132,7 +134,13 @@ def setup(phenny):
     ethno_setup(phenny) #populate ethnologue codes
     f = iso_filename(phenny)
     if os.path.exists(f):
-        phenny.iso_data = read_dict(f)
+        try:
+            phenny.iso_data = read_dict(f)
+        except ValueError:
+            print('iso database read failed, refreshing it')
+            phenny.iso_data = scrape_wiki_codes()
+            phenny.iso_data.update(phenny.ethno_data)
+            write_dict(f, phenny.iso_data)
     else:
         phenny.iso_data = scrape_wiki_codes()
         phenny.iso_data.update(phenny.ethno_data)

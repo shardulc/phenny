@@ -59,7 +59,9 @@ def wiki_response(info, lg):
 
 def wikicount(phenny, raw):
 	lg = raw.group(2).lower()
-	if lg in phenny.wiki_data:
+	if lg == "update":
+		return
+	elif lg in phenny.wiki_data:
 		info = phenny.wiki_data[lg]
 		response = wiki_response(info, lg)
 	elif lg in phenny.wiki_iso_3_map:
@@ -89,10 +91,22 @@ def wikicount(phenny, raw):
 wikicount.name = 'wikicount'
 wikicount.commands = ['wikicount']
 wikicount.example = '.wikicount en'
+wikicount.priority = 'low'
+
+def update_article_count(phenny, raw=None):
+	if raw is None or raw.admin:
+		phenny.wiki_data = scrape_incubator_list()
+		phenny.wiki_data.update(scrape_wiki_list())
+		if raw:
+			phenny.say('Wikipedia article counts successfully updated.')
+	else:
+		phenny.say('Only admins can execute that command!')
+
+update_article_count.name = 'wikicount_update'
+update_article_count.commands = ['wikicount update']
 
 def setup(phenny):
-	phenny.wiki_data = scrape_incubator_list()
-	phenny.wiki_data.update(scrape_wiki_list())
+	update_article_count(phenny)
 	phenny.wiki_iso_3_map = scrape_iso_3to1(phenny.wiki_data)
 	phenny.wiki_iso_3_map.update({
 		'sgs': 'bat-smg',
@@ -102,4 +116,4 @@ def setup(phenny):
 		'nan': 'zh-min-yan',
 		'lzh': 'zh-classical',
 		'be-tarask': 'be-x-old'
-		})
+	})

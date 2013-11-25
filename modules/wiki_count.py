@@ -51,7 +51,7 @@ def wiki_response(info, lg):
 	else:
 		url = 'http://incubator.wikimedia.org/wiki/Wp/' + lg
 		resp = urllib.request.urlopen('http://incubator.wikimedia.org/wiki/Template:Wp/{}/NUMBEROFARTICLES'.format(lg)).read()
-		num_articles = int(html.document_fromstring(resp).get_element_by_id('mw-content-text').find('p/a').text)
+		num_articles = int(html.document_fromstring(resp).get_element_by_id('mw-content-text').find('p/a').text.replace(',', ''))
 		response = 'The {} ({}) Wikipedia is incubated and has {:,} articles. {}'.format(
 			info[0], lg, num_articles, url)
 	return response

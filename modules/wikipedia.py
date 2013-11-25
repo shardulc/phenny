@@ -58,7 +58,8 @@ def wik(phenny, input):
         origterm = m.group(2)
         
     wikipedia(phenny, origterm, lang)
-wik.rule = r'\.wik\s(?:(.*))'
+#wik.rule = r'\.wik\s(?:(.*))'
+wik.commands = ['wik', 'wiki', 'wikipedia']
 wik.priority = 'high'
 
 if __name__ == '__main__': 

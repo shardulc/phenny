@@ -8,6 +8,7 @@ from xml.etree.ElementTree import parse as xmlparse
 from io import StringIO
 import time
 from tools import generate_report
+#from functions import generate_report
 
 global_revisions = None
 global_filename = None

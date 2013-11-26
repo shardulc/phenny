@@ -181,8 +181,10 @@ def gitserver(phenny, input):
 				httpd.shutdown()
 				httpd.socket.close()				
 				httpd = None
-			Handler = None
-			phenny.say("Server has stopped on port %s" % PORT)
+				Handler = None
+				phenny.say("Server has stopped on port %s" % PORT)
+			else:
+				phenny.say("Server is already down!")
 		if command=="start":
 			if httpd is None:
 				Handler = MyHandler
@@ -191,9 +193,35 @@ def gitserver(phenny, input):
 				httpd = socketserver.TCPServer(("", PORT), Handler)
 				phenny.say("Server is up and running on port %s" % PORT)
 				httpd.serve_forever()
-
+			else:
+				phenny.say("Server is already up!")
+		if command=="status":
+			if httpd is None:
+				if input.admin:
+					phenny.say("Server is down! Start using '.gitserver start'")
+				else:
+					phenny.say("Server is down! (only admin can start it)")
+			else:
+				if input.admin:
+					phenny.say("Server is up! Stop using '.gitserver stop'")
+				else:
+					phenny.say("Server is up and running (only admins can shut it down)")
 	else:
-		phenny.reply("Only admins control gitserver.")
+		if command=="status":
+			if httpd is None:
+				if input.admin:
+					phenny.say("Server is down! Start using '.gitserver start'")
+				else:
+					phenny.say("Server is down! (only admin can start it)")
+			else:
+				if input.admin:
+					phenny.say("Server is up! Stop using '.gitserver stop'")
+				else:
+					phenny.say("Server is up and running (only admins can shut it down)")
+		else:	
+			phenny.reply("Only admins control gitserver.")
+
+
 gitserver.name = "gitserver"
 gitserver.rule = ('.gitserver', '(.*)')
 

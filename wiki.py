@@ -53,5 +53,5 @@ class Wiki(object):
         term = result[0]['title']
         term = term.replace(' ', '_')
         snippet = self.text(result[0]['snippet'])
-        return "{0} - {1}".format(snippet, self.url.format(term))
+        return "{0}|{1}".format(snippet, self.url.format(term))
 

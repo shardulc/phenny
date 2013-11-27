@@ -113,7 +113,7 @@ def setup(phenny):
 		'roa': 'nrm',
 		'vro': 'fiu-vro',
 		'yue': 'zh-yue',
-		'nan': 'zh-min-yan',
+		'nan': 'zh-min-nan',
 		'lzh': 'zh-classical',
 		'be-tarask': 'be-x-old'
 	})

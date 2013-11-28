@@ -15,12 +15,12 @@ class TestWiktionary(unittest.TestCase):
         self.phenny = MagicMock()
 
     def test_wiktionary(self):
-        w = wiktionary.wiktionary('test')
+        w = wiktionary.wiktionary(self.phenny, 'test')
 
         assert len(w[1]) > 0
 
     def test_wiktionary_none(self):
-        w = wiktionary.wiktionary('Hell!')
+        w = wiktionary.wiktionary(self.phenny, 'Hell!')
 
         assert len(w[0]) == 0
         assert len(w[1]) == 0

@@ -9,9 +9,7 @@ Licensed under the Eiffel Forum License 2.
 from tools import GrumbleError
 import re
 import web
-import html.parser
 
-h = html.parser.HTMLParser()
 uri = 'http://www.sloganizer.net/en/outbound.php?slogan=%s'
 
 def sloganize(word): 
@@ -19,7 +17,8 @@ def sloganize(word):
     return bytes
 
 def slogan(phenny, input): 
-    """Sloganize a word."""
+    """.slogan <term> - Come up with a slogan for a term."""
+
     word = input.group(2)
     if word is None:
         phenny.say("You need to specify a word; try .slogan Granola")
@@ -34,7 +33,6 @@ def slogan(phenny, input):
     
     if not slogan:
         raise GrumbleError("Looks like an issue with sloganizer.net")
-    slogan = html.parser.HTMLParser().unescape(slogan)
     phenny.say(slogan)
 slogan.commands = ['slogan']
 slogan.example = '.slogan Granola'

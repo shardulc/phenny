@@ -1,0 +1,4 @@
+lxml
+mock
+nose
+requests

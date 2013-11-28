@@ -111,7 +111,7 @@ def gettitle(phenny, uri):
     parts = uri.split(".")
     start = parts[0]
     parts.pop(0)
-    uri = start + "." + urllib.parse.quote('.'.join(parts))
+    uri = start + "." + web.quote('.'.join(parts))
     
     title = None
     localhost = [

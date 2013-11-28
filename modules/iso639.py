@@ -9,7 +9,7 @@ import random
 from modules.ethnologue import setup as ethno_setup
 from modules.ethnologue import write_ethnologue_codes
 from lxml import html
-import urllib.request
+import web
 import os
 import threading
 
@@ -63,7 +63,7 @@ def scrape_wiki_codes():
     data = {}
     base_url = 'http://en.wikipedia.org/wiki/List_of_ISO_639'
     #639-1
-    resp = urllib.request.urlopen(base_url + '-1_codes').read()
+    resp = web.get(base_url + '-1_codes')
     h = html.document_fromstring(resp)
     table = h.find_class('wikitable')[0]
     for row in table.findall('tr')[1:]:
@@ -71,7 +71,7 @@ def scrape_wiki_codes():
         code = row.findall('td')[4].text
         data[code] = name
     #639-2
-    resp = urllib.request.urlopen(base_url + '-2_codes').read()
+    resp = web.get(base_url + '-2_codes')
     h = html.document_fromstring(resp)
     table = h.find_class('wikitable')[0]
     for row in table.findall('tr')[1:]:

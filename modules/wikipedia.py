@@ -7,7 +7,7 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import re, urllib.request, urllib.parse, urllib.error, gzip, io, wiki
+import re, urllib.parse, wiki
 from lxml import etree
 import lxml.html
 import lxml.html.clean
@@ -21,14 +21,14 @@ wikisearch = 'https://%s.wikipedia.org/wiki/Special:Search?' \
 langs = ['ar', 'bg', 'ca', 'cs', 'da', 'de', 'en', 'es', 'eo', 'eu', 'fa', 'fr', 'ko', 'hi', 'hr', 'id', 'it', 'he', 'lt', 'hu', 'ms', 'nl', 'ja', 'no', 'pl', 'pt', 'kk', 'ro', 'ru', 'sk', 'sl', 'sr', 'fi', 'sv', 'tr', 'uk', 'vi', 'vo', 'war', 'zh']
 
 def format_term(term):
-    term = urllib.parse.unquote(term)
-    term = urllib.parse.quote(term)
+    term = web.unquote(term)
+    term = web.quote(term)
     term = term[0].upper() + term[1:]
     term = term.replace(' ', '_')
     return term
 
 def format_term_display(term):
-   term = urllib.parse.unquote(term)
+   term = web.unquote(term)
    term = term[0].upper() + term[1:]
    term = term.replace(' ', '_')
    return term
@@ -42,7 +42,7 @@ def format_subsection(section):
 
 def parse_wiki_page(url, term, section = None):
     try:
-        web_url = urllib.parse.quote(url).replace("%3A", ":", 1)
+        web_url = web.quote(url).replace("%3A", ":", 1)
         html = str(web.get(web_url))
     except:
         return "A wiki page does not exist for that term."

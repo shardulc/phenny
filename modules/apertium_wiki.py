@@ -3,7 +3,6 @@
 apertium_wiki.py - Phenny Wikipedia Module
 """
 
-import re, urllib.request, urllib.parse, urllib.error, gzip, io
 import web
 from lxml import etree
 import lxml.html
@@ -12,20 +11,20 @@ import lxml.html.clean
 wikiuri = 'http://wiki.apertium.org/wiki/%s'
 
 def format_term(term):
-   term = urllib.parse.quote(term)
+   term = web.quote(term)
    term = term[0].upper() + term[1:]
    term = term.replace(' ', '_')
    return term
    
 def format_term_display(term):
-   term = urllib.parse.unquote(term)
+   term = web.unquote(term)
    term = term[0].upper() + term[1:]
    term = term.replace(' ', '_')
    return term
 
 def format_subsection(section):
    section = section.replace(' ', '_')
-   section = urllib.parse.quote(section)
+   section = web.quote(section)
    section = section.replace('%', '.')
    return section
 

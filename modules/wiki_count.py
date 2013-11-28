@@ -4,12 +4,12 @@ author: mattr555
 """
 
 from lxml import html
-import urllib.request
+import web
 
 def scrape_wiki_list():
 	data = {}
 	url = 'http://meta.wikimedia.org/wiki/List_of_Wikipedias'
-	resp = urllib.request.urlopen(url).read()
+	resp = web.get(url)
 	h = html.document_fromstring(resp)
 	for e in h.find_class('sortable'):
 		for row in e.findall('tr')[1:]:
@@ -22,7 +22,7 @@ def scrape_wiki_list():
 def scrape_incubator_list():
 	data = {}
 	url = 'http://incubator.wikimedia.org/wiki/Template:Tests/wp'
-	resp = urllib.request.urlopen(url).read()
+	resp = web.get(url)
 	h = html.document_fromstring(resp)
 	for row in h.find_class('wikitable')[0].findall('tr')[2:]:
 		raw_name = row.findall('td')[0].find('a/b').text
@@ -33,7 +33,7 @@ def scrape_incubator_list():
 
 def scrape_iso_3to1(d):
 	mapping = {}
-	resp = urllib.request.urlopen('http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes').read()
+	resp = web.get('http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes')
 	h = html.document_fromstring(resp)
 	table = h.find_class('wikitable')[0]
 	for row in table.findall('tr')[1:]:
@@ -50,7 +50,7 @@ def wiki_response(info, lg):
 			info[0], lg, info[1], url)
 	else:
 		url = 'http://incubator.wikimedia.org/wiki/Wp/' + lg
-		resp = urllib.request.urlopen('http://incubator.wikimedia.org/wiki/Template:Wp/{}/NUMBEROFARTICLES'.format(lg)).read()
+		resp = web.get('http://incubator.wikimedia.org/wiki/Template:Wp/{}/NUMBEROFARTICLES'.format(lg))
 		num_articles = int(html.document_fromstring(resp).get_element_by_id('mw-content-text').find('p/a').text.replace(',', ''))
 		response = 'The {} ({}) Wikipedia is incubated and has {:,} articles. {}'.format(
 			info[0], lg, num_articles, url)

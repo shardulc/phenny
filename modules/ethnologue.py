@@ -6,10 +6,9 @@ author: mattr555
 
 #from modules.iso639 import ISOcodes
 from lxml import html
-import urllib.request
-from urllib.error import HTTPError
 from string import ascii_lowercase
 import os
+import web
 
 def shorten_num(n):
     if n < 1000:
@@ -23,7 +22,7 @@ def scrape_ethnologue_codes():
     data = {}
     base_url = 'http://www.ethnologue.com/browse/codes/'
     for letter in ascii_lowercase:
-        resp = urllib.request.urlopen(base_url + letter).read()
+        resp = web.get(base_url + letter)
         h = html.document_fromstring(resp)
         for e in h.find_class('views-field-field-iso-639-3'):
             code = e.find('div/a').text
@@ -87,8 +86,8 @@ def ethnologue(phenny, input):
     if len(iso) == 1:
         url = "http://www.ethnologue.com/language/" + iso[0]
         try:
-            resp = urllib.request.urlopen(url).read()
-        except HTTPError as e:
+            resp = web.get(url)
+        except web.HTTPError as e:
             phenny.say('Oh noes! Ethnologue responded with ' + str(e.code) + ' ' + e.msg)
             return
         h = html.document_fromstring(resp)

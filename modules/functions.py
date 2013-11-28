@@ -6,7 +6,7 @@ Globally accessible functions!
 
 import os
 import re
-import urllib.request, urllib.parse, urllib.error, json
+import json
 import web
 from tools import GrumbleError
 
@@ -60,8 +60,8 @@ def get_page(domain, url, encoding='utf-8'): #get the HTML of a webpage.
 	return res.read().decode(encoding)
 
 def translate(translate_me, input_lang, output_lang='en'): 
-	input_lang, output_lang = urllib.parse.quote(input_lang), urllib.parse.quote(output_lang)
-	translate_me = urllib.parse.quote(translate_me)
+	input_lang, output_lang = web.quote(input_lang), web.quote(output_lang)
+	translate_me = web.quote(translate_me)
 	
 	response = get_page('api.apertium.org', '/json/translate?q=%s&langpair=%s|%s' % (translate_me, input_lang, output_lang))
 	

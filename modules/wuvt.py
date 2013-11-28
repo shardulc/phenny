@@ -6,7 +6,6 @@ Copyright 2012, Randy Nance, randynance.info
 http://github.com/randynobx/phenny/
 """
 
-from urllib.error import URLError, HTTPError
 from tools import GrumbleError
 import re
 import web
@@ -15,12 +14,13 @@ re.MULTILINE
 r_play = re.compile(r'^(.*?) - (.*?)$')
 r_dj = re.compile(r'Current DJ: </span>\n(.+?)<')
 
-def wuvt(phenny, input) :
-    """Find out what radio station WUVT is currently playing."""
+def wuvt(phenny, input):
+    """.wuvt - Find out what is currently playing on the radio station WUVT."""
+
     try:
         playing = web.get('http://www.wuvt.vt.edu/playlists/latest_track.php')
         djpage = web.get('http://www.wuvt.vt.edu/playlists/current_dj.php')
-    except (URLError, HTTPError):
+    except:
         raise GrumbleError('Cannot connect to wuvt')
     play= r_play.search(playing)
     song = play.group(2)
@@ -32,5 +32,4 @@ def wuvt(phenny, input) :
                 .format(dj.strip(), song.strip(), artist.strip()))
     else:
         phenny.reply('Cannot connect to wuvt')
-wuvt.example = '.wuvt'
 wuvt.commands = ['wuvt']

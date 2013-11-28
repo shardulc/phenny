@@ -8,20 +8,12 @@ http://inamidst.com/phenny/
 """
 
 import re
-import urllib.request
 import urllib.parse
-import urllib.error
-import http.client
-import http.cookiejar
 import time
 from html.entities import name2codepoint
 import web
 from tools import deprecated
 from modules.linx import get_title as linx_gettitle
-
-cj = http.cookiejar.LWPCookieJar()
-opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
-urllib.request.install_opener(opener)
 
 
 def head(phenny, input):
@@ -47,11 +39,12 @@ def head(phenny, input):
     try:
         info = web.head(uri)
         info['status'] = '200'
-    except urllib.error.HTTPError as e:
-        return phenny.say(str(e.code))
-    except http.client.InvalidURL:
-        return phenny.say("Not a valid URI, sorry.")
-    except IOError:
+    except web.HTTPError as e:
+        if hasattr(e, 'code'):
+            return phenny.say(str(e.code))
+        else:
+            return phenny.say(str(e.response.status_code))
+    except web.ConnectionError:
         return phenny.say("Can't connect to %s" % uri)
 
     resptime = time.time() - start
@@ -164,7 +157,7 @@ def gettitle(phenny, uri):
         #bytes = u.read(262144)
         #u.close()
 
-    except IOError:
+    except web.ConnectionError:
         return
 
     m = r_title.search(bytes)

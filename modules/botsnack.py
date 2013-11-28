@@ -36,7 +36,8 @@ def decrease_hunger(current_hunger, food_value):
         return current_hunger + food_value
 
 def botsnack(phenny, input):
-    """reward me for being good"""
+    """.botsnack - Feed me a bot snack."""
+
     now = time.time()
 
     # 0. Handle cooldown.

@@ -98,8 +98,8 @@ def wikipedia(phenny, origterm, lang):
 
     try:
         result = w.search(term)
-    except IOError: 
-        error = ("Can't connect to %s.wikipedia.org ({0})" % lang).format((wikiuri % lang).format(urllib.parse.unquote(term)))
+    except web.ConnectionError:
+        error = "Can't connect to en.wikipedia.org ({0})".format(wikiuri.format(term))
         return phenny.say(error)
 
     if result is not None: 

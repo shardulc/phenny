@@ -4,7 +4,7 @@
 apertium_translate.py - Phenny Translation Module
 """
 
-import re, urllib.request, urllib.parse, urllib.error, json
+import re, urllib.request, json
 import web
 from tools import GrumbleError, translate
 
@@ -21,8 +21,8 @@ def translate(translate_me, input_lang, output_lang='en'):
    opener = urllib.request.build_opener()
    opener.addheaders = headers
 
-   input_lang, output_lang = urllib.parse.quote(input_lang), urllib.parse.quote(output_lang)
-   translate_me = urllib.parse.quote(translate_me)
+   input_lang, output_lang = web.quote(input_lang), web.quote(output_lang)
+   translate_me = web.quote(translate_me)
 
    response = opener.open('http://api.apertium.org/json/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
 

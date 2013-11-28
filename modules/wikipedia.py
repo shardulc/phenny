@@ -115,7 +115,7 @@ def wik(phenny, input):
     origterm = input.group(3)
     lang = "en"
     
-    m = re.match(r'\.(wik|wiki|wikipedia)\.([a-z]{2,3})(?: +(.*))', input.group(0))
+    m = re.match(r'\.(wik|wiki|wikipedia)\.([a-z]{2,3})(?: +(.*))', str(input))
     if m:
         lang = m.group(2)
         origterm = m.group(3)

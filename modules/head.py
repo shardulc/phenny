@@ -10,6 +10,7 @@ http://inamidst.com/phenny/
 import re
 import urllib.parse
 import time
+import requests
 from html.entities import name2codepoint
 import web
 from tools import deprecated
@@ -124,13 +125,17 @@ def gettitle(phenny, uri):
     try:
         redirects = 0
         while True:
-            info = web.head(uri)
+            try:
+                info = web.head(uri)
 
-            if not isinstance(info, list):
-                status = '200'
-            else:
-                status = str(info[1])
-                info = info[0]
+                if not isinstance(info, list):
+                    status = '200'
+                else:
+                    status = str(info[1])
+                    info = info[0]
+            except web.HTTPError:
+                info = requests.get(uri, headers=web.default_headers, verify=True)
+                status = str(info.status_code)
             if status.startswith('3'):
                 uri = urllib.parse.urljoin(uri, info['Location'])
             else:

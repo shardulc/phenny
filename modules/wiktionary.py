@@ -10,8 +10,9 @@ http://inamidst.com/phenny/
 import re
 import web
 import json
+import re, urllib.request, urllib.parse, urllib.error
 
-uri = 'http://en.wiktionary.org/w/index.php?title=%s&printable=yes'
+uri = 'http://en.wiktionary.org/wiki/{0}?printable=yes'
 wikiapi = 'http://en.wiktionary.org/w/api.php?action=query&titles={0}&prop=revisions&rvprop=content&format=json'
 #r_tag = re.compile(r'<[^>]+>')
 r_ul = re.compile(r'(?ims)<ul>.*?</ul>')
@@ -22,6 +23,7 @@ r_link2 = re.compile(r'\[\[([A-Za-z0-9\-_ ]+?)\|(.+?)\]\]')
 r_context = re.compile(r'{{context\|(.+?)}}')
 r_template1 = re.compile(r'{{.+?\|(.+?)}}')
 r_template2 = re.compile(r'{{(.+?)}}')
+r_sqrbracket = re.compile(r'\[.+?\]')
 
 def text(html): 
     text = r_li.sub('', html).strip()
@@ -31,9 +33,11 @@ def text(html):
     text = r_context.sub(r'\1:', text)
     text = r_template1.sub(r'\1:', text)
     text = r_template2.sub(r'\1:', text)
+    text = text.replace("en|", '')
+    text = r_sqrbracket.sub('', text)
     return text
 
-def wiktionary(word): 
+def wiktionary(phenny, word): 
     bytes = web.get(wikiapi.format(web.quote(word)))
     pages = json.loads(bytes)
     pages = pages['query']['pages']
@@ -50,31 +54,73 @@ def wiktionary(word):
     for line in result.splitlines(): 
         if line == '===Etymology===':
             mode = 'etymology'
-        elif 'Noun' in line: 
+        elif '=Noun=' in line: 
             mode = 'noun'
-        elif 'Verb' in line: 
+        elif '=Verb=' in line: 
             mode = 'verb'
-        elif 'Adjective' in line: 
+        elif '=Adjective=' in line: 
             mode = 'adjective'
-        elif 'Adverb' in line: 
+        elif '=Adverb=' in line: 
             mode = 'adverb'
-        elif 'Interjection' in line: 
+        elif '=Interjection=' in line: 
             mode = 'interjection'
-        elif 'Particle' in line: 
+        elif '=Particle=' in line: 
             mode = 'particle'
-        elif 'Preposition' in line: 
+        elif '=Preposition=' in line: 
             mode = 'preposition'
-        elif len(line) == 0:
-            mode = None
-
         elif mode == 'etymology':
             etymology = text(line)
-        elif mode is not None and '#' in line:
+        
+        if mode is not None and "#" in line and "#:" not in line:
             definitions.setdefault(mode, []).append(text(line))
 
         if '====Synonyms====' in line: 
             break
+
     return etymology, definitions
+    
+def get_between(strSource, strStart, strEnd): #get first string between 2 other strings
+    try:
+        parse = strSource.split(strStart, 2)[1]
+        parse = parse[:parse.find(strEnd)]
+    except:
+        parse = None
+    return parse 
+
+def get_between_all(strSource, strStart, strEnd): #get all the strings between the 2 strings
+    list = []
+    start = 0
+    word = get_between(strSource, strStart, strEnd)
+    while (word != None):
+        list.append(word)
+        start = strSource.find("".join((strStart, word, strEnd)))
+        strSource = strSource[start+len("".join((strStart, word, strEnd))):]
+        word = get_between(strSource, strStart, strEnd)
+    return list
+
+def etymology(phenny, word):
+    ety_value = None
+    try:
+        opener = urllib.request.build_opener()
+        opener.addheaders = [('User-agent', 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.52 Safari/537.17')]
+        bytes = opener.open(uri.format(web.quote(word)))
+        html = bytes.read().decode('utf-8')
+        ety_value = get_between_all(html, '">Etymology</span></h3>', '</p>')
+        ety_value = " ".join(ety_value)
+        ety_value = re.compile(r'<[^<]*?/?>').sub('', ety_value)
+        ety_value = ety_value.replace('&#160;', '')
+        ety_value = ety_value.replace('From ', '← ')
+        ety_value = ety_value.replace(', from', ' ←')
+        ety_value = ety_value.replace('from ', '← ')
+        ety_value = word + ": " + ety_value.replace(".", '') + "."
+        ety_value = r_sqrbracket.sub('', ety_value)
+        
+        if len(ety_value) > 300:
+            ety_value = ety_value[:295] + " [...]"
+    except:
+        ety_value = None
+    return ety_value
+
 
 parts = ('preposition', 'particle', 'noun', 'verb', 
     'adjective', 'adverb', 'interjection')
@@ -90,12 +136,11 @@ def format(word, definitions, number=2):
     return result.strip(' .,')
 
 def w(phenny, input): 
-    """.w <word> - Get the definition of a word from wiktionary."""
-
+    """Look up a word on Wiktionary."""
     if not input.group(2):
         return phenny.reply("Nothing to define.")
     word = input.group(2)
-    etymology, definitions = wiktionary(word)
+    etymology, definitions = wiktionary(phenny, word)
     if not definitions: 
         phenny.say("Couldn't get any definitions for %s." % word)
         return
@@ -105,12 +150,28 @@ def w(phenny, input):
         result = format(word, definitions, 3)
     if len(result) < 150: 
         result = format(word, definitions, 5)
+        
+    result = result.replace('|_|', ' ').replace('|', ' ')
 
     if len(result) > 300: 
         result = result[:295] + '[...]'
     phenny.say(result)
 w.commands = ['w']
 w.example = '.w bailiwick'
+
+def ety(phenny, input): 
+    """Find the etymology of a word."""
+    if not input.group(2):
+        return phenny.reply("Nothing to define.")
+    word = input.group(2)
+    ety_val = ''
+    ety_val = etymology(phenny, word)
+    if not ety_val or ety_val == word + ' .': 
+        phenny.say("Couldn't get any etymology for %s." % word)
+        return
+    phenny.say(text(ety_val))
+ety.commands = ['ety']
+ety.example = '.ety bailiwick'
 
 if __name__ == '__main__': 
     print(__doc__.strip())

@@ -163,7 +163,10 @@ def gettitle(phenny, uri):
         if not (('/html' in mtype) or ('/xhtml' in mtype)):
             return None
 
-        bytes = web.get(uri)
+        try:
+            bytes = web.get(uri)
+        except web.HTTPError:
+            return None
         #bytes = u.read(262144)
         #u.close()
 

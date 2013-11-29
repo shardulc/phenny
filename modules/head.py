@@ -134,9 +134,13 @@ def gettitle(phenny, uri):
                     status = str(info[1])
                     info = info[0]
             except web.HTTPError:
-                info = requests.get(uri, headers=web.default_headers, verify=True)
-                status = str(info.status_code)
-                info = info.headers
+                try:
+                    info = requests.get(uri, headers=web.default_headers, verify=True)
+                    status = str(info.status_code)
+                    info = info.headers
+                except web.HTTPError:
+                    return None
+                    
             if status.startswith('3'):
                 uri = urllib.parse.urljoin(uri, info['Location'])
             else:

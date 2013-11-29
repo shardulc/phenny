@@ -10,11 +10,20 @@ from modules import wikipedia
 
 
 class TestWikipedia(unittest.TestCase):
+    def makegroup(*args):
+        args2 = [] + list(args)
+        def group(x):
+            if x > 0 and x <= len(args2):
+                return args2[x - 1]
+            else:
+                return None
+        return group
+
     def setUp(self):
         self.phenny = MagicMock()
 
     def test_wik(self):
-        input = Mock(groups=lambda: ['', "Human back"])
+        input = Mock(group=self.makegroup('', 'Human back'))
         wikipedia.wik(self.phenny, input)
 
         out = self.phenny.say.call_args[0][0]
@@ -22,17 +31,19 @@ class TestWikipedia(unittest.TestCase):
                 out, flags=re.UNICODE)
         self.assertTrue(m)
 
-    def test_wik_invalid(self):
+    def test_wik_fragment(self):
         term = "New York City#Climate"
-        input = Mock(groups=lambda: ['', term])
+        input = Mock(group=self.makegroup('', term))
         wikipedia.wik(self.phenny, input)
 
-        self.phenny.say.assert_called_once_with( "Can't find anything in "\
-                "Wikipedia for \"{0}\".".format(term))
+        out = self.phenny.say.call_args[0][0]
+        m = re.match('^.* - https:\/\/en\.wikipedia\.org\/wiki\/New_York_City#Climate$',
+                out, flags=re.UNICODE)
+        self.assertTrue(m)
 
     def test_wik_none(self):
         term = "Ajgoajh"
-        input = Mock(groups=lambda: ['', term])
+        input = Mock(group=self.makegroup('', term))
         wikipedia.wik(self.phenny, input)
 
         self.phenny.say.assert_called_once_with( "Can't find anything in "\

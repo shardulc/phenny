@@ -47,6 +47,16 @@ def c(phenny, input):
 c.commands = ['c']
 c.example = '.c 5 + 3'
 
+def py(phenny, input): 
+    """evaluates a python2 expression via a remote sandbox"""
+    query = input.group(2).encode('utf-8')
+    uri = 'http://tumbolia.appspot.com/py/'
+    answer = web.get(uri + web.quote(query))
+    if answer: 
+        phenny.say(answer)
+    else: phenny.reply('Sorry, no result.')
+py.commands = ['py']
+py.example = '.py if not False: print "hello world!"'
 
 def wa(phenny, input):
     if not input.group(2):

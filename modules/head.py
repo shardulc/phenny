@@ -160,7 +160,7 @@ def gettitle(phenny, uri):
 
         try:
             bytes = web.get(uri)
-        except web.HTTPError:
+        except:
             return None
         #bytes = u.read(262144)
         #u.close()

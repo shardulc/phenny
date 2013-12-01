@@ -31,7 +31,7 @@ def setup(phenny):
 
 def search_queue(queue, query):
     for i in range(len(queue)):
-        if query in queue[i]:
+        if query.lower() in queue[i].lower():
             index = int(i)
             break
     return index
@@ -43,7 +43,7 @@ def print_queue(queue_name, queue):
 def queue(phenny, raw):
     """.queue- queue management."""
     if raw.group(1):
-        command = raw.group(1)
+        command = raw.group(1).lower()
         if command == 'display':
             queue_name = raw.group(2)
             if queue_name in phenny.queue_data:
@@ -75,7 +75,7 @@ def queue(phenny, raw):
             queue_name = raw.group(1)
             queue = phenny.queue_data[queue_name]
             if raw.group(2):
-                command = raw.group(2)
+                command = raw.group(2).lower()
                 if queue['owner'] == raw.nick:
                     if command == 'add':
                         if raw.group(3):
@@ -106,7 +106,7 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> swap <index/item1>, <index/item2>')
-                    elif command in ('delete', 'remove'):
+                    elif command == 'remove':
                         if raw.group(3):
                             item = raw.group(3)
                             if item in queue['queue']:

@@ -43,8 +43,8 @@ def print_queue(queue_name, queue):
 def queue(phenny, raw):
     """.queue- queue management."""
     if raw.group(1):
-        command = raw.group(1).lower()
-        if command == 'display':
+        command = raw.group(1)
+        if command.lower() == 'display':
             queue_name = raw.group(2)
             if queue_name in phenny.queue_data:
                 queue = phenny.queue_data[queue_name]
@@ -52,7 +52,7 @@ def queue(phenny, raw):
             else:
                 phenny.reply('That queue wasn\'t found.')
 
-        elif command == 'new':
+        elif command.lower() == 'new':
             if raw.group(2):
                 queue_name = raw.group(2)
                 owner = raw.nick

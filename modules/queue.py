@@ -133,6 +133,10 @@ def queue(phenny, raw):
                                 phenny.reply('{} not found in {}'.format(item, queue_name))
                         else:
                             phenny.reply('Syntax: .queue <name> remove <item>')
+                    elif command == 'pop':
+                        queue['queue'].pop(0)
+                        write_dict(filename(phenny), phenny.queue_data)
+                        phenny.reply(print_queue(queue_name, queue))
                 else:
                     phenny.reply('You aren\'t the owner of this queue!')
             else:

@@ -56,17 +56,20 @@ def queue(phenny, raw):
             if raw.group(2):
                 queue_name = raw.group(2)
                 owner = raw.nick
-                if raw.group(3):
-                    queue = raw.group(3).split(',')
-                    queue = list(map(lambda x: x.strip(), queue))
-                    phenny.queue_data[queue_name] = {'owner': owner, 'queue': queue}
-                    write_dict(filename(phenny), phenny.queue_data)
-                    phenny.reply('Queue {} with items {} created.'.format(
-                        queue_name, ', '.join(queue)))
+                if queue_name not in phenny.queue_data:
+                    if raw.group(3):
+                        queue = raw.group(3).split(',')
+                        queue = list(map(lambda x: x.strip(), queue))
+                        phenny.queue_data[queue_name] = {'owner': owner, 'queue': queue}
+                        write_dict(filename(phenny), phenny.queue_data)
+                        phenny.reply('Queue {} with items {} created.'.format(
+                            queue_name, ', '.join(queue)))
+                    else:
+                        phenny.queue_data[queue_name] = {'owner': owner, 'queue': []}
+                        write_dict(filename(phenny), phenny.queue_data)
+                        phenny.reply('Empty queue {} created.'.format(queue_name))
                 else:
-                    phenny.queue_data[queue_name] = {'owner': owner, 'queue': []}
-                    write_dict(filename(phenny), phenny.queue_data)
-                    phenny.reply('Empty queue {} created.'.format(queue_name))
+                    phenny.reply('A queue with that name already exists. Pick a new name.')
             else:
                 phenny.reply('Syntax: .queue new <name> <item1>, <item2> ...')
 
@@ -88,7 +91,7 @@ def queue(phenny, raw):
             queue = phenny.queue_data[queue_name]
             if raw.group(2):
                 command = raw.group(2).lower()
-                if queue['owner'] == raw.nick:
+                if queue['owner'] == raw.nick or raw.admin:
                     if command == 'add':
                         if raw.group(3):
                             new_queue = raw.group(3).split(',')

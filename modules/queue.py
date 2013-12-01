@@ -6,6 +6,8 @@ author: mattr555
 import os
 import pickle
 
+commands = '.queue display, .queue new, .queue <name> add, .queue <name> swap, .queue <name> remove'
+
 def filename(phenny):
     name = phenny.nick + '-' + phenny.config.host + '.queue.db'
     return os.path.join(os.path.expanduser('~/.phenny'), name)
@@ -34,6 +36,10 @@ def search_queue(queue, query):
             break
     return index
 
+def print_queue(queue_name, queue):
+    return '[{}] (by {}): {}'.format(
+        queue_name, queue['owner'], ', '.join(queue['queue']) if queue['queue'] else '<empty>')
+
 def queue(phenny, raw):
     """.queue- queue management."""
     if raw.group(1):
@@ -42,8 +48,7 @@ def queue(phenny, raw):
             queue_name = raw.group(2)
             if queue_name in phenny.queue_data:
                 queue = phenny.queue_data[queue_name]
-                phenny.reply('{} queue by {}: {}'.format(
-                    queue_name, queue['owner'], ', '.join(queue['queue']) if queue['queue'] else '<empty>'))
+                phenny.reply(print_queue(queue_name, queue))
             else:
                 phenny.reply('That queue wasn\'t found.')
 
@@ -78,8 +83,7 @@ def queue(phenny, raw):
                             new_queue = list(map(lambda x: x.strip(), new_queue))
                             queue['queue'] += new_queue
                             write_dict(filename(phenny), phenny.queue_data)
-                            phenny.reply('{} queue by {}: {}'.format(
-                                queue_name, queue['owner'], ', '.join(queue['queue'])))
+                            phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> add <item1>, <item2> ...')
                     elif command == 'swap':
@@ -99,8 +103,7 @@ def queue(phenny, raw):
                                     return
                             queue['queue'][id1], queue['queue'][id2] = queue['queue'][id2], queue['queue'][id1]
                             write_dict(filename(phenny), phenny.queue_data)
-                            phenny.reply('{} queue by {}: {}'.format(
-                                queue_name, queue['owner'], ', '.join(queue['queue'])))
+                            phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> swap <index/item1>, <index/item2>')
                     elif command in ('delete', 'remove'):
@@ -108,12 +111,12 @@ def queue(phenny, raw):
                             item = raw.group(3)
                             if item in queue['queue']:
                                 queue['queue'].remove(item)
-                                phenny.reply('{} queue by {}: {}'.format(
-                                    queue_name, queue['owner'], ', '.join(queue['queue'])))
+                                write_dict(filename(phenny), phenny.queue_data)
+                                phenny.reply(print_queue(queue_name, queue))
                             elif search_queue(queue['queue'], item):
                                 queue['queue'].pop(search_queue(queue['queue'], item))
-                                phenny.reply('{} queue by {}: {}'.format(
-                                    queue_name, queue['owner'], ', '.join(queue['queue'])))
+                                write_dict(filename(phenny), phenny.queue_data)
+                                phenny.reply(print_queue(queue_name, queue))
                             else:
                                 phenny.reply('{} not found in {}'.format(item, queue_name))
                         else:
@@ -121,14 +124,13 @@ def queue(phenny, raw):
                 else:
                     phenny.reply('You aren\'t the owner of this queue!')
             else:
-                phenny.reply('{} queue by {}: {}'.format(
-                    queue_name, queue['owner'], ', '.join(queue['queue']) if queue['queue'] else '<empty>'))
+                phenny.reply(print_queue(queue_name, queue))
         else:
             if raw.group(3):
-                phenny.reply('That\'s not a command. Commands: .queue display, .queue new, .queue <name> add, .queue <name> swap')
+                phenny.reply('That\'s not a command. Commands: ' + commands)
             else:
                 phenny.reply('That queue wasn\'t found!')
     else:
-        phenny.reply('Commands: .queue display, .queue new, .queue <name> add, .queue <name> swap')
+        phenny.reply('Commands: ' + commands)
 
 queue.rule = r'\.queue(?:\s(\w+))?(?:\s(\w+))?(?:\s(.*))?'

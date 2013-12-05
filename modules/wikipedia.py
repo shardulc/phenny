@@ -59,14 +59,9 @@ def parse_wiki_page(url, term, section = None):
             text = text.getnext()
         url += "#" + format_term_display(section)
     else:
-        #Get first 3 paragraphs and find the one most
-        #likely to actually contain text.
+        #Get first paragraph
 
-        texts = page.findall('.//p')[:4]
-        if len(texts) == 0:
-            return "Unable to find content. Search may be too broad."
-        texts.sort(key=len, reverse=True)
-        text = texts[0]
+        text = page.get_element_by_id('mw-content-text').find('p')
 
     sentences = text.text_content().split(". ")   
     sentence = '"' + sentences[0] + '"'

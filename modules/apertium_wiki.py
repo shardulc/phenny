@@ -60,12 +60,12 @@ def awik(phenny, input):
       else:
         text = page.findall(".//*[@id='mw-content-text']")[0]
 
-   sentences = text.text_content().split(". ")   
+   sentences = text.text_content().split(". ")
    sentence = '"' + sentences[0] + '"'
-   
-   maxlength = 430 - len(' - ' + wikiuri % (format_term_display(term)))
+ 
+   maxlength = 430 - len((' - ' + wikiuri % (format_term_display(term))).encode('utf-8'))
    if len(sentence.encode('utf-8')) > maxlength: 
-      sentence = sentence[:maxlength]
+      sentence = sentence.encode('utf-8')[:maxlength].decode('utf-8', 'ignore')
       words = sentence[:-5].split(' ')
       words.pop()
       sentence = ' '.join(words) + ' [...]'

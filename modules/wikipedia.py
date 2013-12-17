@@ -66,9 +66,9 @@ def parse_wiki_page(url, term, section = None):
     sentences = text.text_content().split(". ")   
     sentence = '"' + sentences[0] + '"'
 
-    maxlength = 440 - len(' - ' + url)
+    maxlength = 430 - len((' - ' + url).encode('utf-8'))
     if len(sentence.encode('utf-8')) > maxlength: 
-        sentence = sentence[:maxlength]
+        sentence = sentence.encode('utf-8')[:maxlength].decode('utf-8', 'ignore')
         words = sentence[:-5].split(' ')
         words.pop()
         sentence = ' '.join(words) + ' [...]'

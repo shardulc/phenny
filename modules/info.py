@@ -15,12 +15,12 @@ def help(phenny, input):
     if hasattr(phenny.config, 'helpurl'):
         helpurl = phenny.config.helpurl
     else:
-        helpurl = "https://vtluug.org/wiki/Wadsworth"
+        helpurl = "http://wiki.apertium.org/wiki/Begiak"
 
     if input.sender.startswith('#'):
         # channels get a brief message instead
         phenny.say(
-            "Hey there, I'm a friendly bot for this channel. Say \".help\" "
+            "Hey there, I'm a friendly bot for #apertium. Say \".help\" "
             "to me in private for a list of my commands or check out my help "
             "page at {helpurl}.".format(
             helpurl=helpurl,

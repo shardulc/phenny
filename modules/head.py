@@ -122,6 +122,7 @@ def gettitle(phenny, uri):
         'https://localhost/', 'https://localhost:80/',
         'https://localhost:8080/', 'https://127.0.0.1/',
         'https://127.0.0.1:80/', 'https://127.0.0.1:8080/',
+        'http://localhost:', 'https://localhost:',
     ]
     for s in localhost:
         if uri.startswith(s):

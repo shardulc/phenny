@@ -30,8 +30,9 @@ def setup(phenny):
         phenny.queue_data = {}
 
 def search_queue(queue, query):
+    index = None
     for i in range(len(queue)):
-        if query.lower() in queue[i].lower():
+        if queue[i].lower().startswith(query.lower()):
             index = int(i)
             break
     return index

@@ -161,7 +161,7 @@ def gettitle(phenny, uri):
         except:
             return None
 
-        if not (('/html' in mtype) or ('/xhtml' in mtype)):
+        if not mtype or not (('/html' in mtype) or ('/xhtml' in mtype)):
             return None
 
         try:

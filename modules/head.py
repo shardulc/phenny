@@ -126,7 +126,7 @@ def gettitle(phenny, uri):
     ]
     for s in localhost:
         if uri.startswith(s):
-            return phenny.reply('Sorry, access forbidden.')
+            return #phenny.reply('Sorry, access forbidden.')
 
     try:
         redirects = 0

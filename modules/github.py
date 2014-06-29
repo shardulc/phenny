@@ -109,6 +109,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 					#msgs.append("unsupported data: "+str(commit))
 					print("unsupported data: "+str(commit))
 		elif "project_name" in data:
+			self.phenny.bot.msg("firespeaker", "DEBUG"+repr(data))
+			with open("/home/begiak/DEBUG.txt", "a") as debugf:
+				debugf.write(repr(data)+"\n\n")
 			# for google code
 			for commit in data['revisions']:
 				msgs.append(self.return_data("googlecode", data, commit))
@@ -118,9 +121,11 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 			msgs = ["Something went wrong: "+str(data.keys())]
 		for msg in msgs:
 			for chan in self.phInput.chans:
-				self.phenny.bot.msg(chan, msg)
+				if msg != None:
+					self.phenny.bot.msg(chan, msg)
 		
 		self.send_response(200)
+		self.phenny.bot.msg("firespeaker", "200 OK")
 
 	def getBBFiles(self, filelist):
 		toReturn = {"added": [], "modified": [], "removed": []}

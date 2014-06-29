@@ -40,8 +40,8 @@ def awikstats(phenny, input):
         except:
             phenny.say('Invalid .awikstats update command; try something like %s' % repr(awikstats.example))
             return
-            
-        commands = shlex.split('python %s StemCounterBot "%s" %s' % (BOT[1], botPassword, ' '.join(langs)))
+
+        commands = shlex.split('python %s StemCounterBot "%s" dict -p %s' % (BOT[1], botPassword, ' '.join(langs)))
         process = subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=filename(''))
         stdout, stderr = process.communicate()
         

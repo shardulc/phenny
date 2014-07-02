@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 apertium_wiki.py - Phenny Apertium Wiki Stats Module
 """

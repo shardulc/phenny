@@ -76,5 +76,5 @@ def particles(phenny, input):
    else:
       phenny.say("%s: %s" % (whouser, message))
 
-particles.rule = r'.*(?i)(particle|частиц).*$'
+particles.rule = r'.*(?i)(particle|частиц|partikkel).*$'
 particles.priority = 'low'

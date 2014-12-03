@@ -74,9 +74,11 @@ class SVNPoller:
 			self.last_revision = self.latest_revision - 1
 		for rev in range(self.last_revision+1, self.latest_revision+1):
 			msg = self.generateReport(rev)
-			if not msg:
-				msg = ":("
-			yield msg
+			#if not msg:
+			#	msg = ":("
+			#yield msg
+			if msg:
+				yield msg
 
 
 	def svn(self, *cmd):
@@ -94,27 +96,39 @@ class SVNPoller:
 	def get_last_revision(self):
 		global global_revisions
 		tree = self.svn("info")
-		revision = tree.find("//commit").get("revision")
+		print(tree)
+		revision = tree.find(".//commit").get("revision")
 		global_revisions[self.repo] = int(revision)
 		return int(revision)
 
 
 	def revision_info(self, revision):
 		tree = self.svn("log", "-r", str(revision), "--verbose")
-		author = tree.find("//author").text
-		comment = tree.find("//msg").text
+		treeAuthor = tree.find(".//author")
+		if treeAuthor is not None:
+			author = treeAuthor.text
+		else: author = "no author"
+		treeComment = tree.find(".//msg")
+		if treeComment is not None:
+			comment = treeComment.text
+		else: comment = "no comment"
+		#self.say(author, "∞", comment)
 		modified_paths = []
 		added_paths = []
 		removed_paths = []
-		for path in tree.findall("//path"):
+		for path in tree.findall(".//path"):
 			if path.get('action') == "A":
 				added_paths.append(path.text)
 			elif path.get('action') == "D":
 				removed_paths.append(path.text)
 			else:
 				modified_paths.append(path.text)
-		date = time.strptime(tree.find("//date").text, "%Y-%m-%dT%H:%M:%S.%fZ")
-		date = time.strftime("%d %b %Y %H:%M:%S", date)
+		treeDate = tree.find(".//date")
+		if treeDate is not None:
+			date = time.strptime(tree.find(".//date").text, "%Y-%m-%dT%H:%M:%S.%fZ")
+			date = time.strftime("%d %b %Y %H:%M:%S", date)
+		else:
+			date = "no date"
 		return self.repo, author, comment, modified_paths, added_paths, removed_paths, date, str(revision)
 
 

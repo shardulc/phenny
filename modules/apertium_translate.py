@@ -14,6 +14,8 @@ headers = [(
    'Gecko/20071127 Firefox/2.0.0.11'
 )]
 
+APIurl = "http://apy.projectjj.com"
+
 APIerrorData = 'Sorry, the apertium API did not return any data ☹'
 APIerrorHttp = 'Sorry, the apertium API gave HTTP error %s: %s ☹'
 
@@ -24,7 +26,7 @@ def translate(translate_me, input_lang, output_lang='en'):
    input_lang, output_lang = web.quote(input_lang), web.quote(output_lang)
    translate_me = web.quote(translate_me)
 
-   response = opener.open('http://api.apertium.org/json/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
+   response = opener.open(APIurl+'/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
 
    responseArray = json.loads(response.decode('utf-8'))
    if int(responseArray['responseStatus']) != 200:
@@ -50,9 +52,9 @@ def apertium_translate(phenny, input):
          #phenny.say(guideline)
          pairs.append(guideline.strip().split('-'))
    guidelines = guidelines[0]
-   #phenny.say(str(guidelines))
+   #phenny.say("guidelines: "+str(guidelines))
    stuff = re.search('(.*) ([a-z]+-[a-z]+)', guidelines)
-   #phenny.say(str(stuff.groups()))
+   #phenny.say('groups: '+str(stuff.groups()))
    pairs.insert(0, stuff.group(2).split('-'))
    translate_me = stuff.group(1)
    #phenny.say(str(pairs))
@@ -88,7 +90,7 @@ def apertium_listlangs(phenny, input):
    opener = urllib.request.build_opener()
    opener.addheaders = headers
 
-   response = opener.open('http://api.apertium.org/json/listPairs').read()
+   response = opener.open(APIurl+'/listPairs').read()
 
    langs = json.loads(response.decode('utf-8'))
    if int(langs['responseStatus']) != 200:
@@ -125,7 +127,7 @@ def apertium_listpairs(phenny, input):
    opener = urllib.request.build_opener()
    opener.addheaders = headers
 
-   response = opener.open('http://api.apertium.org/json/listPairs').read()
+   response = opener.open(APIurl+'/listPairs').read()
 
    langs = json.loads(response.decode('utf-8'))
 

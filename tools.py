@@ -43,10 +43,12 @@ def generate_report(repo, author, comment, modified_paths, added_paths, removed_
         comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
     
     basepath = os.path.commonprefix(paths)
-    if basepath[-1] != "/":
-        basepath = basepath.split("/")
-        basepath.pop()
-        basepath = '/'.join(basepath) + "/"
+    print(basepath)
+    if len(basepath) > 0:
+        if basepath[-1] != "/":
+            basepath = basepath.split("/")
+            basepath.pop()
+            basepath = '/'.join(basepath) + "/"
         
     text_paths = []
     if len(paths) > 0:
@@ -68,11 +70,23 @@ def generate_report(repo, author, comment, modified_paths, added_paths, removed_
                 final_path += " (+)"
             elif final_path in removed_paths:
                 final_path += " (-)"
-    if date == "":
-        msg = "%s: %s * %s: %s: %s" % (repo, author, rev, final_path, comment.strip())
-    else:
-        msg = "[%s] %s: %s * %s: %s: %s" % (date, repo, author, rev, final_path, comment.strip())
-    return msg
+            # if a file's modified, we don't want to say anything
+            #else:
+            #    final_path += " 0"
+            # but we do want to set the string if it hasn't been set, I guess?
+            else:
+                final_path += ""
+        # the following used to be outside the big if
+        # but it would try to report revs with empty info
+        # ... which we don't want
+        if date == "":
+            msg = "%s: %s * %s: %s: %s" % (repo, author, rev, final_path, comment.strip())
+        else:
+            msg = "[%s] %s: %s * %s: %s: %s" % (date, repo, author, rev, final_path, comment.strip())
+        return msg
+    #else: final_path = "empty"
+    #if final_path is None: final_path = "empty"
+
     
 def get_page(domain, url, encoding='utf-8'): #get the HTML of a webpage.
     conn = http.client.HTTPConnection(domain, 80, timeout=60)

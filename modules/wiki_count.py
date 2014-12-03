@@ -37,10 +37,13 @@ def scrape_iso_3to1(d):
 	h = html.document_fromstring(resp)
 	table = h.find_class('wikitable')[0]
 	for row in table.findall('tr')[1:]:
-		three_code = row.findall('td')[7].text.split(' ')[0]
-		one_code = row.findall('td')[4].text
-		if one_code in d:
-			mapping[three_code] = one_code
+		try:
+			three_code = row.findall('td')[7].text.split(' ')[0]
+			one_code = row.findall('td')[4].text
+			if one_code in d:
+				mapping[three_code] = one_code
+		except:
+			pass
 	return mapping
 
 def wiki_response(info, lg):

@@ -47,7 +47,7 @@ def search_queue_list(queue_data, queue_name, nick):
         for i in queue_data:
             if queue_name == i.split(':')[1]:
                 return i, queue_data[i]
-    return None, None 
+    return None, None
 
 def print_queue(queue_name, queue):
     return '[{}]- {}'.format(
@@ -59,11 +59,18 @@ def queue(phenny, raw):
         command = raw.group(1)
         if command.lower() == 'display':
             search = raw.group(2)
-            queue_name, queue = search_queue_list(phenny.queue_data, search, raw.nick)
-            if queue_name:
-                phenny.reply(print_queue(queue_name, queue))
+            if search:
+                queue_name, queue = search_queue_list(phenny.queue_data, search, raw.nick)
+                if queue_name:
+                    phenny.reply(print_queue(queue_name, queue))
+                else:
+                    phenny.reply('That queue wasn\'t found.')
             else:
-                phenny.reply('That queue wasn\'t found.')
+                #there was no queue name given, display all of their names
+                if phenny.queue_data:
+                    phenny.reply('Avaliable queues: ' + ', '.join(sorted(phenny.queue_data.keys())))
+                else:
+                    phenny.reply('There are no queues to display.')
 
         elif command.lower() == 'new':
             if raw.group(2):

@@ -38,15 +38,17 @@ def search_queue(queue, query):
     return index
 
 def get_queue(queue_data, queue_name, nick):
+    lower_names = {k.lower(): k for k in queue_data.keys()}
     if queue_name in queue_data:
         return queue_name, queue_data[queue_name]
-    elif nick + ':' + queue_name in queue_data:
-        n = nick + ':' + queue_name
+    elif nick.lower() + ':' + queue_name.lower() in lower_names:
+        n = lower_names[nick.lower() + ':' + queue_name.lower()]
         return n, queue_data[n]
     else:
-        for i in queue_data:
-            if queue_name == i.split(':')[1]:
-                return i, queue_data[i]
+        for i in lower_names:
+            if queue_name.lower() == i.split(':')[1]:
+                n = lower_names[i.lower()]
+                return n, queue_data[n]
     return None, None
 
 def disambiguate_name(queue_data, queue_name):
@@ -54,7 +56,7 @@ def disambiguate_name(queue_data, queue_name):
     for i in queue_data:
         if queue_name == i:
             return i
-        if queue_name in i:
+        if queue_name.lower() in i.lower():
             matches.append(i)
     return matches[0] if len(matches) == 1 else matches
 

@@ -175,12 +175,14 @@ class Bot(asynchat.async_chat):
         if len(text) > maxlength:
             first_message = text[0:maxlength].decode('utf-8','ignore')
             line_break = len(first_message)
+            space_found = 0
             for i in range(len(first_message)-1,-1,-1):
                 if first_message[i] == " ":
                     line_break = i
+                    space_found = 1
                     break
             self.msg(recipient, text.decode('utf-8','ignore')[0:line_break])
-            self.msg(recipient, text.decode('utf-8','ignore')[line_break+1:])
+            self.msg(recipient, text.decode('utf-8','ignore')[line_break+space_found:])
             return
 
         # No messages within the last 3 seconds? Go ahead!

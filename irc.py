@@ -172,17 +172,28 @@ class Bot(asynchat.async_chat):
 
         # Split long messages
         maxlength = 430
+        max_messages_count = 3
         if len(text) > maxlength:
-            first_message = text[0:maxlength].decode('utf-8','ignore')
-            line_break = len(first_message)
-            space_found = 0
-            for i in range(len(first_message)-1,-1,-1):
-                if first_message[i] == " ":
-                    line_break = i
-                    space_found = 1
+            for i in range(max_messages_count):
+                # We want to add "..." to last message so we leave place for it
+                if i == max_messages_count-1:
+                    maxlength=maxlength-3
+                message = text[0:maxlength].decode('utf-8','ignore')
+                line_break = len(message)
+                space_found = 0
+                for j in range(len(message)-1,-1,-1):
+                    if message[j] == " ":
+                        line_break = j
+                        space_found = 1
+                        break
+                message = text.decode('utf-8','ignore')[0:line_break]
+                # We want to add "..." to last message
+                if i == max_messages_count-1:
+                    message = message + "..."
+                self.msg(recipient, message)
+                text=text.decode('utf-8','ignore')[line_break+space_found:].encode('utf-8')
+                if len(text) <= maxlength:
                     break
-            self.msg(recipient, text.decode('utf-8','ignore')[0:line_break])
-            self.msg(recipient, text.decode('utf-8','ignore')[line_break+space_found:])
             return
 
         # No messages within the last 3 seconds? Go ahead!

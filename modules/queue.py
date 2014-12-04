@@ -6,7 +6,7 @@ author: mattr555
 import os
 import pickle
 
-commands = '.queue display, .queue new, .queue delete, .queue <name> add, .queue <name> swap, .queue <name> remove, .queue <name> pop'
+commands = '.queue display <name>?; .queue new <name> <items>; .queue delete <name>; .queue <name> add <items>; .queue <name> swap <item1/index1>, <item2/index2>; .queue <name> remove <item>; .queue <name> pop; .queue <name> reassign <nick>; .queue <name> rename <new_name>'
 
 def filename(phenny):
     name = phenny.nick + '-' + phenny.config.host + '.queue.db'
@@ -47,7 +47,7 @@ def search_queue_list(queue_data, queue_name, nick):
         for i in queue_data:
             if queue_name == i.split(':')[1]:
                 return i, queue_data[i]
-    return None, None 
+    return None, None
 
 def print_queue(queue_name, queue):
     return '[{}]- {}'.format(
@@ -59,11 +59,18 @@ def queue(phenny, raw):
         command = raw.group(1)
         if command.lower() == 'display':
             search = raw.group(2)
-            queue_name, queue = search_queue_list(phenny.queue_data, search, raw.nick)
-            if queue_name:
-                phenny.reply(print_queue(queue_name, queue))
+            if search:
+                queue_name, queue = search_queue_list(phenny.queue_data, search, raw.nick)
+                if queue_name:
+                    phenny.reply(print_queue(queue_name, queue))
+                else:
+                    phenny.reply('That queue wasn\'t found.')
             else:
-                phenny.reply('That queue wasn\'t found.')
+                #there was no queue name given, display all of their names
+                if phenny.queue_data:
+                    phenny.reply('Avaliable queues: ' + ', '.join(sorted(phenny.queue_data.keys())))
+                else:
+                    phenny.reply('There are no queues to display.')
 
         elif command.lower() == 'new':
             if raw.group(2):
@@ -155,6 +162,24 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         except IndexError:
                             phenny.reply('That queue is already empty.')
+                    elif command == 'reassign':
+                        if raw.group(3):
+                            new_owner = raw.group(3)
+                            new_queue_name = new_owner + queue_name[queue_name.index(':'):]
+                            phenny.queue_data.pop(queue_name)
+                            phenny.queue_data[new_queue_name] = {'owner': new_owner, 'queue': queue['queue']}
+                            write_dict(filename(phenny), phenny.queue_data)
+                            phenny.reply(print_queue(new_queue_name, queue))
+                        else:
+                            phenny.reply('Syntax: .queue <name> reassign <nick>')
+                    elif command.lower() == 'rename':
+                        if raw.group(3):
+                            new_queue_name = queue['owner'] + ':' + raw.group(3)
+                            phenny.queue_data[new_queue_name] = phenny.queue_data.pop(queue_name)
+                            write_dict(filename(phenny), phenny.queue_data)
+                            phenny.reply(print_queue(new_queue_name, queue))
+                        else:
+                            phenny.reply('Syntax: .queue <name> rename <new_name>')
                 else:
                     phenny.reply('You aren\'t the owner of this queue!')
             else:

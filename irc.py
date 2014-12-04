@@ -170,6 +170,33 @@ class Bot(asynchat.async_chat):
             except UnicodeEncodeError as e: 
                 return
 
+        # Split long messages
+        maxlength = 430
+        max_messages_count = 3
+        if len(text) > maxlength:
+            for i in range(max_messages_count):
+                # We want to add "..." to last message so we leave place for it
+                if i == max_messages_count-1:
+                    maxlength=maxlength-3
+                message = text[0:maxlength].decode('utf-8','ignore')
+                line_break = len(message)
+                space_found = 0
+                for j in range(len(message)-1,-1,-1):
+                    if message[j] == " ":
+                        line_break = j
+                        space_found = 1
+                        break
+                message = text.decode('utf-8','ignore')[0:line_break]
+                # We want to add "..." to last message
+                if i == max_messages_count-1:
+                    message = message + "..."
+                self.msg(recipient, message)
+                text=text.decode('utf-8','ignore')[line_break+space_found:].encode('utf-8')
+                if len(text) <= maxlength:
+                    self.msg(recipient,text.decode('utf-8','ignore'))
+                    break
+            return
+
         # No messages within the last 3 seconds? Go ahead!
         # Otherwise, wait so it's been at least 0.8 seconds + penalty
         if self.stack: 

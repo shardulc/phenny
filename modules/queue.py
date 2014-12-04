@@ -6,7 +6,7 @@ author: mattr555
 import os
 import pickle
 
-commands = '.queue display <name>?, .queue new <name> <items>, .queue delete <name>, .queue <name> add <items>, .queue <name> swap <item1> <item2>, .queue <name> remove <item>, .queue <name> pop, .queue <name> reassign <nick>, .queue <name> rename <new_name>,'
+commands = '.queue display <name>?, .queue new <name> <items>, .queue delete <name>, .queue <name> add <items>, .queue <name> swap <item1> <item2>, .queue <name> remove <item>, .queue <name> pop, .queue <name> reassign <nick>, .queue <name> rename <new_name>'
 
 def filename(phenny):
     name = phenny.nick + '-' + phenny.config.host + '.queue.db'

@@ -128,6 +128,16 @@ def gettitle(phenny, uri):
         if uri.startswith(s):
             return #phenny.reply('Sorry, access forbidden.')
 
+    if not hasattr(phenny.config, 'blacklisted_urls'):
+        phenny.config.blacklisted_urls = []
+    if not hasattr(phenny.bot, 'blacklisted_urls'):
+        phenny.bot.blacklisted_urls = []
+        for s in phenny.config.blacklisted_urls:
+            phenny.bot.blacklisted_urls.append(re.compile(s))
+    for regex in phenny.bot.blacklisted_urls:
+        if regex.match(uri):
+            return
+
     try:
         redirects = 0
         while True:

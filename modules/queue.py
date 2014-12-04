@@ -37,7 +37,7 @@ def search_queue(queue, query):
             break
     return index
 
-def search_queue_list(queue_data, queue_name, nick):
+def get_queue(queue_data, queue_name, nick):
     if queue_name in queue_data:
         return queue_name, queue_data[queue_name]
     elif nick + ':' + queue_name in queue_data:
@@ -48,6 +48,15 @@ def search_queue_list(queue_data, queue_name, nick):
             if queue_name == i.split(':')[1]:
                 return i, queue_data[i]
     return None, None
+
+def disambiguate_name(queue_data, queue_name):
+    matches = []
+    for i in queue_data:
+        if queue_name == i:
+            return i
+        if queue_name in i:
+            matches.append(i)
+    return matches[0] if len(matches) == 1 else matches
 
 def print_queue(queue_name, queue):
     return '[{}]- {}'.format(
@@ -60,11 +69,15 @@ def queue(phenny, raw):
         if command.lower() == 'display':
             search = raw.group(2)
             if search:
-                queue_name, queue = search_queue_list(phenny.queue_data, search, raw.nick)
-                if queue_name:
-                    phenny.reply(print_queue(queue_name, queue))
+                queue_names = disambiguate_name(phenny.queue_data, search)
+                if type(queue_names) is str:
+                    #there was only one possible queue
+                    phenny.reply(print_queue(queue_names, phenny.queue_data[queue_names]))
+                elif len(queue_names) > 0:
+                    #the name was ambiguous, show a list of queues
+                    phenny.reply('Did you mean: ' + ', '.join(queue_names) + '?')
                 else:
-                    phenny.reply('That queue wasn\'t found.')
+                    phenny.reply('No queues found.')
             else:
                 #there was no queue name given, display all of their names
                 if phenny.queue_data:
@@ -95,7 +108,7 @@ def queue(phenny, raw):
 
         elif command.lower() == 'delete':
             if raw.group(2):
-                queue_name, queue = search_queue_list(phenny.queue_data, raw.group(2), raw.nick)
+                queue_name, queue = get_queue(phenny.queue_data, raw.group(2), raw.nick)
                 if raw.nick == queue['owner'] or raw.admin:
                     phenny.queue_data.pop(queue_name)
                     write_dict(filename(phenny), phenny.queue_data)
@@ -105,9 +118,9 @@ def queue(phenny, raw):
             else:
                 phenny.reply('Syntax: .queue delete <name>')
 
-        elif search_queue_list(phenny.queue_data, raw.group(1), raw.nick)[0]:
+        elif get_queue(phenny.queue_data, raw.group(1), raw.nick)[0]:
             #queue-specific commands
-            queue_name, queue = search_queue_list(phenny.queue_data, raw.group(1), raw.nick)
+            queue_name, queue = get_queue(phenny.queue_data, raw.group(1), raw.nick)
             if raw.group(2):
                 command = raw.group(2).lower()
                 if queue['owner'] == raw.nick or raw.admin:

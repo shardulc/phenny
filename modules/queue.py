@@ -6,7 +6,7 @@ author: mattr555
 import os
 import pickle
 
-commands = '.queue display, .queue new, .queue delete, .queue <name> add, .queue <name> swap, .queue <name> remove, .queue <name> pop'
+commands = '.queue display, .queue new, .queue delete, .queue rename, .queue <name> add, .queue <name> swap, .queue <name> remove, .queue <name> pop, .queue <name> reassign'
 
 def filename(phenny):
     name = phenny.nick + '-' + phenny.config.host + '.queue.db'
@@ -98,6 +98,19 @@ def queue(phenny, raw):
             else:
                 phenny.reply('Syntax: .queue delete <name>')
 
+        elif command.lower() == 'rename':
+            if raw.group(3):
+                queue_name, queue = search_queue_list(phenny.queue_data, raw.group(2), raw.nick)
+                if raw.nick == queue['owner'] or raw.admin:
+                    new_queue_name = queue['owner'] + ':' + raw.group(3)
+                    phenny.queue_data[new_queue_name] = phenny.queue_data.pop(queue_name)
+                    write_dict(filename(phenny), phenny.queue_data)
+                    phenny.reply(print_queue(new_queue_name, queue))
+                else:
+                    phenny.reply('You aren\'t authorized to do that!')
+            else:
+                phenny.reply('Syntax: .queue rename <old_name> <new_name>')
+
         elif search_queue_list(phenny.queue_data, raw.group(1), raw.nick)[0]:
             #queue-specific commands
             queue_name, queue = search_queue_list(phenny.queue_data, raw.group(1), raw.nick)
@@ -155,6 +168,16 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         except IndexError:
                             phenny.reply('That queue is already empty.')
+                    elif command == 'reassign':
+                        if raw.group(3):
+                            new_owner = raw.group(3)
+                            new_queue_name = new_owner + queue_name[queue_name.index(':'):]
+                            phenny.queue_data.pop(queue_name)
+                            phenny.queue_data[new_queue_name] = {'owner': new_owner, 'queue': queue['queue']}
+                            write_dict(filename(phenny), phenny.queue_data)
+                            phenny.reply(print_queue(new_queue_name, queue))
+                        else:
+                            phenny.reply('Syntax: .queue <name> reassign <nick>')
                 else:
                     phenny.reply('You aren\'t the owner of this queue!')
             else:

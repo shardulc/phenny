@@ -193,6 +193,7 @@ class Bot(asynchat.async_chat):
                 self.msg(recipient, message)
                 text=text.decode('utf-8','ignore')[line_break+space_found:].encode('utf-8')
                 if len(text) <= maxlength:
+                    self.msg(recipient,text.decode('utf-8','ignore'))
                     break
             return
 

@@ -208,4 +208,4 @@ def queue(phenny, raw):
     else:
         phenny.reply('Commands: ' + commands)
 
-queue.rule = r'\.queue(?:\s([a-zA-Z0-9:_]+))?(?:\s(\w+))?(?:\s(.*))?'
+queue.rule = r'\.queue(?:\s([\w:]+))?(?:\s([\w:]+))?(?:\s(.*))?'

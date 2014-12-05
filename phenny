@@ -65,6 +65,9 @@ def create_default_config(fn):
         '*': ['!'] # default whitelist, allow all
     }
 
+    # Blacklisted urls for gettitle module:
+    blacklisted_urls = []
+
     # EOF
     """), file=f)
     f.close()

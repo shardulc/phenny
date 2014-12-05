@@ -39,8 +39,9 @@ def search_queue(queue, query):
 
 def get_queue(queue_data, queue_name, nick):
     lower_names = {k.lower(): k for k in queue_data.keys()}
-    if queue_name in queue_data:
-        return queue_name, queue_data[queue_name]
+    if queue_name.lower() in lower_names:
+        n = lower_names[queue_name.lower()]
+        return n, queue_data[n]
     elif nick.lower() + ':' + queue_name.lower() in lower_names:
         n = lower_names[nick.lower() + ':' + queue_name.lower()]
         return n, queue_data[n]

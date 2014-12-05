@@ -190,11 +190,13 @@ class Bot(asynchat.async_chat):
                 # We want to add "..." to last message
                 if i == max_messages_count-1:
                     message = message + "..."
+                    text = b''
                 self.msg(recipient, message)
                 text=text.decode('utf-8','ignore')[line_break+space_found:].encode('utf-8')
                 if len(text) <= maxlength:
                     self.msg(recipient,text.decode('utf-8','ignore'))
                     break
+            self.sending.release()
             return
 
         # No messages within the last 3 seconds? Go ahead!

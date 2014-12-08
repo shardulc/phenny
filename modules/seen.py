@@ -10,13 +10,12 @@ http://inamidst.com/phenny/
 import time, os, shelve, datetime
 from tools import deprecated
 
-def setup(self):
-    fn = self.nick + '-' + self.config.host + '.logger.db'
-    self.seen_db = os.path.join(os.path.expanduser('~/.phenny'), fn)
-    self.seen_conn = sqlite3.connect(self.logger_db)
-
 def f_seen(phenny, input): 
     """.seen <nick> - Reports when <nick> was last seen."""
+    
+    fn = self.nick + '-' + self.config.host + '.logger.db'
+    self.seen_db = os.path.join(os.path.expanduser('~/.phenny'), fn)
+    self.seen_conn = sqlite3.connect(self.seen_db)
     
     c = seen.conn.cursor()
     c.execute(str("select " + input + " from nick"))

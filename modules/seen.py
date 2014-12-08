@@ -10,8 +10,21 @@ http://inamidst.com/phenny/
 import time, os, shelve, datetime
 from tools import deprecated
 
+def setup(self):
+    fn = self.nick + '-' + self.config.host + '.logger.db'
+    self.seen_db = os.path.join(os.path.expanduser('~/.phenny'), fn)
+    self.seen_conn = sqlite3.connect(self.logger_db)
+
 def f_seen(phenny, input): 
     """.seen <nick> - Reports when <nick> was last seen."""
+    
+    c = seen.conn.cursor()
+    c.execute(str("select " + input + " from nick"))
+    cLastTime = c.fetchone()[5]
+    cNick = c.fetchone()[4]
+    cChannel = c.fetchone()[0]
+    c.close()
+    
     nick = input.group(2).lower()
     if not hasattr(phenny, 'seen'): 
         return phenny.msg(input.sender, '?')
@@ -22,6 +35,13 @@ def f_seen(phenny, input):
 
         msg = "I last saw %s at %s (%s) on %s" % (nick, t, dt, channel)
         phenny.reply(msg)
+    elif nick in cNick:
+        dt = timesince(datetime.datetime.utcfromtimestamp(cLastTime))
+        t = time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(cLastTime))
+        
+        msg = "I last saw %s at %s (%s) on %s" % (nick, t, dt, cChannel)
+        phenny.reply(msg)
+        
     else: phenny.reply("Sorry, I haven't seen %s around." % nick)
 f_seen.name = 'seen'
 f_seen.example = '.seen firespeaker'

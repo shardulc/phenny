@@ -68,11 +68,13 @@ def parse_num_speakers(s):
         if len(i) <= 3 or ',' in i:
             if i.replace(',', '').replace('.', '').isdigit():
                 hits.append(int(i.replace(',', '').replace('.', '')))
+    if hits and 'no known l1 speakers' in s.lower():
+        return 'No primary speakers'
+    if hits and 'ethnic population' in s.lower() or 'l2 users worldwide' in s.lower():
+        return shorten_num(sorted(hits, reverse=True)[1])
     if hits:
-        if 'ethnic population' in s.lower():
-            return shorten_num(hits[0])
-        return shorten_num(hits[-1])
-    return 'No primary'
+        return shorten_num(max(hits))
+    return 'No primary speakers'
 
 def ethnologue(phenny, input):
     """.ethnologue <lg> - gives ethnologue info from partial language name or iso639"""

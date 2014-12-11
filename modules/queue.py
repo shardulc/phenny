@@ -82,6 +82,9 @@ def queue(phenny, raw):
                         if q.split(':')[0] == raw.nick and q[len(raw.nick)+1:] == search:
                             phenny.reply(print_queue(q, phenny.queue_data[q]))
                             return
+                        elif q[q.find(':')+1:] == search:
+                            phenny.reply(print_queue(q, phenny.queue_data[q]))
+                            return
                     #the name was ambiguous, show a list of queues
                     phenny.reply('Did you mean: ' + ', '.join(queue_names) + '?')
                 else:

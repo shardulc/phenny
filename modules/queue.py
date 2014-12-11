@@ -77,6 +77,14 @@ def queue(phenny, raw):
                     #there was only one possible queue
                     phenny.reply(print_queue(queue_names, phenny.queue_data[queue_names]))
                 elif len(queue_names) > 0:
+                    for q in queue_names:
+                        #the exact name is same for more users
+                        if q.split(':')[0] == raw.nick and q[len(raw.nick)+1:] == search:
+                            phenny.reply(print_queue(q, phenny.queue_data[q]))
+                            return
+                        elif q[q.find(':')+1:] == search:
+                            phenny.reply(print_queue(q, phenny.queue_data[q]))
+                            return
                     #the name was ambiguous, show a list of queues
                     phenny.reply('Did you mean: ' + ', '.join(queue_names) + '?')
                 else:
@@ -112,12 +120,15 @@ def queue(phenny, raw):
         elif command.lower() == 'delete':
             if raw.group(2):
                 queue_name, queue = get_queue(phenny.queue_data, raw.group(2), raw.nick)
-                if raw.nick == queue['owner'] or raw.admin:
-                    phenny.queue_data.pop(queue_name)
-                    write_dict(filename(phenny), phenny.queue_data)
-                    phenny.reply('Queue {} deleted.'.format(queue_name))
+                if type(queue_name) is str:
+                    if raw.nick == queue['owner'] or raw.admin:
+                        phenny.queue_data.pop(queue_name)
+                        write_dict(filename(phenny), phenny.queue_data)
+                        phenny.reply('Queue {} deleted.'.format(queue_name))
+                    else:
+                        phenny.reply('You aren\'t authorized to do that!')
                 else:
-                    phenny.reply('You aren\'t authorized to do that!')
+                    phenny.reply('That queue wasn\'t found!')
             else:
                 phenny.reply('Syntax: .queue delete <name>')
 

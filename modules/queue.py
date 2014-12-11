@@ -77,16 +77,24 @@ def queue(phenny, raw):
                     #there was only one possible queue
                     phenny.reply(print_queue(queue_names, phenny.queue_data[queue_names]))
                 elif len(queue_names) > 0:
+                    queue_exact = list(queue_names)
                     for q in queue_names:
-                        #the exact name is same for more users
                         if q.split(':')[0] == raw.nick and q[len(raw.nick)+1:] == search:
+                            #current user owns queue with exact name
                             phenny.reply(print_queue(q, phenny.queue_data[q]))
                             return
-                        elif q[q.find(':')+1:] == search:
-                            phenny.reply(print_queue(q, phenny.queue_data[q]))
-                            return
-                    #the name was ambiguous, show a list of queues
-                    phenny.reply('Did you mean: ' + ', '.join(queue_names) + '?')
+                        elif q[q.find(':')+1:] != search:
+                            #filter queues with exact name
+                            queue_exact.remove(q)
+                    if len(queue_exact) == 1:
+                        #only one user owns queue with exact name
+                        phenny.reply(print_queue(queue_exact[0], phenny.queue_data[queue_exact[0]]))
+                    elif len(queue_exact) > 1:
+                        #more users own queues with exact name
+                        phenny.reply('Did you mean: ' + ', '.join(queue_exact) + '?')
+                    else:
+                        #the name was ambiguous, show a list of queues
+                        phenny.reply('Did you mean: ' + ', '.join(queue_names) + '?')
                 else:
                     phenny.reply('No queues found.')
             else:

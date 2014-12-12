@@ -36,7 +36,7 @@ def bargle(phenny, input):
    if input != "hargle bargle" and input != "harglebargle":
       phenny.say("bargle!")
 
-bargle.rule = r'.*(?i)(hargle).*$'
+bargle.rule = r'.*(?i)(hargle)((?![\s]*bargle).)*$'
 bargle.priority = 'low'
 
 def hargle(phenny, input):
@@ -44,7 +44,7 @@ def hargle(phenny, input):
    if input != "hargle bargle" and input != "harglebargle":
       phenny.say("HARGLE BARGLE!")
 
-hargle.rule = r'.*(?i)(bargle).*$'
+hargle.rule = r'((?!hargle[\s]*).)*(?i)(bargle).*$'
 hargle.priority = 'low'
 
 

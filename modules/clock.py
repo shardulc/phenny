@@ -17,9 +17,11 @@ import datetime
 import web
 from decimal import Decimal as dec
 from tools import deprecated
+from lxml import html
 
 TimeZones = {'KST': 9, 'CADT': 10.5, 'EETDST': 3, 'MESZ': 2, 'WADT': 9, 
-                 'EET': 2, 'MST': -7, 'WAST': 8, 'IST': 5.5, 'B': 2, 
+                 'EET': 2, 'MST': -7, 'WAST': 8, #This is wrong... WAST is UTC +2
+                 'IST': 5.5, 'B': 2, 
                  'MSK': 3, 'X': -11, 'MSD': 4, 'CETDST': 2, 'AST': -4, 
                  'HKT': 8, 'JST': 9, 'CAST': 9.5, 'CET': 1, 'CEST': 2, 
                  'EEST': 3, 'EAST': 10, 'METDST': 2, 'MDT': -6, 'A': 1, 
@@ -224,8 +226,8 @@ def f_time(phenny, input):
         locale.setlocale(locale.LC_TIME, (tz[1:-1], 'UTF-8'))
         msg = time.strftime("%A, %d %B %Y %H:%M:%SZ", time.gmtime())
         phenny.reply(msg)
-    elif TZ in TimeZones: 
-        offset = TimeZones[TZ] * 3600
+    elif TZ in phenny.clock_data: 
+        offset = phenny.clock_data[TZ] * 3600
         timenow = time.gmtime(time.time() + offset)
         msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(TZ), timenow)
         phenny.reply(msg)
@@ -316,8 +318,8 @@ def time_zone(phenny, input):
     if (not regex_match) or (regex_match.groups()[0] == "") or (regex_match.groups()[1] == "") or (regex_match.groups()[2] == ""):
         phenny.say(time_zone.__doc__.strip())
     else:
-        from_tz_match = TimeZones.get(regex_match.groups()[1].upper(), "")
-        to_tz_match = TimeZones.get(regex_match.groups()[2].upper(), "")
+        from_tz_match = phenny.clock_data.get(regex_match.groups()[1].upper(), "")
+        to_tz_match = phenny.clock_data.get(regex_match.groups()[2].upper(), "")
         if (from_tz_match == "") or (to_tz_match == ""):
             phenny.say("Please enter valid time zone(s) :P")
             return
@@ -348,6 +350,34 @@ def time_zone(phenny, input):
         phenny.say(format(dest_time_hours, '02d') + format(dest_time_mins, '02d') + regex_match.groups()[2].upper())
 time_zone.commands = ['tz']
 time_zone.priority = 'high'
+
+def scrape_time_zone():
+    data = {}
+    zone_url = 'http://www.timeanddate.com/time/zones/'
+    #639-1
+    resp = web.get(zone_url)
+    h = html.document_fromstring(resp)
+    table = h.find_class('tb-tz')[0]
+    tbody = table.findall('tbody')[0]
+    for row in tbody.findall('tr'):
+        abbrev = row.findall('td')[0].find('a')
+        if (abbrev is not None):
+            abbrev = abbrev.text
+        offsetregex = re.compile('UTC (.*):(.*)')
+        if (str((row.findall('td')[3]).text) != "UTC"):
+            offsetregex = offsetregex.match((row.findall('td')[3]).text)
+            hours = int((offsetregex.groups()[0]))
+            hours = hours + math.copysign(1, int(offsetregex.groups()[1])/60) * int(offsetregex.groups()[1])/60
+        else:
+            hours = 0
+        
+        if not (abbrev in data):
+            data[abbrev] = hours
+    return data
+
+def setup(phenny):
+    phenny.clock_data = scrape_time_zone()
+    print(phenny.clock_data)
     
 if __name__ == '__main__': 
     print(__doc__.strip())

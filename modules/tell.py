@@ -103,15 +103,18 @@ def f_remind(phenny, input):
 f_remind.rule = ('$nick', ['tell', 'ask'], r'(\S+) (.*)')
 f_remind.thread = False
 
-def getReminders(phenny, channel, key, tellee): 
-    lines = []
+def formatReminder(r, tellee):
+    teller, verb, datetime, msg = r
     template = "%s: %s <%s> %s %s %s"
     today = time.strftime('%d %b', time.gmtime())
+    if datetime.startswith(today): 
+        datetime = datetime[len(today)+1:]
+    return template % (tellee, datetime, teller, verb, tellee, msg)
 
-    for (teller, verb, datetime, msg) in phenny.reminders[key]: 
-        if datetime.startswith(today): 
-            datetime = datetime[len(today)+1:]
-        lines.append(template % (tellee, datetime, teller, verb, tellee, msg))
+def getReminders(phenny, channel, key, tellee): 
+    lines = []
+    for reminder in phenny.reminders[key]: 
+        lines.append(formatReminder(reminder, tellee))
 
     try: del phenny.reminders[key]
     except KeyError: phenny.msg(channel, 'Er...')
@@ -161,6 +164,37 @@ messageAlert.event = 'JOIN'
 messageAlert.rule = r'.*'
 messageAlert.priority = 'low'
 messageAlert.thread = False
+
+def mytells(phenny, input):
+    tells = []
+    for tellee in phenny.reminders:
+        for msg in phenny.reminders[tellee]:
+            if input.nick == msg[0]:
+                tells.append((msg, tellee))
+    tells = sorted(tells) # consistently sort the list
+    if tells:
+        if input.group(1) and int(input.group(1)) > 0:
+            try:
+                msg, tellee = tells[int(input.group(1))-1]
+                phenny.reminders[tellee].remove(msg)
+                phenny.reply('Removed reminder {} that would have sent to {}'.format(input.group(1), tellee))
+            except:
+                phenny.reply("That isn't a valid reminder.")
+        else:
+            pmflag = False
+            for index, (msg, tellee) in enumerate(tells):
+                reminder = '[{}] - {}'.format(index+1, formatReminder(msg, tellee))
+                if '**pm**' in reminder:
+                    pmflag = True
+                    phenny.msg(input.nick, reminder)
+                else:
+                    phenny.reply(reminder)
+            if pmflag:
+                phenny.reply('Additional reminders sent via pm')
+            phenny.reply('Use .mytells rm <num> to remove a reminder')
+    else:
+        phenny.reply("You don't have any tells queued.")
+mytells.rule = r'\.mytells(?:\s(?:rm|del)\s(\d+))?'
 
 if __name__ == '__main__': 
     print(__doc__.strip())

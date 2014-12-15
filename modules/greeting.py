@@ -29,7 +29,7 @@ def greeting(phenny, input):
     c = greeting.conn.cursor()
     c.execute("SELECT * FROM lines_by_nick WHERE nick = ?", (nick.lower(),))
     if c.fetchone() == None:
-        phenny.say(input.nick + ": Welcome to " + input.sender + " " + input.nick + "! Please stick around for a while and someone will address any questions you have.")
+        phenny.say(input.nick + ": Welcome to " + input.sender + ", " + input.nick + "! Please stick around for a while and someone will address any questions you have.")
     c.close()
     
     sqlite_data = {

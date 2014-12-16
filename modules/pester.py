@@ -15,7 +15,7 @@ def pester(phenny, input):
 	mess = input.group(3)
 	
 	if (not user) or (not mess):
-		phenny.say(pester_postpone.__doc__.strip())
+		phenny.reply(pester_postpone.__doc__.strip())
 		return
 	user = user.lower()
 	
@@ -23,7 +23,7 @@ def pester(phenny, input):
 		phenny.pesters[user] = [{'origin-user':input.nick.lower(), 'message':mess, 'time-thold':datetime.datetime.now()}]
 	else:
 		phenny.pesters[user].append({'origin-user':input.nick.lower(), 'message':mess, 'time-thold':datetime.datetime.now()})	
-	phenny.say("OK " + input.nick + ", I will pester " + input.group(2) + " to " +  input.group(3))	
+	phenny.reply("I will pester " + input.group(2) + " to " +  input.group(3))	
 pester.rule = (['pester'], r'(.*)\sto\s(.*)')
 pester.priority = 'high'
 pester.example = '.pester user_xyz to commit his code :)'
@@ -34,7 +34,7 @@ def stop_pester(phenny,input):
     mess = input.group(3)
     
     if (not user) or (not mess):
-        phenny.say(stop_pester.__doc__.strip())
+        phenny.reply(stop_pester.__doc__.strip())
         return
     user = user.lower()
     
@@ -45,18 +45,18 @@ def stop_pester(phenny,input):
                 phenny.pesters[user].remove(pest)
                 success = True
     else:
-        phenny.say(input.nick.lower() + ": Looks like " + user + " does not have any pesters from you...")
+        phenny.reply("Looks like " + user + " does not have any pesters from you...")
         return
     if success:
-        phenny.say(input.nick.lower() + ": Successfully deleted pesters.")
+        phenny.reply("Successfully deleted pesters.")
     else:
         success = False
         for pest in phenny.pesters[input.nick.lower()]:
             if (pest['origin-user'] == input.nick.lower()):
-                phenny.say(input.nick.lower() + ": Perhaps did you mean: .stoppestering " + user + " to " + pest['message'])
+                phenny.reply("Perhaps did you mean: .stoppestering " + user + " to " + pest['message'])
                 success = True
         if not success:
-            phenny.say(input.nick.lower() + ": Looks like " + user + " does not have any pesters from you...")
+            phenny.reply("Looks like " + user + " does not have any pesters from you...")
     
 stop_pester.rule = (['stoppestering'], r'(.*)\sto\s(.*)')
 stop_pester.priority = 'high'
@@ -68,7 +68,7 @@ def pester_alert(phenny, input):
         for pest in phenny.pesters[input.nick.lower()]:
             if pest['time-thold'] <= datetime.datetime.now():
                 success = True
-                phenny.say(input.nick.lower() + ": <" + pest['origin-user'] + "> " + pest['message'])
+                phenny.reply("<" + pest['origin-user'] + "> " + pest['message'])
                 pest['time-thold'] = datetime.datetime.now() + datetime.timedelta(0,SECONDS_TO_PESTER)
     if not success:
         phenny.say("No pesters for you!") #Debug
@@ -94,12 +94,12 @@ def pester_postpone(phenny,input):
                 pest['time-thold'] = datetime.datetime.now() + datetime.timedelta(0,POSTPONE_SECONDS)
                 success = True
     else:
-        phenny.say(input.nick.lower() + ": Looks like you are not being pestered :P")
+        phenny.reply("Looks like you are not being pestered :P")
         return
     if success:
-        phenny.say(input.nick.lower() + ": Successfully postponed pesters.")
+        phenny.reply("Successfully postponed pesters.")
     else:
-        phenny.say(input.nick.lower() + ": Looks like " + user + " is not pestering you...")
+        phenny.reply("Looks like " + user + " is not pestering you...")
 
 pester_postpone.rule = (['postponepester'], r'from\s(.*)')
 pester_postpone.priority = 'high'
@@ -121,12 +121,12 @@ def pester_dismiss(phenny,input):
                 phenny.pesters[user].remove(pest)
                 success = True
     else:
-        phenny.say(input.nick.lower() + ": Looks like you are not being pestered :P")
+        phenny.reply("Looks like you are not being pestered :P")
         return
     if success:
-        phenny.say(input.nick.lower() + ": Successfully dismissed pesters.")
+        phenny.reply("Successfully dismissed pesters.")
     else:
-        phenny.say(input.nick.lower() + ": Looks like " + user + " is not pestering you...")
+        phenny.reply("Looks like " + user + " is not pestering you...")
         
         
 def setup(phenny):

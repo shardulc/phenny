@@ -15,56 +15,143 @@ import socket
 import struct
 import datetime
 import web
-import pytz
+import os
+import threading
+from lxml import html
 from decimal import Decimal as dec
 from tools import deprecated
-
 
 r_local = re.compile(r'\([a-z]+_[A-Z]+\)')
 
 def f_time(phenny, input): 
-    """.time [timezone|offset] Returns current time in defined timezone/offset. Defaults to GMT."""
-    d = datetime.datetime.utcnow()
-    d = d.replace(tzinfo=pytz.utc)
+    """.time [timezone] - Show current time in defined timezone. Defaults to GMT."""
     tz = input.group(2) or 'GMT'
+
+    # Personal time zones, because they're rad
+    if hasattr(phenny.config, 'timezones'): 
+        People = phenny.config.timezones
+    else: People = {}
+
+    if tz in People: 
+        tz = People[tz]
+    elif (not input.group(2)) and input.nick in People: 
+        tz = People[input.nick]
+
     TZ = tz.upper()
-    tz_nodel = tz.replace(':', '').replace('.', '')
+    if len(tz) > 30: return
 
-    if (TZ == 'UTC') or (TZ == 'Z'):
-        phenny.reply(d.strftime('%Y-%m-%dT%H:%M:%SZ'))
-    elif TZ in pytz.all_timezones:
-        TZ = pytz.timezone(TZ)
-        phenny.reply(d.astimezone(TZ).strftime('%a, %d %b %Y %H:%M:%S %Z'))
-    elif tz[0] in ('+', '-') and 3 <= len(tz_nodel) <= 5 and tz_nodel[1:].isdigit() and len(tz) - len(tz_nodel) <= 1:
-        if 2 <= tz.find(':') <= 3:
-            pos = tz.find(':')
-            if int(tz[1:pos]) <= 24 and int(tz[pos+1:]) <= 59:
-               offset = int(tz[1:pos]) + int(tz[pos+1:]) / 60
-            else:
-                phenny.reply("Offset '%s' is invalid." %tz)
-                return
-
-        elif len(tz) - len(tz_nodel) == 0:
-            if int(tz[1:-2]) <= 24 and int(tz[-2:]) <= 59:
-                offset = int(tz[1:-2]) + int(tz[-2:]) / 60
-            else:
-                phenny.reply("Offset '%s' is invalid." %tz)
-                return
-        else:
-            if float(tz[1:]) <= 24:
-                offset = float(tz[1:])
-            else:
-               phenny.reply("Offset '%s' is invalid." %tz)
-               return
-        if tz[0] == '-':
-            offset *= -1
-        timenow = time.gmtime(time.time() + offset * 3600)
-        phenny.reply (time.strftime('%a, %d %b %Y %H:%M:%S ' + str(tz), timenow))
-    else:
-        phenny.reply("Sorry, I don't know about the '%s' timezone." %tz)
+    if (TZ == 'UTC') or (TZ == 'Z'): 
+        msg = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+        phenny.reply(msg)
+    elif r_local.match(tz): # thanks to Mark Shoulsdon (clsn)
+        locale.setlocale(locale.LC_TIME, (tz[1:-1], 'UTF-8'))
+        msg = time.strftime("%A, %d %B %Y %H:%M:%SZ", time.gmtime())
+        phenny.reply(msg)
+    elif TZ in phenny.tz_data: 
+        offset = phenny.tz_data[TZ] * 3600
+        timenow = time.gmtime(time.time() + offset)
+        msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(TZ), timenow)
+        phenny.reply(msg)
+    elif tz and tz[0] in ('+', '-') and 4 <= len(tz) <= 6: 
+        timenow = time.gmtime(time.time() + (int(tz[:3]) * 3600))
+        msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz), timenow)
+        phenny.reply(msg)
+    else: 
+        try: t = float(tz)
+        except ValueError: 
+            import os, re, subprocess
+            r_tz = re.compile(r'^[A-Za-z]+(?:/[A-Za-z_]+)*$')
+            if r_tz.match(tz) and os.path.isfile('/usr/share/zoneinfo/' + tz): 
+                cmd, PIPE = 'TZ=%s date' % tz, subprocess.PIPE
+                proc = subprocess.Popen(cmd, shell=True, stdout=PIPE)
+                phenny.reply(proc.communicate()[0])
+            else: 
+                error = "Sorry, I don't know about the '%s' timezone." % tz
+                phenny.reply(error)
+        else: 
+            timenow = time.gmtime(time.time() + (t * 3600))
+            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz), timenow)
+            phenny.reply(msg)
 f_time.name = 'time'
 f_time.commands = ['time']
-f_time.example = '.time UTC, .time +0100, .time -5:30, .time +8.75'
+f_time.example = '.time UTC'
+
+def scrape_wiki_zones():
+    data = {}
+    url = 'http://en.wikipedia.org/wiki/List_of_time_zone_abbreviations'
+    resp = web.get(url)
+    h = html.document_fromstring(resp)
+    table = h.find_class('wikitable')[0]
+    for row in table.findall('tr')[1:]:
+        code = row.findall('td')[0].text
+        offset = row.findall('td')[2].find('a').text[3:]
+        offset = offset.replace('−', '-') # replacing minus sign with hyphen
+        if offset.find(':') > 0:
+            offset = int(offset.split(':')[0]) + int(offset.split(':')[1]) / 60
+        else:
+            if offset == '':
+                offset = 0
+            offset = int(offset)
+        data[code] = offset
+    return data
+
+def filename(phenny):
+    name = phenny.nick + '-' + phenny.config.host + '.timezones.db'
+    return os.path.join(os.path.expanduser('~/.phenny'), name)
+
+def write_dict(filename, data):
+    with open(filename, 'w') as f:
+        for k, v in data.items():
+            f.write('{}${}\n'.format(k, v))
+
+def read_dict(filename):
+    data = {}
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            if line == '\n':
+                continue
+            code, offset = line.replace('\n', '').split('$')
+            if offset.find('.') == -1:
+                offset = int(offset)
+            else:
+                offset = float(offset)
+            data[code] = offset
+    return data
+
+def refresh_database(phenny, raw=None):
+    if raw.admin or raw is None:
+        f = filename(phenny)
+        phenny.tz_data = scrape_wiki_zones()
+        write_dict(f, phenny.tz_data)
+        phenny.say('Timezone database successfully written')
+    else:
+        phenny.say('Only admins can execute that command!')
+refresh_database.name = 'refresh_timezone_database'
+refresh_database.commands = ['tz update']
+refresh_database.thread = True
+
+def thread_check(phenny, raw):
+    for t in threading.enumerate():
+        if t.name == refresh_database.name:
+            phenny.say('A timezone updating thread is currently running')
+            break
+    else:
+        phenny.say('No timezone updating thread running')
+thread_check.name = 'timezone_thread_check'
+thread_check.commands = ['tz status']
+
+def setup(phenny):
+    f = filename(phenny)
+    if os.path.exists(f):
+        try:
+            phenny.tz_data = read_dict(f)
+        except ValueError:
+            print('timezone database read failed, refreshing it')
+            phenny.tz_data = scrape_wiki_zones()
+            write_dict(f, phenny.tz_data)
+    else:
+        phenny.tz_data = scrape_wiki_zones()
+        write_dict(f, phenny.tz_data)
 
 def beats(phenny, input): 
     """Shows the internet time in Swatch beats."""

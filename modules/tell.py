@@ -23,6 +23,103 @@ lispchannels = frozenset([ '#lisp', '#scheme', '#opendarwin', '#macdev',
 '#perl6', '#sdlperl', '#ksvg', '#rcirc', '#code4lib', '#linux-quebec',
 '#programmering', '#maxima', '#robin', '##concurrency', '#paredit' ])
 
+# nick aliases (saved in ~/<User phenny dir>/<nick>-<host>.alias.db)
+# format (each row is an alias group, aliases are separated by '\t'): 
+#
+# spectre\tspectie\tspectei
+# nick\talias
+nick_aliases = [] #don't change this, use the 'aliasPair' command on the bot
+
+# pending alias pair requests
+# reset each session
+nick_pairs = []
+
+def aliasGroupFor(nick1):
+    # Returns a list containing all aliases for nick1 (including nick1)
+    # If there are no recorded aliases, it returns a list only containing nick1
+    for alias_group in nick_aliases:
+        if nick1 in alias_group:
+            return alias_group
+    return [nick1]
+
+def aliasPairMerge(phenny, nick1, nick2):
+    #Merges the alias group that nick1 is in with the one nick2 is in
+    #The resulting group is stored in nick_aliases
+    group1 = aliasGroupFor(nick1)
+    if len(group1) > 1: #group is in nick_aliases
+        nick_aliases.remove(group1)
+    
+    group2 = aliasGroupFor(nick2)
+    if len(group2) > 1: #group is in nick_aliases
+        nick_aliases.remove(group2)
+        
+    group1.extend(group2)
+    
+    nick_aliases.append(group1)
+    
+    dumpAliases(phenny.alias_filename)
+
+def aliasPair(phenny, input):
+    # Send or confirm an alias pair request
+    # Use: ".aliasPair nickAlias"
+    nick1 = input.nick
+    pair, nick2 = input.groups()
+    if (nick2 == None):
+        phenny.reply("Usage: .aliasPair nick")
+    elif (nick1 == nick2):
+        phenny.reply("I don't think that will be necessary.")
+    elif (nick2 in aliasGroupFor(nick1)):  
+        phenny.reply("You and " + nick2 + " are already paired.")
+    elif ([nick2, nick1] in nick_pairs):
+        nick_pairs.remove([nick2, nick1])
+        aliasPairMerge(phenny, nick1, nick2)
+        phenny.reply("Confirmed alias request with " + nick2 + ". Your current aliases are: " + ', '.join(aliasGroupFor(nick1)) + ".")
+    elif ([nick1, nick2] in nick_pairs):
+        phenny.reply("Alias request already exists. Switch your nick to " + nick2 + " and call \".aliasPair " + nick1 + "\" to confirm.")
+    else:
+        nick_pairs.append([nick1, nick2])
+        phenny.reply("Alias request created. Switch your nick to " + nick2 + " and call \".aliasPair " + nick1 + "\" to confirm.")
+aliasPair.rule = (['aliasPair'], r'(\S+)')
+
+def aliasList(phenny, input):
+    # List current aliases
+    # Use: ".aliasList"
+    nick1 = input.nick
+    phenny.reply("Your current aliases are: " + ', '.join(aliasGroupFor(nick1)) + ".")
+aliasList.commands = ['aliasList']
+
+def aliasRemove(phenny, input):
+    # Remove self from alias group
+    # Use: ".aliasRemove"
+    nick1 = input.nick
+    group = aliasGroupFor(nick1)
+    if len(group) > 1:
+        nick_aliases.remove(group)
+        group.remove(nick1)
+        nick_aliases.append(group)
+        dumpAliases(phenny.alias_filename)
+    phenny.reply("You have removed " + nick1 + " from its alias group.")
+    
+aliasRemove.commands = ['aliasRemove']
+
+def loadAliases(fn):
+    f = open(fn)
+    for line in f: 
+        line = line.strip()
+        if line: 
+            try: nick_aliases.append(line.split('\t'))
+            except ValueError: continue
+    f.close()
+
+def dumpAliases(fn):
+    f = open(fn, 'w')
+    for group in nick_aliases: 
+        line = '\t'.join(group)
+        try: f.write(line + '\n')
+        except IOError: break
+    try: f.close()
+    except IOError: pass
+    
 def loadReminders(fn): 
     result = {}
     f = open(fn)
@@ -56,6 +153,16 @@ def setup(self):
             f.write('')
             f.close()
     self.reminders = loadReminders(self.tell_filename) # @@ tell
+    
+    fn2 = self.nick + '-' + self.config.host + '.alias.db'
+    self.alias_filename = os.path.join(os.path.expanduser('~/.phenny'), fn2)
+    if not os.path.exists(self.alias_filename): 
+        try: f = open(self.alias_filename, 'w')
+        except OSError: pass
+        else: 
+            f.write('')
+            f.close()
+    nick_aliases = loadAliases(self.alias_filename)
 
 def f_remind(phenny, input): 
     teller = input.nick
@@ -65,6 +172,8 @@ def f_remind(phenny, input):
     verb = verb
     tellee = tellee
     msg = msg
+    
+    aliases = aliasGroupFor(teller)
 
     tellee_original = tellee.rstrip('.,:;')
     tellee = tellee_original.lower()
@@ -76,7 +185,10 @@ def f_remind(phenny, input):
         return phenny.reply('That nickname is too long.')
 
     timenow = time.strftime('%d %b %H:%MZ', time.gmtime())
-    if not tellee in (teller.lower(), phenny.nick.lower(), 'me'): # @@
+
+    if tellee in aliases: 
+        phenny.say('You can %s yourself that.' % verb)
+    elif not tellee in (teller.lower(), phenny.nick.lower(), 'me'): # @@
         # @@ <deltab> and year, if necessary
         warn = False
         if tellee not in phenny.reminders: 
@@ -95,8 +207,6 @@ def f_remind(phenny, input):
         elif rand > 0.999: response = "yeah, sure, whatever"
 
         phenny.reply(response)
-    elif teller.lower() == tellee: 
-        phenny.say('You can %s yourself that.' % verb)
     else: phenny.say("Hey, I'm not as stupid as Monty you know!")
 
     dumpReminders(phenny.tell_filename, phenny.reminders) # @@ tell
@@ -124,6 +234,7 @@ def message(phenny, input):
     if not input.sender.startswith('#'): return
 
     tellee = input.nick
+    aliases = aliasGroupFor(tellee)
     channel = input.sender
 
     if not os: return
@@ -134,7 +245,7 @@ def message(phenny, input):
     remkeys = list(reversed(sorted(phenny.reminders.keys())))
     for remkey in remkeys: 
         if not remkey.endswith('*') or remkey.endswith(':'): 
-            if tellee.lower() == remkey: 
+            if remkey in aliases:
                 reminders.extend(getReminders(phenny, channel, remkey, tellee))
         elif tellee.lower().startswith(remkey.rstrip('*:')): 
             reminders.extend(getReminders(phenny, channel, remkey, tellee))

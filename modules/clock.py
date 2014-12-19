@@ -127,7 +127,7 @@ def refresh_database(phenny, raw=None):
     else:
         phenny.say('Only admins can execute that command!')
 refresh_database.name = 'refresh_timezone_database'
-refresh_database.commands = ['tz update']
+refresh_database.commands = ['tzdb update']
 refresh_database.thread = True
 
 def thread_check(phenny, raw):
@@ -138,7 +138,7 @@ def thread_check(phenny, raw):
     else:
         phenny.say('No timezone updating thread running')
 thread_check.name = 'timezone_thread_check'
-thread_check.commands = ['tz status']
+thread_check.commands = ['tzdb status']
 
 def setup(phenny):
     f = filename(phenny)

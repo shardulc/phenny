@@ -7,8 +7,9 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import os, re, time, random
+import os, re, datetime, random
 import web
+from collections import Counter
 
 maximum = 4
 lispchannels = frozenset([ '#lisp', '#scheme', '#opendarwin', '#macdev',
@@ -184,7 +185,7 @@ def f_remind(phenny, input):
     if len(tellee) > 20: 
         return phenny.reply('That nickname is too long.')
 
-    timenow = time.strftime('%d %b %H:%MZ', time.gmtime())
+    timenow = datetime.datetime.utcnow().strftime('%d %b %Y %H:%MZ')
 
     if tellee in aliases: 
         phenny.say('You can %s yourself that.' % verb)
@@ -214,16 +215,19 @@ f_remind.rule = ('$nick', ['tell', 'ask'], r'(\S+) (.*)')
 f_remind.thread = False
 
 def formatReminder(r, tellee):
-    teller, verb, datetime, msg = r
+    teller, verb, dt, msg = r
     template = "%s: %s <%s> %s %s %s"
-    today = time.strftime('%d %b', time.gmtime())
-    if datetime.startswith(today): 
-        datetime = datetime[len(today)+1:]
-    return template % (tellee, datetime, teller, verb, tellee, msg)
+    today = datetime.datetime.utcnow().strftime('%d %b')
+    year = datetime.datetime.utcnow().strftime('%Y ')
+    if dt.startswith(today):
+        dt = dt[len(today)+1:]
+    if year in dt:
+        dt = dt.replace(year, '')
+    return template % (tellee, dt, teller, verb, tellee, msg)
 
-def getReminders(phenny, channel, key, tellee): 
+def getReminders(phenny, channel, key, tellee):
     lines = []
-    for reminder in phenny.reminders[key]: 
+    for reminder in phenny.reminders[key]:
         lines.append(formatReminder(reminder, tellee))
 
     try: del phenny.reminders[key]
@@ -276,36 +280,58 @@ messageAlert.rule = r'.*'
 messageAlert.priority = 'low'
 messageAlert.thread = False
 
-def mytells(phenny, input):
+def datesort(tell):
+    dt = tell[0][2]
+    try:
+        return datetime.datetime.strptime(dt, '%d %b %Y %H:%MZ')
+    except ValueError:
+        # message was created before addition of year, assume 2014
+        t = datetime.datetime.strptime(dt, '%d %b %H:%MZ')
+        return t + (datetime.datetime(year=2014, month=1, day=1) - datetime.datetime(year=t.year, month=1, day=1))
+
+def tells(phenny, input):
+    """
+Usage: ".tells" for a summary of queued reminders; ".tells show <nick>" for reminders queued to a specific nick; ".tells rm <num>" to delete a reminder
+    """
+    teller = input.nick
     tells = []
     for tellee in phenny.reminders:
         for msg in phenny.reminders[tellee]:
-            if input.nick == msg[0]:
+            if teller == msg[0]:
                 tells.append((msg, tellee))
-    tells = sorted(tells) # consistently sort the list
+    tells = sorted(tells, key=lambda x: datesort(x)) # consistently sort the list
     if tells:
-        if input.group(1) and int(input.group(1)) > 0:
-            try:
-                msg, tellee = tells[int(input.group(1))-1]
-                phenny.reminders[tellee].remove(msg)
-                phenny.reply('Removed reminder {} that would have sent to {}'.format(input.group(1), tellee))
-            except:
-                phenny.reply("That isn't a valid reminder.")
-        else:
-            pmflag = False
-            for index, (msg, tellee) in enumerate(tells):
-                reminder = '[{}] - {}'.format(index+1, formatReminder(msg, tellee))
-                if '**pm**' in reminder:
-                    pmflag = True
-                    phenny.msg(input.nick, reminder)
+        if input.group(1):
+            if input.group(1) in ('rm', 'del'):
+                if input.group(2).isdigit() and int(input.group(2)) <= len(tells):
+                    msg, tellee = tells[int(input.group(2))-1]
+                    phenny.reminders[tellee].remove(msg)
+                    phenny.reply('Removed reminder {} that would have sent to {}. (reminder numbers have changed, use ".tells show" again)'.format(input.group(2), tellee))
                 else:
-                    phenny.reply(reminder)
-            if pmflag:
-                phenny.reply('Additional reminders sent via pm')
-            phenny.reply('Use .mytells rm <num> to remove a reminder')
+                    phenny.reply("That isn't a valid reminder.")
+            elif input.group(1) == 'show':
+                filtered_tells = filter(lambda x: x[1]==input.group(2), tells)
+                pmflag = False
+                for this_index, (msg, tellee) in enumerate(filtered_tells):
+                    reminder = '[{}] - {}'.format(tells.index((msg, tellee))+1, formatReminder(msg, tellee))
+                    if '**pm**' in reminder or this_index > 1:
+                        pmflag = True
+                        phenny.msg(teller, teller + ': ' + reminder)
+                    else:
+                        phenny.reply(reminder)
+                if pmflag:
+                    phenny.reply('Additional reminders sent via pm')
+                    phenny.msg(teller, 'Use .tells rm <num> to remove a reminder')
+                else:
+                    phenny.reply('Use .tells rm <num> to remove a reminder')
+            else:
+                phenny.reply("That's not a valid command.")
+        else:
+            count = Counter([i for (_, i) in tells])
+            phenny.reply('You have the following tells: ' + ', '.join(sorted(['{} ({})'.format(tellee, cnt) for tellee, cnt in count.items()])))
     else:
         phenny.reply("You don't have any tells queued.")
-mytells.rule = r'\.mytells(?:\s(?:rm|del)\s(\d+))?'
+tells.rule = r'\.tells(?:\s(rm|del|show)\s([\d\w]+))?'
 
 if __name__ == '__main__': 
     print(__doc__.strip())

@@ -291,7 +291,7 @@ def datesort(tell):
 
 def tells(phenny, input):
     """
-Usage: ".tells" for a summary of queued reminders; ".tells show <nick>" for reminders queued to a specific nick; ".tells rm <num>" to delete a reminder
+Usage: ".tells" for a summary of queued reminders; ".tells [show ]<nick/num>" for reminders queued to a specific nick; ".tells rm <num>" to delete a reminder
     """
     teller = input.nick
     tells = []
@@ -299,39 +299,45 @@ Usage: ".tells" for a summary of queued reminders; ".tells show <nick>" for remi
         for msg in phenny.reminders[tellee]:
             if teller == msg[0]:
                 tells.append((msg, tellee))
-    tells = sorted(tells, key=lambda x: datesort(x)) # consistently sort the list
+    tells = sorted(tells, key=lambda x: datesort(x)) # consistently sort the list by date
+
     if tells:
         if input.group(1):
             if input.group(1) in ('rm', 'del'):
                 if input.group(2).isdigit() and int(input.group(2)) <= len(tells):
                     msg, tellee = tells[int(input.group(2))-1]
                     phenny.reminders[tellee].remove(msg)
+                    if not phenny.reminders[tellee]:
+                        del phenny.reminders[tellee]
                     phenny.reply('Removed reminder {} that would have sent to {}. (reminder numbers have changed, use ".tells show" again)'.format(input.group(2), tellee))
                 else:
                     phenny.reply("That isn't a valid reminder.")
-            elif input.group(1) == 'show':
-                filtered_tells = filter(lambda x: x[1]==input.group(2), tells)
+            else:
+                search_term = input.group(2) or input.group(1)
+                if search_term.isdigit() and int(search_term) <= len(tells):
+                    filtered_tells = [tells[int(search_term)-1]]
+                else:
+                    filtered_tells = list(filter(lambda x: x[1]==search_term, tells))
+                if not filtered_tells:
+                    phenny.reply('No tells found.')
+
                 pmflag = False
+                send_pms = len(filtered_tells) > 2
                 for this_index, (msg, tellee) in enumerate(filtered_tells):
                     reminder = '[{}] - {}'.format(tells.index((msg, tellee))+1, formatReminder(msg, tellee))
-                    if '**pm**' in reminder or this_index > 1:
+                    if '**pm**' in reminder or (send_pms and this_index > 1):
                         pmflag = True
                         phenny.msg(teller, teller + ': ' + reminder)
                     else:
                         phenny.reply(reminder)
                 if pmflag:
                     phenny.reply('Additional reminders sent via pm')
-                    phenny.msg(teller, 'Use .tells rm <num> to remove a reminder')
-                else:
-                    phenny.reply('Use .tells rm <num> to remove a reminder')
-            else:
-                phenny.reply("That's not a valid command.")
         else:
             count = Counter([i for (_, i) in tells])
             phenny.reply('You have the following tells: ' + ', '.join(sorted(['{} ({})'.format(tellee, cnt) for tellee, cnt in count.items()])))
     else:
         phenny.reply("You don't have any tells queued.")
-tells.rule = r'\.tells(?:\s(rm|del|show)\s([\d\w]+))?'
+tells.rule = r'\.tells(?:\s(rm|del|show|[\d\w]+)(?:\s([\d\w]+))?)?$'
 
 if __name__ == '__main__': 
     print(__doc__.strip())

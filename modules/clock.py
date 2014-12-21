@@ -225,5 +225,50 @@ def npl(phenny, input):
 npl.commands = ['npl']
 npl.priority = 'high'
 
+def time_zone(phenny, input):
+    """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone."""
+    
+    format_regex = re.compile("(\d*)([a-zA-Z]*)\sin\s([a-zA-z]*)")
+    input_txt = input.group(2)
+    if not input_txt:
+        phenny.reply(time_zone.__doc__.strip())
+        return
+    regex_match = format_regex.search(input_txt)
+    if (not regex_match) or (regex_match.groups()[0] == "") or (regex_match.groups()[1] == "") or (regex_match.groups()[2] == ""):
+        phenny.reply(time_zone.__doc__.strip())
+    else:
+        from_tz_match = phenny.tz_data[regex_match.groups()[1].upper()]
+        to_tz_match = phenny.tz_data[regex_match.groups()[2].upper()]
+        if (from_tz_match == "") or (to_tz_match == ""):
+            phenny.reply("Please enter valid time zone(s) :P")
+            return
+            
+        time_hours = int(int(regex_match.groups()[0])/100)
+        time_mins = int(regex_match.groups()[0])%100
+        if (time_hours >= 24) or (time_hours < 0) or (time_mins >= 60) or (time_mins < 0):
+            phenny.reply("Please enter a vald time :P")
+            return
+        time_diff_hours = int(to_tz_match-from_tz_match)
+        time_diff_minutes = int(((to_tz_match-from_tz_match)-time_diff_hours)*60)
+        
+        dest_time_hours = time_hours + time_diff_hours
+        dest_time_mins = time_mins + time_diff_minutes
+                
+        if dest_time_mins >= 60:
+            dest_time_mins = dest_time_mins - 60
+            dest_time_hours = dest_time_hours + 1
+        elif dest_time_mins < 0:
+            dest_time_mins = dest_time_mins + 60
+            dest_time_hours = dest_time_hours - 1
+            
+        if dest_time_hours >= 24:
+            dest_time_hours = dest_time_hours - 24
+        elif dest_time_hours < 0:
+            dest_time_hours = dest_time_hours + 24
+            
+        phenny.reply(format(dest_time_hours, '02d') + format(dest_time_mins, '02d') + regex_match.groups()[2].upper())
+time_zone.commands = ['tz']
+time_zone.priority = 'high'
+    
 if __name__ == '__main__': 
     print(__doc__.strip())

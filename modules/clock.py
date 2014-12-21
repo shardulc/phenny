@@ -15,193 +15,16 @@ import socket
 import struct
 import datetime
 import web
+import os
+import threading
+from lxml import html
 from decimal import Decimal as dec
 from tools import deprecated
-
-TimeZones = {'KST': 9, 'CADT': 10.5, 'EETDST': 3, 'MESZ': 2, 'WADT': 9, 
-                 'EET': 2, 'MST': -7, 'WAST': 8, 'IST': 5.5, 'B': 2, 
-                 'MSK': 3, 'X': -11, 'MSD': 4, 'CETDST': 2, 'AST': -4, 
-                 'HKT': 8, 'JST': 9, 'CAST': 9.5, 'CET': 1, 'CEST': 2, 
-                 'EEST': 3, 'EAST': 10, 'METDST': 2, 'MDT': -6, 'A': 1, 
-                 'UTC': 0, 'ADT': -3, 'EST': -5, 'E': 5, 'D': 4, 'G': 7, 
-                 'F': 6, 'I': 9, 'H': 8, 'K': 10, 'PDT': -7, 'M': 12, 
-                 'L': 11, 'O': -2, 'MEST': 2, 'Q': -4, 'P': -3, 'S': -6, 
-                 'R': -5, 'U': -8, 'T': -7, 'W': -10, 'WET': 0, 'Y': -12, 
-                 'CST': -6, 'EADT': 11, 'Z': 0, 'GMT': 0, 'WETDST': 1, 
-                 'C': 3, 'WEST': 1, 'CDT': -5, 'MET': 1, 'N': -1, 'V': -9, 
-                 'EDT': -4, 'UT': 0, 'PST': -8, 'MEZ': 1, 'BST': 1, 
-                 'ACS': 9.5, 'ATL': -4, 'ALA': -9, 'HAW': -10, 'AKDT': -8, 
-                 'AKST': -9, 
-                 'BDST': 2, 'KGT': 6}
-
-TZ1 = {
- 'NDT': -2.5, 
- 'BRST': -2, 
- 'ADT': -3, 
- 'EDT': -4, 
- 'CDT': -5, 
- 'MDT': -6, 
- 'PDT': -7, 
- 'YDT': -8, 
- 'HDT': -9, 
- 'BST': 1, 
- 'MEST': 2, 
- 'SST': 2, 
- 'FST': 2, 
- 'CEST': 2, 
- 'EEST': 3, 
- 'WADT': 8, 
- 'KDT': 10, 
- 'EADT': 13, 
- 'NZD': 13, 
- 'NZDT': 13, 
- 'GMT': 0, 
- 'UT': 0, 
- 'UTC': 0, 
- 'WET': 0, 
- 'WAT': -1, 
- 'AT': -2, 
- 'FNT': -2, 
- 'BRT': -3, 
- 'MNT': -4, 
- 'EWT': -4, 
- 'AST': -4, 
- 'EST': -5, 
- 'ACT': -5, 
- 'CST': -6, 
- 'MST': -7, 
- 'PST': -8, 
- 'YST': -9, 
- 'HST': -10, 
- 'CAT': -10, 
- 'AHST': -10, 
- 'NT': -11, 
- 'IDLW': -12, 
- 'CET': 1, 
- 'MEZ': 1, 
- 'ECT': 1, 
- 'MET': 1, 
- 'MEWT': 1, 
- 'SWT': 1, 
- 'SET': 1, 
- 'FWT': 1, 
- 'EET': 2, 
- 'UKR': 2, 
- 'BT': 3, 
- 'ZP4': 4, 
- 'ZP5': 5, 
- 'ZP6': 6, 
- 'WST': 8, 
- 'HKT': 8, 
- 'CCT': 8, 
- 'JST': 9, 
- 'KST': 9, 
- 'EAST': 10, 
- 'GST': 10, 
- 'NZT': 12, 
- 'NZST': 12, 
- 'IDLE': 12
-}
-
-TZ2 = {
- 'ACDT': 10.5, 
- 'ACST': 9.5, 
- 'ADT': 3, 
- 'AEDT': 11, # hmm
- 'AEST': 10, # hmm
- 'AHDT': 9, 
- 'AHST': 10, 
- 'AST': 4, 
- 'AT': 2, 
- 'AWDT': -9, 
- 'AWST': -8, 
- 'BAT': -3, 
- 'BDST': -2, 
- 'BET': 11, 
- 'BST': -1, 
- 'BT': -3, 
- 'BZT2': 3, 
- 'CADT': -10.5, 
- 'CAST': -9.5, 
- 'CAT': 10, 
- 'CCT': -8, 
- # 'CDT': 5, 
- 'CED': -2, 
- 'CET': -1, 
- 'CST': 6, 
- 'EAST': -10, 
- # 'EDT': 4, 
- 'EED': -3, 
- 'EET': -2, 
- 'EEST': -3, 
- 'EST': 5, 
- 'FST': -2, 
- 'FWT': -1, 
- 'GMT': 0, 
- 'GST': -10, 
- 'HDT': 9, 
- 'HST': 10, 
- 'IDLE': -12, 
- 'IDLW': 12, 
- # 'IST': -5.5, 
- 'IT': -3.5, 
- 'JST': -9, 
- 'JT': -7, 
- 'KST': -9, 
- 'MDT': 6, 
- 'MED': -2, 
- 'MET': -1, 
- 'MEST': -2, 
- 'MEWT': -1, 
- 'MST': 7, 
- 'MT': -8, 
- 'NDT': 2.5, 
- 'NFT': 3.5, 
- 'NT': 11, 
- 'NST': -6.5, 
- 'NZ': -11, 
- 'NZST': -12, 
- 'NZDT': -13, 
- 'NZT': -12, 
- # 'PDT': 7, 
- 'PST': 8, 
- 'ROK': -9, 
- 'SAD': -10, 
- 'SAST': -9, 
- 'SAT': -9, 
- 'SDT': -10, 
- 'SST': -2, 
- 'SWT': -1, 
- 'USZ3': -4, 
- 'USZ4': -5, 
- 'USZ5': -6, 
- 'USZ6': -7, 
- 'UT': 0, 
- 'UTC': 0, 
- 'UZ10': -11, 
- 'WAT': 1, 
- 'WET': 0, 
- 'WST': -8, 
- 'YDT': 8, 
- 'YST': 9, 
- 'ZP4': -4, 
- 'ZP5': -5, 
- 'ZP6': -6
-}
-
-TZ3 = {
-    'AEST': 10, 
-    'AEDT': 11
-}
-
-#TimeZones.update(TZ2) # do these have to be negated ?
-TimeZones.update(TZ1)
-TimeZones.update(TZ3)
 
 r_local = re.compile(r'\([a-z]+_[A-Z]+\)')
 
 def f_time(phenny, input): 
-    """Returns the current time."""
+    """.time [timezone] - Show current time in defined timezone. Defaults to GMT."""
     tz = input.group(2) or 'GMT'
 
     # Personal time zones, because they're rad
@@ -224,8 +47,8 @@ def f_time(phenny, input):
         locale.setlocale(locale.LC_TIME, (tz[1:-1], 'UTF-8'))
         msg = time.strftime("%A, %d %B %Y %H:%M:%SZ", time.gmtime())
         phenny.reply(msg)
-    elif TZ in TimeZones: 
-        offset = TimeZones[TZ] * 3600
+    elif TZ in phenny.tz_data: 
+        offset = phenny.tz_data[TZ] * 3600
         timenow = time.gmtime(time.time() + offset)
         msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(TZ), timenow)
         phenny.reply(msg)
@@ -253,6 +76,104 @@ f_time.name = 'time'
 f_time.commands = ['time']
 f_time.example = '.time UTC'
 
+def scrape_wiki_zones():
+    data = {}
+    url = 'http://en.wikipedia.org/wiki/List_of_time_zone_abbreviations'
+    resp = web.get(url)
+    h = html.document_fromstring(resp)
+    table = h.find_class('wikitable')[0]
+    for row in table.findall('tr')[1:]:
+        code = row.findall('td')[0].text
+        offset = row.findall('td')[2].find('a').text[3:]
+        offset = offset.replace('−', '-') # replacing minus sign with hyphen
+        if offset.find(':') > 0:
+            offset = int(offset.split(':')[0]) + int(offset.split(':')[1]) / 60
+        else:
+            if offset == '':
+                offset = 0
+            offset = int(offset)
+        data[code] = offset
+    url = 'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
+    resp = web.get(url)
+    h = html.document_fromstring(resp)
+    table = h.find_class('wikitable')[0]
+    for trs in table.findall('tr'):
+        tmr=0
+        for tds in trs.findall('td'):
+            tmr=tmr+1
+            if tmr==3:
+                ctz=tds.find('a').text[tds.find('a').text.find('/')+1:].replace('_',' ')
+                if ctz.find('/')!=-1:
+                    ctz=ctz[ctz.find('/')+1:]
+            if tmr==5:
+                ctu=tds.find('a').text
+                if ctu[ctu.find(':')+1]=='0':
+                    ctu=ctu[:ctu.find(':')]
+                else:
+                    ctu=ctu[:ctu.find(':')]+'.5'
+                if ctu[0]=='−':
+                    ctu='-'+ctu[1:]
+                data[ctz.upper()]=float(ctu)
+    return data
+
+def filename(phenny):
+    name = phenny.nick + '-' + phenny.config.host + '.timezones.db'
+    return os.path.join(os.path.expanduser('~/.phenny'), name)
+
+def write_dict(filename, data):
+    with open(filename, 'w') as f:
+        for k, v in data.items():
+            f.write('{}${}\n'.format(k, v))
+
+def read_dict(filename):
+    data = {}
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            if line == '\n':
+                continue
+            code, offset = line.replace('\n', '').split('$')
+            if offset.find('.') == -1:
+                offset = int(offset)
+            else:
+                offset = float(offset)
+            data[code] = offset
+    return data
+
+def refresh_database(phenny, raw=None):
+    if raw.admin or raw is None:
+        f = filename(phenny)
+        phenny.tz_data = scrape_wiki_zones()
+        write_dict(f, phenny.tz_data)
+        phenny.say('Timezone database successfully written')
+    else:
+        phenny.say('Only admins can execute that command!')
+refresh_database.name = 'refresh_timezone_database'
+refresh_database.commands = ['tz update']
+refresh_database.thread = True
+
+def thread_check(phenny, raw):
+    for t in threading.enumerate():
+        if t.name == refresh_database.name:
+            phenny.say('A timezone updating thread is currently running')
+            break
+    else:
+        phenny.say('No timezone updating thread running')
+thread_check.name = 'timezone_thread_check'
+thread_check.commands = ['tz status']
+
+def setup(phenny):
+    f = filename(phenny)
+    if os.path.exists(f):
+        try:
+            phenny.tz_data = read_dict(f)
+        except ValueError:
+            print('timezone database read failed, refreshing it')
+            phenny.tz_data = scrape_wiki_zones()
+            write_dict(f, phenny.tz_data)
+    else:
+        phenny.tz_data = scrape_wiki_zones()
+        write_dict(f, phenny.tz_data)
+
 def beats(phenny, input): 
     """Shows the internet time in Swatch beats."""
     beats = ((time.time() + 3600) % 86400) / 86.4
@@ -272,7 +193,7 @@ def yi(phenny, input):
     if extraraels == 4: 
         return phenny.say('Yes! PARTAI!')
     elif extraraels == 3:
-    	  return phenny.say('Soon...')
+          return phenny.say('Soon...')
     else: phenny.say('Not yet...')
 yi.commands = ['yi']
 yi.priority = 'low'
@@ -316,8 +237,8 @@ def time_zone(phenny, input):
     if (not regex_match) or (regex_match.groups()[0] == "") or (regex_match.groups()[1] == "") or (regex_match.groups()[2] == ""):
         phenny.reply(time_zone.__doc__.strip())
     else:
-        from_tz_match = TimeZones.get(regex_match.groups()[1].upper(), "")
-        to_tz_match = TimeZones.get(regex_match.groups()[2].upper(), "")
+        from_tz_match = phenny.tz_data[regex_match.groups()[1].upper()]
+        to_tz_match = phenny.tz_data[regex_match.groups()[2].upper()]
         if (from_tz_match == "") or (to_tz_match == ""):
             phenny.reply("Please enter valid time zone(s) :P")
             return

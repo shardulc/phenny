@@ -32,7 +32,7 @@ def greeting(phenny, input):
         pass
     
     c = greeting.conn.cursor()
-    c.execute("SELECT * FROM special_nicks WHERE nick = ?", (nick.lower(),))
+    c.execute("SELECT * FROM special_nicks WHERE nick = ? AND channel = ?", (nick.lower(), input.sender))
     try:
         phenny.say(input.nick + ": " + str(c.fetchone()[0]))
     except TypeError:

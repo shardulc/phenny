@@ -140,7 +140,6 @@ r_time = re.compile(r'^([0-9]{2}[:.][0-9]{2})')
 r_zone = re.compile(r'( ?([A-Za-z]+|[+-]\d\d?))')
 
 import calendar
-from modules.clock import TimeZones
 
 def at(phenny, input):
     message = input[4:]
@@ -160,8 +159,8 @@ def at(phenny, input):
     if z.startswith('+') or z.startswith('-'):
         tz = int(z)
 
-    if z in TimeZones:
-        tz = TimeZones[z]
+    if z in phenny.tz_data:
+        tz = phenny.tz_data[z]
     else: return phenny.reply("Sorry, didn't understand the time zone.")
 
     d = time.strftime("%Y-%m-%d", time.gmtime())

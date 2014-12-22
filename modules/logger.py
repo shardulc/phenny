@@ -30,7 +30,7 @@ def logger(phenny, input):
 
     sqlite_data = {
         'channel': input.sender,
-        'nick': input.nick,
+        'nick': input.nick.lower(),
         'msg': input.group(1),
         'chars': len(input.group(1)),
     }
@@ -55,11 +55,10 @@ def logger(phenny, input):
                     );''', sqlite_data)
     c.close()
 
-    if random.randint(0, 20) == 10:
-        c = logger.conn.cursor()
-        c.execute('update lines_by_nick set quote=:msg where channel=:channel \
+    c = logger.conn.cursor()
+    c.execute('update lines_by_nick set quote=:msg where channel=:channel \
                 and nick=:nick', sqlite_data)
-        c.close()
+    c.close()
 
     logger.conn.commit()
 logger.conn = None

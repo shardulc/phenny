@@ -67,56 +67,61 @@ greeting.rule = r'(.*)'
 greeting.thread = False
 
 def greeting_add(phenny, input):
-    if input.group(2) == None:
-        phenny.reply ("You haven't specified a name and message.")
-        return
-    elif len(input.group(2).split(" ")) < 2:
-        phenny.reply ("You haven't specified a message.")
-        return
-    
-    sqlite_data = {
-        'channel': input.sender,
-        'nick': input.group(2).split(" ")[0].lower(),
-        'message': input.group(2).split(" ", 1)[1]
-    }
-    
-    dbconnection = sqlite3.connect(phenny.greeting_db)
-    c = dbconnection.cursor()
-    c.execute('''insert or replace into special_nicks
-                (channel, nick, message)
-                values(
-                    :channel,
-                    :nick,
-                    :message
-                );''', sqlite_data)
-    c.close()
-    
-    c = dbconnection.cursor()
-    c.execute('update special_nicks set message=:message where channel=:channel \
-                and nick=:nick', sqlite_data)
-    c.close()
-    
-    dbconnection.commit()
-    
-    phenny.reply("Successfully added " + input.group(2).split(" ", 1)[0] + " to the special greetings list.")
+    if input.admin:
+        if input.group(2) == None:
+            phenny.reply ("You haven't specified a name and message.")
+            return
+        elif len(input.group(2).split(" ")) < 2:
+            phenny.reply ("You haven't specified a message.")
+            return
+        
+        sqlite_data = {
+            'channel': input.sender,
+            'nick': input.group(2).split(" ")[0].lower(),
+            'message': input.group(2).split(" ", 1)[1]
+        }
+        
+        dbconnection = sqlite3.connect(phenny.greeting_db)
+        c = dbconnection.cursor()
+        c.execute('''insert or replace into special_nicks
+                    (channel, nick, message)
+                    values(
+                        :channel,
+                        :nick,
+                        :message
+                    );''', sqlite_data)
+        c.close()
+        
+        c = dbconnection.cursor()
+        c.execute('update special_nicks set message=:message where channel=:channel \
+                    and nick=:nick', sqlite_data)
+        c.close()
+        
+        dbconnection.commit()
+        
+        phenny.reply("Successfully added " + input.group(2).split(" ", 1)[0] + " to the special greetings list.")
+    else:
+        phenny.reply("You have insufficient privelleges to use this command.")
     
 greeting_add.rule = (['greeting add'], r'(.*)')
 greeting_add.name = 'greeting add'
 greeting.priority = 'low'
 
 def greeting_del(phenny, input):
-    if input.group(2) == None:
-        phenny.reply ("You haven't specified a name.")
-        return
-    
-    dbconnection = sqlite3.connect(phenny.greeting_db)
-    c = dbconnection.cursor()
-    c.execute("DELETE FROM special_nicks WHERE nick = ? AND channel = ?", (input.group(2).split(" ")[0].lower(), input.sender))
-    c.close()
-    dbconnection.commit()
-    
-    phenny.reply("Successfully deleted " + input.group(2).split(" ", 1)[0] + " from the special greetings list.")
-    
+    if input.admin:
+        if input.group(2) == None:
+            phenny.reply ("You haven't specified a name.")
+            return
+        
+        dbconnection = sqlite3.connect(phenny.greeting_db)
+        c = dbconnection.cursor()
+        c.execute("DELETE FROM special_nicks WHERE nick = ? AND channel = ?", (input.group(2).split(" ")[0].lower(), input.sender))
+        c.close()
+        dbconnection.commit()
+        
+        phenny.reply("Successfully deleted " + input.group(2).split(" ", 1)[0] + " from the special greetings list.")
+    else:
+        phenny.reply("You have insufficient privelleges to use this command.")
 greeting_del.rule = (['greeting del'], r'(.*)')
 greeting_del.name = 'greeting del'
 greeting.priority = 'low'

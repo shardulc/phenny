@@ -3,12 +3,13 @@
 apertium_wiki.py - Phenny Wikipedia Module
 """
 
-import web
+import web, json
 from lxml import etree
 import lxml.html
 import lxml.html.clean
 
 wikiuri = 'http://wiki.apertium.org/wiki/%s'
+wikisearchuri = 'http://wiki.apertium.org/api.php?action=query&list=search&srlimit=1&format=json&srsearch=%s'
 
 def format_term(term):
    term = web.quote(term)
@@ -41,8 +42,13 @@ def awik(phenny, input):
    try:
       html = str(web.get(wikiuri % (term)))
    except:
-      phenny.reply("A wiki page does not exist for that term.")
-      return
+      apiResponse = json.loads(str(web.get(wikisearchuri % (term))))
+      if len(apiResponse['query']['search']):
+        term = apiResponse['query']['search'][0]['title']
+        html = str(web.get(wikiuri % (term)))
+      else:
+        phenny.reply("No wiki results for that term.")
+        return
    
    page = lxml.html.fromstring(html)
 

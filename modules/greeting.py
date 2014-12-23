@@ -3,16 +3,14 @@ import os
 import sqlite3
 
 def setup(self):
-    fn = self.nick + '-' + self.config.host + '.greeting.db'
-    self.greeting_db = os.path.join(os.path.expanduser('~/.phenny'), fn)
+    fn = self.nick + '-' + self.config.host + '.logger.db'
+    self.logger_db = os.path.join(os.path.expanduser('~/.phenny'), fn)
+    self.logger_conn = sqlite3.connect(self.logger_db)
+    fnl = self.nick + '-' + self.config.host + '.greeting.db'
+    self.greeting_db = os.path.join(os.path.expanduser('~/.phenny'), fnl)
     self.greeting_conn = sqlite3.connect(self.greeting_db)
-
+    
     c = self.greeting_conn.cursor()
-    c.execute('''create table if not exists lines_by_nick (
-        channel     varchar(255),
-        nick        varchar(255),
-        unique (channel, nick) on conflict replace
-    );''')
     c.execute('''create table if not exists special_nicks (
         message     varchar(255),
         nick        varchar(255),
@@ -23,11 +21,14 @@ def setup(self):
 
 def greeting(phenny, input):
     if not greeting.conn:
-        greeting.conn = sqlite3.connect(phenny.greeting_db)
+        greeting.conn = sqlite3.connect(phenny.logger_db)
+    if not greeting.conndb:
+        greeting.conndb = sqlite3.connect(phenny.greeting_db)
     if input.sender.lower() in phenny.config.greetings.keys():
         greetingmessage = phenny.config.greetings[input.sender]
     else:
         return
+    
     greetingmessage = greetingmessage.replace("%name", input.nick)
     greetingmessage = greetingmessage.replace("%channel", input.sender)
 
@@ -37,10 +38,11 @@ def greeting(phenny, input):
     except UnboundLocalError:
         pass
     
-    c = greeting.conn.cursor()
-    c.execute("SELECT * FROM special_nicks WHERE nick = ? AND channel = ?", (nick.lower(), input.sender))
+    c = greeting.conndb.cursor()
+    c.execute("SELECT * FROM special_nicks WHERE nick = ?", (nick.lower(),))
     try:
         phenny.say(input.nick + ": " + str(c.fetchone()[0]))
+        return
     except TypeError:
         pass
     c.close()
@@ -51,23 +53,10 @@ def greeting(phenny, input):
         if input.nick != phenny.config.nick:
             phenny.say(greetingmessage)
     c.close()
-    
-    sqlite_data = {
-        'channel': input.sender,
-        'nick': input.nick.lower(),
-     }
-        
-    c = greeting.conn.cursor()
-    c.execute('''insert or replace into lines_by_nick
-                    (channel, nick)
-                    values(
-                        :channel,
-                        :nick
-                    );''', sqlite_data)
-    c.close()
     greeting.conn.commit()
     
 greeting.conn = None
+greeting.conndb = None
 greeting.event = "JOIN"
 greeting.priority = 'low'
 greeting.rule = r'(.*)'

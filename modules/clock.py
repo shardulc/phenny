@@ -27,6 +27,16 @@ def f_time(phenny, input):
     """.time [timezone] - Show current time in defined timezone. Defaults to GMT."""
     tz = input.group(2) or 'GMT'
 
+    f = filename(phenny)
+    import os, re, subprocess
+    if os.path.exists(f):
+        try:
+            phenny.tz_data = read_dict(f)
+        except ValueError:
+            print('timezone database read failed, update it')
+    else:
+        print('timezone database read failed update it')
+
     # Personal time zones, because they're rad
     if hasattr(phenny.config, 'timezones'): 
         People = phenny.config.timezones
@@ -40,6 +50,7 @@ def f_time(phenny, input):
     TZ = tz.upper()
     longs=int(len(tz))
     skip=False
+    print(phenny.tz_data)
     if len(tz) > 30: return
     for (slug, title) in phenny.tz_data.items():
         if slug[:longs]==TZ:

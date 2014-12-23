@@ -43,7 +43,7 @@ def greeting(phenny, input):
     c.execute("SELECT * FROM lines_by_nick WHERE nick = ?", (nick.lower(),))
     if c.fetchone() == None:
         if input.nick != phenny.config.nick:
-            phenny.say(input.nick + ": Welcome to " + input.sender + ", " + input.nick + "! Please stick around for a while and someone will address any questions you have.")
+            phenny.say(input.nick + ": " + phenny.config.greeting)
     c.close()
     
     sqlite_data = {

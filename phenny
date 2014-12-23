@@ -33,6 +33,7 @@ def create_default_config(fn):
     ipv6 = False
     channels = ['#example', '#test']
     owner = 'yournickname'
+    greeting = "Welcome to our channel! Enjoy your stay." 
 
     # password is the NickServ password, serverpass is the server password
     # password = 'example'

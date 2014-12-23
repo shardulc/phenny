@@ -34,6 +34,7 @@ def create_default_config(fn):
     channels = ['#example', '#test']
     owner = 'yournickname'
     greeting = "Welcome to our channel! Enjoy your stay." 
+    greeting_channels = ['#example', "#macho"]
 
     # password is the NickServ password, serverpass is the server password
     # password = 'example'

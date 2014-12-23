@@ -14,6 +14,7 @@ import re, urllib.request, urllib.parse, urllib.error
 
 uri = 'http://en.wiktionary.org/wiki/{0}?printable=yes'
 wikiapi = 'http://en.wiktionary.org/w/api.php?action=query&titles={0}&prop=revisions&rvprop=content&format=json'
+wikisearchapi = 'http://en.wiktionary.org/w/api.php?action=query&list=search&srlimit=1&format=json&srsearch={0}'
 #r_tag = re.compile(r'<[^>]+>')
 r_ul = re.compile(r'(?ims)<ul>.*?</ul>')
 r_li = re.compile(r'^# ')
@@ -141,21 +142,27 @@ def w(phenny, input):
         return phenny.reply("Nothing to define.")
     word = input.group(2)
     etymology, definitions = wiktionary(phenny, word)
-    if not definitions: 
-        phenny.say("Couldn't get any definitions for %s." % word)
-        return
 
-    result = format(word, definitions)
-    if len(result) < 150: 
-        result = format(word, definitions, 3)
-    if len(result) < 150: 
-        result = format(word, definitions, 5)
-        
-    result = result.replace('|_|', ' ').replace('|', ' ')
+    if definitions:
+        result = format(word, definitions)
+        if len(result) < 150: 
+            result = format(word, definitions, 3)
+        if len(result) < 150: 
+            result = format(word, definitions, 5)
+            
+        result = result.replace('|_|', ' ').replace('|', ' ')
 
-    if len(result) > 300: 
-        result = result[:295] + '[...]'
-    phenny.say(result)
+        if len(result) > 300: 
+            result = result[:295] + '[...]'
+        phenny.say(result)
+    else:
+        apiResponse = json.loads(str(web.get(wikisearchapi.format(word))))
+        if len(apiResponse['query']['search']):
+            word = apiResponse['query']['search'][0]['title']
+            phenny.say("Perhaps you meant %s?" % repr(word))
+        else:
+            phenny.say("Couldn't find any definitions for %s." % word)
+
 w.commands = ['w']
 w.example = '.w bailiwick'
 

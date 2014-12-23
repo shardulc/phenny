@@ -5,7 +5,7 @@ import sqlite3
 def setup(self):
     fn = self.nick + '-' + self.config.host + '.logger.db'
     self.logger_db = os.path.join(os.path.expanduser('~/.phenny'), fn)
-    self.logger_conn = sqlite3.connect(self.greeting_db)
+    self.logger_conn = sqlite3.connect(self.logger_db)
     fnl = self.nick + '-' + self.config.host + '.greeting.db'
     self.greeting_db = os.path.join(os.path.expanduser('~/.phenny'), fnl)
     self.greeting_conn = sqlite3.connect(self.greeting_db)
@@ -23,7 +23,7 @@ def greeting(phenny, input):
     if not greeting.conn:
         greeting.conn = sqlite3.connect(phenny.logger_db)
     if not greeting.conndb:
-        greetingdb.conndb = sqlite3.connect(phenny.greeting_db)
+        greeting.conndb = sqlite3.connect(phenny.greeting_db)
     if input.sender.lower() in phenny.config.greetings.keys():
         greetingmessage = phenny.config.greetings[input.sender]
     else:
@@ -39,7 +39,7 @@ def greeting(phenny, input):
         pass
     
     c = greeting.conndb.cursor()
-    c.execute("SELCT * FROM special_nicks WHERE nick = ?", (nick.lower(),))
+    c.execute("SELECT * FROM special_nicks WHERE nick = ?", (nick.lower(),))
     try:
         phenny.say(input.nick + ": " + str(c.fetchone()[0]))
         return

@@ -24,6 +24,12 @@ def setup(self):
 def greeting(phenny, input):
     if not greeting.conn:
         greeting.conn = sqlite3.connect(phenny.greeting_db)
+    if input.sender.lower() in phenny.config.greetings.keys():
+        greetingmessage = phenny.config.greetings[input.sender]
+    else:
+        return
+    greetingmessage = greetingmessage.replace("%name", input.nick)
+    greetingmessage = greetingmessage.replace("%channel", input.sender)
 
     # Greeting Message
     try:
@@ -43,7 +49,7 @@ def greeting(phenny, input):
     c.execute("SELECT * FROM lines_by_nick WHERE nick = ?", (nick.lower(),))
     if c.fetchone() == None:
         if input.nick != phenny.config.nick:
-            phenny.say(input.nick + ": " + phenny.config.greeting)
+            phenny.say(greetingmessage)
     c.close()
     
     sqlite_data = {

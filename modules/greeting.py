@@ -9,6 +9,7 @@ def setup(self):
     self.greeting_db = os.path.join(os.path.expanduser('~/.phenny'), fnl)
     self.greeting_conn = sqlite3.connect(self.greeting_db)
     
+    c = self.greeting_conn.cursor()
     c.execute('''create table if not exists special_nicks (
         message     varchar(255),
         nick        varchar(255),

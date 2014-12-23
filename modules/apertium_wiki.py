@@ -9,7 +9,7 @@ import lxml.html
 import lxml.html.clean
 
 wikiuri = 'http://wiki.apertium.org/wiki/%s'
-wikisearchuri = 'http://wiki.apertium.org/api.php?action=query&list=search&srlimit=1&format=json&srsearch=%s'
+wikisearchuri = 'http://wiki.apertium.org/api.php?action=query&list=search&srlimit=1&format=json&srsearch=%s&srwhat=%s'
 
 def format_term(term):
    term = web.quote(term)
@@ -42,13 +42,18 @@ def awik(phenny, input):
    try:
       html = str(web.get(wikiuri % (term)))
    except:
-      apiResponse = json.loads(str(web.get(wikisearchuri % (term))))
+      apiResponse = json.loads(str(web.get(wikisearchuri % (term, 'title'))))
       if len(apiResponse['query']['search']):
         term = apiResponse['query']['search'][0]['title']
         html = str(web.get(wikiuri % (term)))
       else:
-        phenny.reply("No wiki results for that term.")
-        return
+        apiResponse = json.loads(str(web.get(wikisearchuri % (term, 'text'))))
+        if len(apiResponse['query']['search']):
+          term = apiResponse['query']['search'][0]['title']
+          html = str(web.get(wikiuri % (term)))
+        else:
+          phenny.reply("No wiki results for that term.")
+          return
    
    page = lxml.html.fromstring(html)
 

@@ -29,7 +29,7 @@ lispchannels = frozenset([ '#lisp', '#scheme', '#opendarwin', '#macdev',
 #
 # spectre\tspectie\tspectei
 # nick\talias
-nick_aliases = [] #don't change this, use the 'aliasPair' command on the bot
+nick_aliases = [] #don't change this, use the '.alias add' command on the bot
 
 # pending alias pair requests
 # reset each session
@@ -62,11 +62,11 @@ def aliasPairMerge(phenny, nick1, nick2):
 
 def aliasPair(phenny, input):
     # Send or confirm an alias pair request
-    # Use: ".aliasPair nickAlias"
+    # Use: ".alias add nickAlias"
     nick1 = input.nick
     pair, nick2 = input.groups()
     if (nick2 == None):
-        phenny.reply("Usage: .aliasPair nick")
+        phenny.reply("Usage: .alias add nick")
     elif (nick1 == nick2):
         phenny.reply("I don't think that will be necessary.")
     elif (nick2 in aliasGroupFor(nick1)):  
@@ -76,22 +76,22 @@ def aliasPair(phenny, input):
         aliasPairMerge(phenny, nick1, nick2)
         phenny.reply("Confirmed alias request with " + nick2 + ". Your current aliases are: " + ', '.join(aliasGroupFor(nick1)) + ".")
     elif ([nick1, nick2] in nick_pairs):
-        phenny.reply("Alias request already exists. Switch your nick to " + nick2 + " and call \".aliasPair " + nick1 + "\" to confirm.")
+        phenny.reply("Alias request already exists. Switch your nick to " + nick2 + " and call \".alias add " + nick1 + "\" to confirm.")
     else:
         nick_pairs.append([nick1, nick2])
-        phenny.reply("Alias request created. Switch your nick to " + nick2 + " and call \".aliasPair " + nick1 + "\" to confirm.")
+        phenny.reply("Alias request created. Switch your nick to " + nick2 + " and call \".alias add " + nick1 + "\" to confirm.")
 aliasPair.rule = (['aliasPair'], r'(\S+)')
 
 def aliasList(phenny, input):
     # List current aliases
-    # Use: ".aliasList"
+    # Use: ".alias list"
     nick1 = input.nick
     phenny.reply("Your current aliases are: " + ', '.join(aliasGroupFor(nick1)) + ".")
-aliasList.commands = ['aliasList']
+aliasList.commands = ['.alias list']
 
 def aliasRemove(phenny, input):
     # Remove self from alias group
-    # Use: ".aliasRemove"
+    # Use: ".alias remove"
     nick1 = input.nick
     group = aliasGroupFor(nick1)
     if len(group) > 1:
@@ -101,7 +101,7 @@ def aliasRemove(phenny, input):
         dumpAliases(phenny.alias_filename)
     phenny.reply("You have removed " + nick1 + " from its alias group.")
     
-aliasRemove.commands = ['aliasRemove']
+aliasRemove.commands = ['.alias remove']
 
 def loadAliases(fn):
     f = open(fn)

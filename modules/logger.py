@@ -50,8 +50,7 @@ def logger(phenny, input):
                         coalesce((select characters from lines_by_nick where
                             channel=:channel and nick=:nick) + :chars, :chars),
                         CURRENT_TIMESTAMP,
-                        coalesce((select quote from lines_by_nick where
-                            channel=:channel and nick=:nick), :msg)
+                        :msg
                     );''', sqlite_data)
     c.close()
 

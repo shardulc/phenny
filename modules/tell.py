@@ -272,8 +272,11 @@ message.priority = 'low'
 message.thread = False
 
 def messageAlert(phenny, input):
-    if (input.nick.lower() in list(phenny.reminders.keys())):
-        phenny.say(input.nick + ': You have messages.')
+    aliases = aliasGroupFor(input.nick)
+    remkeys = phenny.reminders.keys()
+    for alias in aliases:
+        if alias in remkeys:
+            phenny.say(input.nick + ': You have messages.')
 messageAlert.event = 'JOIN'
 messageAlert.rule = r'.*'
 messageAlert.priority = 'low'

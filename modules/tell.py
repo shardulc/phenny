@@ -213,7 +213,9 @@ def f_remind(phenny, input):
 f_remind.rule = ('$nick', ['tell', 'ask'], r'(\S+) (.*)')
 f_remind.thread = False
 
-def formatReminder(r, tellee):
+def formatReminder(r, tellee, recipient=None):
+    if not recipient:
+        recipient = tellee
     teller, verb, dt, msg = r
     template = "%s: %s <%s> %s %s %s"
     today = datetime.datetime.utcnow().strftime('%d %b')
@@ -222,12 +224,12 @@ def formatReminder(r, tellee):
         dt = dt[len(today)+1:]
     if year in dt:
         dt = dt.replace(year, '')
-    return template % (tellee, dt, teller, verb, tellee, msg)
+    return template % (recipient, dt, teller, verb, tellee, msg)
 
-def getReminders(phenny, channel, key, tellee):
+def getReminders(phenny, channel, key, recipient):
     lines = []
     for reminder in phenny.reminders[key]:
-        lines.append(formatReminder(reminder, tellee))
+        lines.append(formatReminder(reminder, key, recipient))
 
     try: del phenny.reminders[key]
     except KeyError: phenny.msg(channel, 'Er...')

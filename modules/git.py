@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python
 """
-github.py - Github Post-Receive Hooks Module
+git.py - Github Post-Receive Hooks Module
 """
 
 import http.server

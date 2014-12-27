@@ -192,11 +192,11 @@ def f_remind(phenny, input):
         # @@ <deltab> and year, if necessary
         warn = False
         if tellee not in phenny.reminders: 
-            phenny.reminders[tellee] = [(teller, verb, timenow, msg)]
+            phenny.reminders[tellee_original] = [(teller, verb, timenow, msg)]
         else: 
             # if len(phenny.reminders[tellee]) >= maximum: 
             #     warn = True
-            phenny.reminders[tellee].append((teller, verb, timenow, msg))
+            phenny.reminders[tellee_original].append((teller, verb, timenow, msg))
         # @@ Stephanie's augmentation
         response = "I'll pass that on when %s is around." % tellee_original
         # if warn: response += (" I'll have to use a pastebin, though, so " + 
@@ -248,11 +248,11 @@ def message(phenny, input):
 
     reminders = []
     remkeys = list(reversed(sorted(phenny.reminders.keys())))
-    for remkey in remkeys: 
+    for remkey in remkeys:
         if not remkey.endswith('*') or remkey.endswith(':'): 
-            if remkey in aliases:
+            if remkey in aliases or remkey.lower() in aliases:
                 reminders.extend(getReminders(phenny, channel, remkey, tellee))
-        elif tellee.lower().startswith(remkey.rstrip('*:')): 
+        elif tellee.lower().startswith(remkey.rstrip('*:')) or tellee.lower().startswith(remkey.lower().rstrip('*:')): 
             reminders.extend(getReminders(phenny, channel, remkey, tellee))
 
     for line in reminders[:maximum]: 
@@ -275,9 +275,9 @@ message.thread = False
 
 def messageAlert(phenny, input):
     aliases = aliasGroupFor(input.nick)
-    remkeys = phenny.reminders.keys()
+    remkeys = map(str.lower, phenny.reminders.keys())
     for alias in aliases:
-        if alias in remkeys:
+        if alias.lower() in remkeys:
             phenny.say(input.nick + ': You have messages.')
 messageAlert.event = 'JOIN'
 messageAlert.rule = r'.*'

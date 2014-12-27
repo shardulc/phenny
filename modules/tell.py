@@ -100,7 +100,7 @@ def alias(phenny, raw):
     else:
         phenny.reply("Usage: .alias add <nick>, .alias list <nick>?, .alias remove")
 
-alias.rule = r'\.alias(?:\s(\w+))?(?:\s(\w+))?'
+alias.rule = r'\.alias(?:\s(\S+))?(?:\s(\S+))?'
 
 def loadAliases(fn):
     f = open(fn)

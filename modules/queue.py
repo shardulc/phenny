@@ -191,7 +191,8 @@ def queue(phenny, raw):
                                 if id2 is None:
                                     phenny.reply('{} not found in {}'.format(indices[1].strip(), queue_name))
                                     return
-                            queue['queue'][id2 + (-1 if id1 < id2 else 0)] = queue['queue'].pop(id1)
+                            #queue['queue'][id2 + (-1 if id1 < id2 else 0)] = queue['queue'].pop(id1)
+                            queue['queue'].insert(id2, queue['queue'].pop(id1))
                             write_dict(filename(phenny), phenny.queue_data)
                             phenny.reply(print_queue(queue_name, queue))
                         else:

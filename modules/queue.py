@@ -126,7 +126,7 @@ def queue(phenny, raw):
             else:
                 phenny.reply('Syntax: .queue new <name> <item1>, <item2> ...')
 
-        elif command.lower() == 'delete':
+        elif command.lower() == 'delete' or command.lower() == 'remove':
             if raw.group(2):
                 queue_name, queue = get_queue(phenny.queue_data, raw.group(2), raw.nick)
                 if type(queue_name) is str:
@@ -176,7 +176,7 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> swap <index/item1>, <index/item2>')
-                    elif command == 'move':
+                    elif command == 'move' or command == 'mv':
                         if raw.group(3) and ',' in raw.group(3):
                             indices = raw.group(3).split(',')
                             try:
@@ -213,7 +213,7 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> replace <index/item>, <new_item>')
-                    elif command == 'remove':
+                    elif command == 'remove' or command == 'delete':
                         if raw.group(3):
                             item = raw.group(3)
                             if item in queue['queue']:

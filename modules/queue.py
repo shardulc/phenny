@@ -126,7 +126,7 @@ def queue(phenny, raw):
             else:
                 phenny.reply('Syntax: .queue new <name> <item1>, <item2> ...')
 
-        elif command.lower() == 'delete' or command.lower() == 'remove':
+        elif command.lower() in ['delete', 'remove', 'del', 'rm']:
             if raw.group(2):
                 queue_name, queue = get_queue(phenny.queue_data, raw.group(2), raw.nick)
                 if type(queue_name) is str:
@@ -176,7 +176,7 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> swap <index/item1>, <index/item2>')
-                    elif command == 'move' or command == 'mv':
+                    elif command in ['move', 'mv']:
                         if raw.group(3) and ',' in raw.group(3):
                             indices = raw.group(3).split(',')
                             try:
@@ -213,7 +213,7 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> replace <index/item>, <new_item>')
-                    elif command == 'remove' or command == 'delete':
+                    elif command in ['remove', 'delete', 'del', 'rm']:
                         if raw.group(3):
                             item = raw.group(3)
                             if item in queue['queue']:
@@ -247,7 +247,7 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(new_queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> reassign <nick>')
-                    elif command.lower() == 'rename':
+                    elif command.lower() in ['rename', 'ren']:
                         if raw.group(3):
                             new_queue_name = queue['owner'] + ':' + raw.group(3)
                             phenny.queue_data[new_queue_name] = phenny.queue_data.pop(queue_name)

@@ -7,6 +7,7 @@ author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 import os
 import random
 import sqlite3
+import datetime
 
 def setup(self):
     fn = self.nick + '-' + self.config.host + '.logger.db'
@@ -21,7 +22,7 @@ def setup(self):
         characters  unsigned big int not null default 0,
         last_time   timestamp default CURRENT_TIMESTAMP,
         quote       text,
-        unique (channel, nick) on conflict replace
+        unique (nick) on conflict replace
     );''')
 
 def logger(phenny, input):
@@ -31,6 +32,7 @@ def logger(phenny, input):
     sqlite_data = {
         'channel': input.sender,
         'nick': input.nick.lower(),
+        'last_time': datetime.datetime.utcnow(),
         'msg': input.group(1),
         'chars': len(input.group(1)),
     }
@@ -49,7 +51,7 @@ def logger(phenny, input):
                             channel=:channel and nick=:nick) + 1, 1),
                         coalesce((select characters from lines_by_nick where
                             channel=:channel and nick=:nick) + :chars, :chars),
-                        CURRENT_TIMESTAMP,
+                        :last_time,
                         :msg
                     );''', sqlite_data)
     c.close()

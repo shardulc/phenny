@@ -5,8 +5,9 @@ author: mattr555
 
 import os
 import pickle
+import random
 
-commands = '.queue display <name>?; .queue new <name> <items>; .queue delete <name>; .queue <name> add <items>; .queue <name> swap <item1/index1>, <item2/index2>; .queue <name> remove <item>; .queue <name> pop; .queue <name> reassign <nick>; .queue <name> rename <new_name>'
+commands = '.queue display <name>?; .queue new <name> <items>; .queue delete <name>; .queue <name> add <items>; .queue <name> swap <item/index1>, <item/index2>; .queue <name> move <source_item/index>, <target_item/index>; .queue <name> replace <item/index>, <new_item>; .queue <name> remove <item>; .queue <name> pop; .queue <name> random; .queue <name> reassign <nick>; .queue <name> rename <new_name>'
 
 def filename(phenny):
     name = phenny.nick + '-' + phenny.config.host + '.queue.db'
@@ -175,6 +176,42 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         else:
                             phenny.reply('Syntax: .queue <name> swap <index/item1>, <index/item2>')
+                    elif command == 'move':
+                        if raw.group(3) and ',' in raw.group(3):
+                            indices = raw.group(3).split(',')
+                            try:
+                                id1, id2 = tuple(map(lambda x: int(x.strip()), indices))[:2]
+                            except ValueError:
+                                q1, q2 = tuple(map(lambda x: x.strip(), indices))[:2]
+                                id1 = search_queue(queue['queue'], q1)
+                                if id1 is None:
+                                    phenny.reply('{} not found in {}'.format(indices[0].strip(), queue_name))
+                                    return
+                                id2 = search_queue(queue['queue'], q2)
+                                if id2 is None:
+                                    phenny.reply('{} not found in {}'.format(indices[1].strip(), queue_name))
+                                    return
+                            queue['queue'][id2 + (-1 if id1 < id2 else 0)] = queue['queue'].pop(id1)
+                            write_dict(filename(phenny), phenny.queue_data)
+                            phenny.reply(print_queue(queue_name, queue))
+                        else:
+                            phenny.reply('Syntax: .queue <name> move <source_index/item>, <target_index/item>')
+                    elif command == 'replace':
+                        if raw.group(3) and ',' in raw.group(3):
+                            old, new = raw.group(3).split(',')
+                            old = old.strip()
+                            try:
+                                old_id = int(old)
+                            except ValueError:
+                                old_id = search_queue(queue['queue'], old)
+                                if old_id is None:
+                                    phenny.reply('{} not found in {}'.format(old, queue_name))
+                                    return
+                            queue['queue'][old_id] = new.strip()
+                            write_dict(filename(phenny), phenny.queue_data)
+                            phenny.reply(print_queue(queue_name, queue))
+                        else:
+                            phenny.reply('Syntax: .queue <name> replace <index/item>, <new_item>')
                     elif command == 'remove':
                         if raw.group(3):
                             item = raw.group(3)
@@ -197,6 +234,8 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         except IndexError:
                             phenny.reply('That queue is already empty.')
+                    elif command == 'random':
+                        phenny.reply('%s is the lucky one.' % repr(random.choice(queue['queue'])))
                     elif command == 'reassign':
                         if raw.group(3):
                             new_owner = raw.group(3)

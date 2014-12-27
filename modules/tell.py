@@ -191,7 +191,7 @@ def f_remind(phenny, input):
     elif not tellee in (teller.lower(), phenny.nick.lower(), 'me'): # @@
         # @@ <deltab> and year, if necessary
         warn = False
-        if tellee not in phenny.reminders: 
+        if tellee_original not in phenny.reminders: 
             phenny.reminders[tellee_original] = [(teller, verb, timenow, msg)]
         else: 
             # if len(phenny.reminders[tellee]) >= maximum: 

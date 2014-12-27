@@ -235,6 +235,8 @@ def queue(phenny, raw):
                             phenny.reply(print_queue(queue_name, queue))
                         except IndexError:
                             phenny.reply('That queue is already empty.')
+                    elif command == 'random':
+                        phenny.reply('%s is the lucky one.' % repr(random.choice(queue['queue'])))
                     elif command == 'reassign':
                         if raw.group(3):
                             new_owner = raw.group(3)

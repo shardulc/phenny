@@ -108,15 +108,13 @@ def wikipedia(phenny, origterm, lang):
 def wik(phenny, input): 
     """Search for something on Wikipedia"""
     origterm = input.group(3)
-    lang = "en"
-    
-    m = re.match(r'\.(wik|wiki|wikipedia)\.([a-z]{2,3})(?: +(.*))', str(input))
-    if m:
-        lang = m.group(2)
-        origterm = m.group(3)
+    if input.group(2):
+        lang = input.group(2)
+    else:
+        lang = "en"
 
     wikipedia(phenny, origterm, lang)
-wik.rule = r'\.(wik|wiki|wikipedia)(\.[a-z]{2,3})?\s(?:(.*))'
+wik.rule = r'\.(wik|wiki|wikipedia)(\.[a-z]{2,3})?\s(.*)'
 #wik.commands = ['wik', 'wiki', 'wikipedia']
 wik.priority = 'high'
 

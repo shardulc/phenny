@@ -16,6 +16,10 @@ import web
 from tools import deprecated
 from modules.linx import get_title as linx_gettitle
 
+from modules.apertium_wiki import awik
+from modules.wikipedia import wikipedia
+from modules.wiktionary import w as wikt
+
 
 def head(phenny, input):
     """Provide HTTP HEAD information."""
@@ -137,6 +141,18 @@ def gettitle(phenny, uri):
     for regex in phenny.bot.blacklisted_urls:
         if regex.match(uri):
             return
+
+    if uri.startswith('http://wiki.apertium.org/wiki/'):
+        item = uri[len('http://wiki.apertium.org/wiki/'):]
+        return awik(phenny, re.match(r'(blahblah)?(.*)', item))
+    if re.match(r'https?://en.wiktionary.org/wiki/(.*)', uri):
+        item = re.match(r'https?://en.wiktionary.org/wiki/(.*)', uri).group(1)
+        return wikt(phenny, re.match(r'(blahblah)?(.*)', item))
+    if re.match(r'https?://([a-z]{2,3}).wikipedia.org/wiki/(.*)', uri):
+        uri = uri.replace('%23', '#')
+        match = re.match(r'https?://([a-z]{2,3}).wikipedia.org/wiki/(.*)', uri)
+        lang, page = match.group(1), match.group(2)
+        return wikipedia(phenny, page, lang)
 
     try:
         redirects = 0

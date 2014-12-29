@@ -22,27 +22,39 @@ def f_seen(phenny, input):
         phenny.reply(".seen <nick> - Reports when <nick> was last seen.")
         return
 
-    logger_conn = sqlite3.connect(phenny.logger_db, detect_types=sqlite3.PARSE_DECLTYPES)
+    fn = phenny.nick + '-' + phenny.config.host + '.logger.db'
+    seen_db = os.path.join(os.path.expanduser('~/.phenny'), fn)
+    seen_conn = sqlite3.connect(seen_db)
     
+
     cNick = ""
-    cChannel = ""
-    c = logger_conn.cursor()
-    c.execute("select * from lines_by_nick where nick = ?", (nick,))
-    cl = c.fetchone()
+    c = seen_conn.cursor()
+    c.execute("SELECT * FROM lines_by_nick WHERE nick = ?", (nick,))
     try:
-        cNick = cl[1]
-        cChannel = cl[0]
-        cLastTime = cl[4]
+        cLastTime = str(c.fetchone()[5])
+        cNick = str(c.fetchone()[4])
+        cChannel = str(c.fetchone()[0])
     except TypeError:
-        phenny.reply("Sorry, I haven't seen %s around." % nick)
-        return
+        pass
     c.close()
 
-    if cNick != "":
-        dt = timesince(cLastTime)
-        t = time.strftime('%Y-%m-%d %H:%M:%S UTC', cLastTime.timetuple())
-        msg = "I last saw %s at %s (%s) on %s" % (nick, t, dt, cChannel)
+    if not hasattr(phenny, 'seen'):
+        return phenny.msg(input.sender, '?')
+    if nick in phenny.seen:
+        channel, t = phenny.seen[nick]
+        dt = timesince(datetime.datetime.utcfromtimestamp(t))
+        t = time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(t))
+
+        msg = "I last saw %s at %s (%s) on %s" % (nick, t, dt, channel)
         phenny.reply(msg)
+    elif nick in cNick:
+        dt = timesince(datetime.datetime.utcfromtimestamp(cLastTime))
+        t = time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(cLastTime))
+
+        msg = "I last saw %s at %s (%s) on %s" % (cNick, t, dt, cChannel)
+        phenny.reply(msg)
+
+    else: phenny.reply("Sorry, I haven't seen %s around." % nick)
 f_seen.name = 'seen'
 f_seen.example = '.seen firespeaker'
 f_seen.rule = (['seen'], r'(\S+)')

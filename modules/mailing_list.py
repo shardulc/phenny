@@ -43,7 +43,6 @@ def check_mail(phenny):
     mail.select('inbox')
     rc, data = mail.uid('search', None, 'UNSEEN')
     unseen_mails = data[0].split()
-    print(unseen_mails)
 
     for uid in unseen_mails:
         rc, data = mail.uid('fetch', uid, '(RFC822)')

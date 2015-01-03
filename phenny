@@ -69,6 +69,15 @@ def create_default_config(fn):
     # Blacklisted urls for gettitle module:
     blacklisted_urls = []
 
+    # IMAP credentials for mailing list reporter:
+    # imap_server = 'imap.gmail.com'
+    # imap_user = 'someone@gmail.com'
+    # imap_pass = 'supersecretpassword'
+
+    # mailing_lists = {
+    #     'friendly-name': ('list-address@example.com', '#channel-to-broadcast-to')
+    # }
+
     # EOF
     """), file=f)
     f.close()

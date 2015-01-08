@@ -41,10 +41,10 @@ def get(uri, headers={}, verify=True, **kwargs):
             head = doc.find("head")
             metas = head.findall("meta")
             for meta in metas:
-                if meta.get("http-equiv") == "Content-Type":
+                if meta.get("http-equiv").lower() == "content-type":
                     contents = [x.strip() for x in meta.get("content").split(";")]
                     for content in contents:
-                        if content.split("=")[0] == "charset":
+                        if content.split("=")[0].lower() == "charset":
                             r.encoding = content.split("=")[1]
                             return r.text
                 if meta.get("charset"):

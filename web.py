@@ -9,6 +9,7 @@ import re
 import urllib.parse
 import requests
 import json as jsonlib
+import lxml.html as lhtml
 
 """
 class Grab(urllib.request.URLopener): 
@@ -32,6 +33,23 @@ def get(uri, headers={}, verify=True, **kwargs):
     headers.update(default_headers)
     r = requests.get(uri, headers=headers, verify=verify, **kwargs)
     r.raise_for_status()
+    # Fix charset if necessary
+    if 'Content-Type' in r.headers:
+        content_type = r.headers['Content-Type']
+        if 'text/html' in content_type and 'charset' not in content_type:
+            doc = lhtml.document_fromstring(r.text)
+            head = doc.find("head")
+            metas = head.findall("meta")
+            for meta in metas:
+                if meta.get("http-equiv") == "Content-Type":
+                    contents = [x.strip() for x in meta.get("content").split(";")]
+                    for content in contents:
+                        if content.split("=")[0] == "charset":
+                            r.encoding = content.split("=")[1]
+                            return r.text
+                if meta.get("charset"):
+                    r.encoding = meta.get("charset")
+                    return r.text
     return r.text
 
 def head(uri, headers={}, verify=True, **kwargs): 

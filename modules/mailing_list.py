@@ -88,6 +88,8 @@ def check_mail(phenny):
     phenny.mailing_list_timer.start()
     return found
 
+syntax = 'Syntax: .mailinglist poll; .mailinglist last [{}]'
+
 def list_report(phenny, input):
     """.mailinglist poll - poll for new mailing list messages
     .mailinglist last <list> - get the latest message in a list"""
@@ -116,9 +118,9 @@ def list_report(phenny, input):
             message = format_email(e, input.group(2))
             phenny.reply(message)
         else:
-            phenny.reply('Possible lists: {}'.format(', '.join(phenny.config.mailing_lists.keys())))
+            phenny.reply(syntax.format(', '.join(phenny.config.mailing_lists.keys())))
     else:
-        phenny.reply('Syntax: .mailinglist poll; .mailinglist last <list>')
+        phenny.reply(syntax.format(', '.join(phenny.config.mailing_lists.keys())))
 list_report.name = "mailing list reporter"
 list_report.rule = r'.(?:mailinglist|ml)(?:\s(poll|last(?:\s([\w-]+))))?'
 list_report.priority = 'medium'

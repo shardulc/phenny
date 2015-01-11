@@ -4,11 +4,6 @@ mailing_list.py - mailing list reporter
 author: mattr555 <mattramina@gmail.com>
 """
 
-#TODO: multiple channels to broadcast
-#fail gracefully on no defined lists
-#function for last message in list
-#obfuscate emails
-
 import threading
 import imaplib
 import email
@@ -46,8 +41,8 @@ def strip_reply_lines(e):
 
 def obfuscate_address(address):
     def first_three_chars(match):
-        return match.group(1)[:3] + '...' + match.group(2)
-    return re.sub(r'([^\s@]+)(@[^@]+\.[^@]+)', first_three_chars, address)
+        return match.group(1)[:3] + '...' + match.group(2)[:3] + '...'
+    return re.sub(r'([^\s@]+)(@[-\.\w]+)', first_three_chars, address)
 
 def login(phenny):
     if not configured(phenny):
@@ -94,35 +89,37 @@ def check_mail(phenny):
     return found
 
 def list_report(phenny, input):
-    ".mailinglist - poll for new mailing list messages"
-    phenny.reply('Ok, polling.')
-    if not check_mail(phenny):
-        phenny.reply('Sorry, no unread mailing list messages.')
+    """.mailinglist poll - poll for new mailing list messages
+    .mailinglist last <list> - get the latest message in a list"""
+    if not configured(phenny):
+        phenny.reply("I'm not configured for mailing lists, ask {} to set them up.".format(phenny.config.owner))
+        return
+    if input.group(1):
+        if input.group(1) == "poll":
+            phenny.reply('Ok, polling.')
+            if not check_mail(phenny):
+                phenny.reply('Sorry, no unread mailing list messages.')
+        elif input.group(2) in phenny.config.mailing_lists:
+            phenny.reply('Ok, may take some time!')
+            mail = login(phenny)
+            mail.select(input.group(2))
+            uids = mail.uid('search', None, 'ALL')[1][0].decode('utf8').split(' ')
+            best = ('', 0)
+            for uid in uids:
+                d = mail.uid('fetch', uid, '(BODY[HEADER.FIELDS (DATE)])')[1][0][1]
+                d = parsedate_tz(d.decode('utf8').strip('Date: ').strip())
+                d = datetime.datetime(*d[:7])
+                if d.timestamp() > best[1]:
+                    best = (uid, d.timestamp())
+            m = mail.uid('fetch', best[0], '(RFC822)')
+            e = email.message_from_string(m[1][0][1].decode('utf8'))
+            message = format_email(e, input.group(2))
+            phenny.reply(message)
+        else:
+            phenny.reply('Possible lists: {}'.format(', '.join(phenny.config.mailing_lists.keys())))
+    else:
+        phenny.reply('Syntax: .mailinglist poll; .mailinglist last <list>')
 list_report.name = "mailing list reporter"
-list_report.rule = ('.mailinglist')
+list_report.rule = r'.(?:mailinglist|ml)(?:\s(poll|last(?:\s([\w-]+))))?'
 list_report.priority = 'medium'
 list_report.thread = True
-
-def last_message(phenny, input):
-    ".lastmessage <list> - get the latest message from a mailing list"
-    #this works on setting up filters in the gmail inbox with the same names as the friendly names
-    if input.group(1) and input.group(1) in phenny.config.mailing_lists:
-        phenny.reply('Ok, may take some time!')
-        mail = login(phenny)
-        mail.select(input.group(1))
-        uids = mail.uid('search', None, 'ALL')[1][0].decode('utf8').split(' ')
-        best = ('', 0)
-        for uid in uids:
-            d = mail.uid('fetch', uid, '(BODY[HEADER.FIELDS (DATE)])')[1][0][1]
-            d = parsedate_tz(d.decode('utf8').strip('Date: ').strip())
-            d = datetime.datetime(*d[:7])
-            if d.timestamp() > best[1]:
-                best = (uid, d.timestamp())
-        m = mail.uid('fetch', best[0], '(RFC822)')
-        e = email.message_from_string(m[1][0][1].decode('utf8'))
-        message = format_email(e, input.group(1))
-        phenny.reply(message)
-    else:
-        phenny.reply('Syntax: .lastmessage [{}]'.format(', '.join(phenny.config.mailing_lists.keys())))
-last_message.rule = r'\.lastmessage ?([\w-]+)?'
-last_message.thread = True

@@ -88,40 +88,51 @@ def check_mail(phenny):
     phenny.mailing_list_timer.start()
     return found
 
-syntax = 'Syntax: .mailinglist poll; .mailinglist last [{}]'
+def last_message(phenny, ml):
+    mail = login(phenny)
+    mail.select(ml)
+    try:
+        uids = mail.uid('search', None, 'ALL')[1][0].decode('utf8').split(' ')
+    except imaplib.IMAP4.error:
+        return 'A mailing list filter has not been set up for {}, bug {} to fix it'.format(ml, phenny.config.owner)
+    best = ('', datetime.datetime(1970, 1, 1))
+
+    for uid in uids:
+        try:
+            d = mail.uid('fetch', uid, '(BODY[HEADER.FIELDS (DATE)])')[1][0][1]
+        except imaplib.IMAP4.error:
+            return '{}: No emails'.format(ml)
+        d = parsedate_tz(d.decode('utf8').strip('Date: ').strip())
+        d = datetime.datetime(*d[:7])
+        if d > best[1]:
+            best = (uid, d)
+    m = mail.uid('fetch', best[0], '(RFC822)')
+    e = email.message_from_string(m[1][0][1].decode('utf8'))
+    return format_email(e, ml)
+
+syntax = 'Syntax: .{0} poll; .{0} last; .{0} last [{1}]'
 
 def list_report(phenny, input):
     """.mailinglist poll - poll for new mailing list messages
-    .mailinglist last <list> - get the latest message in a list"""
+    .mailinglist last <list>? - get the latest message in a list or all lists"""
     if not configured(phenny):
         phenny.reply("I'm not configured for mailing lists, ask {} to set them up.".format(phenny.config.owner))
         return
-    if input.group(1):
-        if input.group(1) == "poll":
+    if input.group(2):
+        if input.group(2) == "poll":
             phenny.reply('Ok, polling.')
             if not check_mail(phenny):
                 phenny.reply('Sorry, no unread mailing list messages.')
-        elif input.group(2) in phenny.config.mailing_lists:
-            phenny.reply('Ok, may take some time!')
-            mail = login(phenny)
-            mail.select(input.group(2))
-            uids = mail.uid('search', None, 'ALL')[1][0].decode('utf8').split(' ')
-            best = ('', 0)
-            for uid in uids:
-                d = mail.uid('fetch', uid, '(BODY[HEADER.FIELDS (DATE)])')[1][0][1]
-                d = parsedate_tz(d.decode('utf8').strip('Date: ').strip())
-                d = datetime.datetime(*d[:7])
-                if d.timestamp() > best[1]:
-                    best = (uid, d.timestamp())
-            m = mail.uid('fetch', best[0], '(RFC822)')
-            e = email.message_from_string(m[1][0][1].decode('utf8'))
-            message = format_email(e, input.group(2))
-            phenny.reply(message)
+        elif input.group(3) in phenny.config.mailing_lists:
+            phenny.reply(last_message(phenny, input.group(3)))
+        elif input.group(2) == "last":
+            for i in phenny.config.mailing_lists:
+                phenny.reply(last_message(phenny, i))
         else:
-            phenny.reply(syntax.format(', '.join(phenny.config.mailing_lists.keys())))
+            phenny.reply(syntax.format(input.group(1), ', '.join(phenny.config.mailing_lists.keys())))
     else:
-        phenny.reply(syntax.format(', '.join(phenny.config.mailing_lists.keys())))
+        phenny.reply(syntax.format(input.group(1), ', '.join(phenny.config.mailing_lists.keys())))
 list_report.name = "mailing list reporter"
-list_report.rule = r'.(?:mailinglist|ml)(?:\s(poll|last(?:\s([\w-]+))))?'
+list_report.rule = r'.(mailinglist|ml)(?:\s(poll|last(?:\s([\w-]+))?))?'
 list_report.priority = 'medium'
 list_report.thread = True

@@ -87,16 +87,96 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         else:
             data = json.loads(post_data)
 
+        # handle GitHub triggers
+        if 'Github' in self.headers['User-Agent']:
+            event = self.headers['X-Github-Event']
+            user = data['sender']['login']
+            repo = data['repository']['name']            
+            if event == 'commit_comment':
+                commit = data['comment']['commit_id']
+                comment = data['comment']['body']
+                date = data['comment']['updated_at']
+                msgs.append('[{:}] {:} * {:}: new comment on commit {:}: {:}' \
+                            .format(date, user, repo, commit, comment))
+            elif event == 'create' or event == 'delete':
+                ref = data['ref']
+                type_ = data['ref_type']
+                msgs.append('{:}: {:} {:} has been {:}d' \
+                            .format(repo, type_, ref, event))
+            elif event == 'delete':
+                ref = data['ref']
+                type_ = data['ref_type']
+                msgs.append('{:}: {:} {:} has been deleted' \
+                            .format(repo, type_, ref))
+            elif event == 'fork':
+                msgs.append('{:}: {:} has forked this repo' \
+                            .format(repo, user))
+            elif event == 'issue_comment':
+                number = data['issue']['number']
+                comment = data['comment']['body']
+                date = data['comment']['updated_at']
+                msgs.append('[{:}] {:} * {:}: new comment on issue #{:}: {:}' \
+                            .format(date, user, repo, number, comment))
+            elif event == 'issues':
+                number = data['issue']['number']
+                title = data['issue']['title']
+                action = data['action']
+                date = data['issue']['updated_at']
+                msgs.append('[{:}] {:} * {:}: issue #{:} "{:}" has been {:}' \
+                            .format(date, user, repo, number, title, action))
+            elif event == 'member':
+                new_user = data['member']['login']
+                action = data['action']
+                msgs.append('{:}: user {:} {:} as collaborator' \
+                            .format(repo, new_user, action))
+            elif event == 'membership':
+                new_user = data['member']['login']
+                action = data['action']
+                prep = ['to', 'from'][int(action == 'removed')]
+                scope = data['scope']
+                name = data['team']['name']
+                msgs.append('{:}: user {:} {:} {:} {:} {:}' \
+                            .format(repo, new_user, action, prep, scope, name))
+            elif event == 'pull_event':
+                number = data['number']
+                title = data['pull_request']['title']
+                action = data['action']
+                date = data['pull_request']['updated_at']
+                msgs.append('[{:}] {:} * {:}: pull request #{:} "{:}" has been {:}' \
+                            .format(date, user, repo, number, title, action))
+            elif event == 'pull_request_review_comment':
+                number = data['pull_request']['number']
+                comment = data['comment']['body']
+                date = data['comment']['updated_at']
+                msgs.append('[{:}]: {:} * {:}: new comment on pull request #{:}: {:}' \
+                            .format(date, user, repo, number, comment))
+            elif event == 'push':
+                msgs.append(self.return_data("github", data, commit))
+            elif event == 'release':
+                tag = data['release']['tag_name']
+                action = data['action']
+                date = data['action']['published_at']
+                msgs.append('[{:}] {:} * {:}: release {:} {:}' \
+                            .format(date, user, repo, tag, action))
+            elif event == 'repository':
+                name = data['repository']['name']
+                action = data['action']
+                url = data['repository']['url']
+                msgs.append('new repository {:} {:} by {:} (<{:}>)' \
+                            .format(name, action, user, url))
+            elif event == 'team_add':
+                name = data['repository']['full_name']
+                team = data['team']['name']
+                msgs.append('repository {:} added to team {:}' \
+                            .format(name, team))
+
         # try to make sense of data
         # msgs will contain both commit reports and error reports
         msgs = []
         if "commits" in data:
             for commit in data['commits']:
                 try:
-                    if "committer" in commit:
-                        # for github
-                        msgs.append(self.return_data("github", data, commit))
-                    elif "author" in commit:
+                    if "author" in commit:
                         # for bitbucket
                         msgs.append(self.return_data("bitbucket", data,
                                                      commit))

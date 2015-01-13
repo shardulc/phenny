@@ -28,10 +28,10 @@ def recipients(e):
 def get_text(e):
     for part in e.walk():
         if part.get_content_maintype() == "text":
-            return part.get_payload()
+            return part.get_payload(decode=True)
 
 def strip_reply_lines(e):
-    message = get_text(e).split('\n')
+    message = str(get_text(e), encoding='utf8').split('\n')
     stripped = []
     for i in message:
         if i.startswith('>'):
@@ -41,8 +41,8 @@ def strip_reply_lines(e):
 
 def obfuscate_address(address):
     def first_three_chars(match):
-        return match.group(1)[:3] + '...' + match.group(2)[:3] + '...'
-    return re.sub(r'([^\s@]+)(@[-\.\w]+)', first_three_chars, address)
+        return match.group(1)[:3] + '...' + match.group(2)[:3] + '...' + match.group(3)
+    return re.sub(r'([^\s@]+)(@[-\.\w]+)(\.\w+)', first_three_chars, address)
 
 def login(phenny):
     if not configured(phenny):
@@ -55,7 +55,7 @@ def login(phenny):
         phenny.msg(phenny.config.owner, 'IMAP connection/auth failed :(')
 
 def format_email(e, list_name):
-    message = '{} on "{}" in {}: {}'.format(obfuscate_address(e['From']), e['Subject'], list_name, strip_reply_lines(e))
+    message = '{}: {} * {} * {}'.format(list_name, obfuscate_address(e['From']), e['Subject'].replace('['+list_name.capitalize()+'] ', ''), strip_reply_lines(e))
     if len(message) > 400:
         return message[:395] + '[...]'
     else:

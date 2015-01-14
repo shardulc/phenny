@@ -8,7 +8,6 @@ def setup(self):
     self.pester_conn = sqlite3.connect(self.pester_db)
 
     c = self.pester_conn.cursor()
-    ### note-for-me: set dismissed to "" if is_dismissed is supposed to be false
     c.execute('''CREATE TABLE IF NOT EXISTS to_pester (
         pesteree TEXT,
         pesterer TEXT,

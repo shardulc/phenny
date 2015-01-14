@@ -1,15 +1,4 @@
 #!/usr/bin/python3
-"""
-def pester(phenny, input):
-    phenny.say(input.nick)       # gives nick of sayer
-    phenny.say(input.group(0))   # gives whole line said
-    phenny.say(input.group(1))   # gives the word 'pester'
-    phenny.say(input.group(2))   # gives the name to pester
-    phenny.say(input.group(3))   # gives the rest (after 'to')
-pester.rule = ('$nick', ['pester'], r'(\S+) to (.*)')
-
-NOTE: time of the format %Y-%m-%d %H:%M:%S
-"""
 import os, sqlite3
 from datetime import datetime
 

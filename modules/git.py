@@ -87,6 +87,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         else:
             data = json.loads(post_data)
 
+        # msgs will contain both commit reports and error reports
+        msgs = []
+        
         # handle GitHub triggers
         if 'Github' in self.headers['User-Agent']:
             event = self.headers['X-Github-Event']
@@ -171,8 +174,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                             .format(name, team))
 
         # try to make sense of data
-        # msgs will contain both commit reports and error reports
-        msgs = []
         if "commits" in data:
             for commit in data['commits']:
                 try:

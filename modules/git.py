@@ -91,12 +91,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         msgs = []
         
         # handle GitHub triggers
-        if 'Github' in self.headers['User-Agent']:
+        if 'GitHub' in self.headers['User-Agent']:
             event = self.headers['X-Github-Event']
             user = data['sender']['login']
             repo = data['repository']['name']            
             if event == 'commit_comment':
-                commit = data['comment']['commit_id']
+                commit = data['comment']['commit_id'][:7]
                 comment = data['comment']['body']
                 date = data['comment']['updated_at']
                 msgs.append('[{:}] {:} * {:}: new comment on commit {:}: {:}' \
@@ -106,11 +106,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 type_ = data['ref_type']
                 msgs.append('{:}: {:} {:} has been {:}d' \
                             .format(repo, type_, ref, event))
-            elif event == 'delete':
-                ref = data['ref']
-                type_ = data['ref_type']
-                msgs.append('{:}: {:} {:} has been deleted' \
-                            .format(repo, type_, ref))
             elif event == 'fork':
                 msgs.append('{:}: {:} has forked this repo' \
                             .format(repo, user))
@@ -154,11 +149,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 msgs.append('[{:}]: {:} * {:}: new comment on pull request #{:}: {:}' \
                             .format(date, user, repo, number, comment))
             elif event == 'push':
-                msgs.append(self.return_data("github", data, commit))
+                for commit in data['commits']:
+                    msgs.append(self.return_data("github", data, commit))
             elif event == 'release':
                 tag = data['release']['tag_name']
                 action = data['action']
-                date = data['action']['published_at']
+                date = data['release']['published_at']
                 msgs.append('[{:}] {:} * {:}: release {:} {:}' \
                             .format(date, user, repo, tag, action))
             elif event == 'repository':
@@ -172,9 +168,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 team = data['team']['name']
                 msgs.append('repository {:} added to team {:}' \
                             .format(name, team))
-
-        # try to make sense of data
-        if "commits" in data:
+        # not github
+        elif "commits" in data:
             for commit in data['commits']:
                 try:
                     if "author" in commit:
@@ -196,8 +191,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             for commit in data['revisions']:
                 msgs.append(self.return_data("googlecode", data, commit))
 
-        if not msgs:
+        if (not msgs) and (data['commits']):
             # we couldn't get anything
+            # sometimes github sends empty pushes (eg. for releases), so check
+            # the data
             msgs = ["Something went wrong: " + str(data.keys())]
 
         # post all messages to all channels

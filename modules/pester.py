@@ -2,8 +2,6 @@
 import os, sqlite3
 from datetime import datetime
 
-#!/usr/bin/python3
-
 def setup(self):
     fn = self.nick + '-' + self.config.host + '.pester.db'
     self.pester_db = os.path.join(os.path.expanduser('~/.phenny'), fn)

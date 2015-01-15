@@ -35,7 +35,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         fields = []
         if site == "github":
             fields = [
-                "phenny",
+                data['repository']['name'],
                 data['pusher']['name'],
                 commit['message'],
                 commit['modified'],
@@ -104,29 +104,29 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             elif event == 'create' or event == 'delete':
                 ref = data['ref']
                 type_ = data['ref_type']
-                msgs.append('{:}: {:} {:} has been {:}d' \
-                            .format(repo, type_, ref, event))
+                msgs.append('{:}: {:} * {:} {:} {:}d' \
+                            .format(repo, user, type_, ref, event))
             elif event == 'fork':
-                msgs.append('{:}: {:} has forked this repo' \
+                msgs.append('{:}: {:} forked this repo' \
                             .format(repo, user))
             elif event == 'issue_comment':
                 number = data['issue']['number']
                 comment = data['comment']['body']
                 date = data['comment']['updated_at']
-                msgs.append('[{:}] {:} * {:}: new comment on issue #{:}: {:}' \
-                            .format(date, user, repo, number, comment))
+                msgs.append('{:}: {:} * new comment on issue #{:}: {:}' \
+                            .format(repo, user, number, comment))
             elif event == 'issues':
                 number = data['issue']['number']
                 title = data['issue']['title']
                 action = data['action']
                 date = data['issue']['updated_at']
-                msgs.append('[{:}] {:} * {:}: issue #{:} "{:}" has been {:}' \
-                            .format(date, user, repo, number, title, action))
+                msgs.append('{:}: {:} * issue #{:} "{:}" {:}' \
+                            .format(repo, user, number, title, action))
             elif event == 'member':
                 new_user = data['member']['login']
                 action = data['action']
-                msgs.append('{:}: user {:} {:} as collaborator' \
-                            .format(repo, new_user, action))
+                msgs.append('{:}: {:} * user {:} {:} as collaborator' \
+                            .format(repo, user, new_user, action))
             elif event == 'membership':
                 new_user = data['member']['login']
                 action = data['action']
@@ -135,7 +135,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 name = data['team']['name']
                 msgs.append('{:}: user {:} {:} {:} {:} {:}' \
                             .format(repo, new_user, action, prep, scope, name))
-            elif event == 'pull_event':
+            elif event == 'pull_request':
                 number = data['number']
                 title = data['pull_request']['title']
                 action = data['action']
@@ -146,8 +146,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 number = data['pull_request']['number']
                 comment = data['comment']['body']
                 date = data['comment']['updated_at']
-                msgs.append('[{:}]: {:} * {:}: new comment on pull request #{:}: {:}' \
-                            .format(date, user, repo, number, comment))
+                msgs.append('{:}: {:} * new comment on pull request #{:}: {:}' \
+                            .format(repo, user, number, comment))
             elif event == 'push':
                 for commit in data['commits']:
                     msgs.append(self.return_data("github", data, commit))
@@ -168,6 +168,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 team = data['team']['name']
                 msgs.append('repository {:} added to team {:}' \
                             .format(name, team))
+            else:
+                msgs.append('sorry, event {:} not supported yet.'.format(event))
         # not github
         elif "commits" in data:
             for commit in data['commits']:
@@ -284,12 +286,12 @@ def gitserver(phenny, input):
                 stopserver(phenny, input)
             else:
                 phenny.reply("Server is already down!")
-        if command == "start":
+        elif command == "start":
             if httpd is None:
                 setup_server(phenny, input)
             else:
                 phenny.reply("Server is already up!")
-        if command == "status":
+        elif command == "status":
             if httpd is None:
                 phenny.reply("Server is down! Start using '.gitserver start'")
             else:
@@ -370,6 +372,7 @@ def retrieve_commit(phenny, input):
 
     # get repo and rev with regex
     data = input.group(1).split(' ')
+    print(data)
 
     if len(data) != 2:
         phenny.reply("Invalid number of parameters.")

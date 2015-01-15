@@ -31,7 +31,7 @@ def start_pester(phenny, input):
     else:
         phenny.say(input.nick + ': You are already pestering ' + input.group(2))
 start_pester.conn = None
-pester.rule = ('$nick', ['pester'], r'(\S+) to (.*)')
+start_pester.rule = ('$nick', ['pester'], r'(\S+) to (.*)')
 
 
 def pester(phenny, input):
@@ -108,3 +108,4 @@ def pesters(phenny, input):
             c.execute('''DELETE FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.nick])
             phenny.say(input.nick + ': I have stopped pestering ' + input.group(2))
 pesters.rule = r'[.]pesters (dismiss from|stop pestering) (.*)'
+

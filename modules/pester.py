@@ -109,6 +109,5 @@ def pesters(phenny, input):
             phenny.say(input.nick + ': I have stopped pestering ' + input.group(2))
             
     pesters.conn.commit()
-    pesters.conn.close()
 pesters.rule = r'[.]pesters (dismiss|stop) (.*)'
 

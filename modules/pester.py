@@ -93,7 +93,7 @@ pester.rule = r'(.*)'
 def pesters(phenny, input):
     pesters.conn = sqlite3.connect(phenny.pester_db)
     c = pesters.conn.cursor()
-    if input.group(1) == 'dismiss from':
+    if input.group(1) == 'dismiss':
         current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         if c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.nick, input.group(2)]).fetchall() == []:
             phenny.say(input.nick + ': You are not being pestered by ' + input.group(2))
@@ -101,7 +101,7 @@ def pesters(phenny, input):
             c.execute('''UPDATE to_pester SET dismissed=? WHERE pesteree=? AND pesterer=?''', [current_time, input.nick, input.group(2)])
             phenny.say(input.nick + ': Dismissed')
         
-    elif input.group(1) == 'stop pestering':
+    elif input.group(1) == 'stop':
         if c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.nick]).fetchall() == []:
             phenny.say(input.nick + ': You are not pestering ' + input.group(2))
         else:
@@ -110,5 +110,5 @@ def pesters(phenny, input):
             
     pesters.conn.commit()
     pesters.conn.close()
-pesters.rule = r'[.]pesters (dismiss from|stop pestering) (.*)'
+pesters.rule = r'[.]pesters (dismiss|stop) (.*)'
 

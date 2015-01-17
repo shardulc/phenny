@@ -98,9 +98,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             if event == 'commit_comment':
                 commit = data['comment']['commit_id'][:7]
                 comment = data['comment']['body']
-                date = data['comment']['updated_at']
-                msgs.append('[{:}] {:} * {:}: new comment on commit {:}: {:}' \
-                            .format(date, user, repo, commit, comment))
+                msgs.append('{:}: {:} * new comment on commit {:}: {:}' \
+                            .format(repo, user, commit, comment))
             elif event == 'create' or event == 'delete':
                 ref = data['ref']
                 type_ = data['ref_type']
@@ -112,14 +111,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             elif event == 'issue_comment':
                 number = data['issue']['number']
                 comment = data['comment']['body']
-                date = data['comment']['updated_at']
                 msgs.append('{:}: {:} * new comment on issue #{:}: {:}' \
                             .format(repo, user, number, comment))
             elif event == 'issues':
                 number = data['issue']['number']
                 title = data['issue']['title']
                 action = data['action']
-                date = data['issue']['updated_at']
                 msgs.append('{:}: {:} * issue #{:} "{:}" {:}' \
                             .format(repo, user, number, title, action))
             elif event == 'member':
@@ -140,12 +137,11 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 title = data['pull_request']['title']
                 action = data['action']
                 date = data['pull_request']['updated_at']
-                msgs.append('[{:}] {:} * {:}: pull request #{:} "{:}" has been {:}' \
-                            .format(date, user, repo, number, title, action))
+                msgs.append('{:}: {:} * pull request #{:} "{:}" {:}' \
+                            .format(repo, user, number, title, action))
             elif event == 'pull_request_review_comment':
                 number = data['pull_request']['number']
                 comment = data['comment']['body']
-                date = data['comment']['updated_at']
                 msgs.append('{:}: {:} * new comment on pull request #{:}: {:}' \
                             .format(repo, user, number, comment))
             elif event == 'push':
@@ -154,9 +150,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             elif event == 'release':
                 tag = data['release']['tag_name']
                 action = data['action']
-                date = data['release']['published_at']
-                msgs.append('[{:}] {:} * {:}: release {:} {:}' \
-                            .format(date, user, repo, tag, action))
+                msgs.append('{:}: {:} * release {:} {:}' \
+                            .format(repo, user, tag, action))
             elif event == 'repository':
                 name = data['repository']['name']
                 action = data['action']

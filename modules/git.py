@@ -372,7 +372,6 @@ def retrieve_commit(phenny, input):
 
     # get repo and rev with regex
     data = input.group(1).split(' ')
-    print(data)
 
     if len(data) != 2:
         phenny.reply("Invalid number of parameters.")

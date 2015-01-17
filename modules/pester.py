@@ -106,8 +106,21 @@ def pesters(phenny, input):
             phenny.say(input.nick + ': You are not pestering ' + input.group(2))
         else:
             c.execute('''DELETE FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.nick])
-            phenny.say(input.nick + ': I have stopped pestering ' + input.group(2))
+            phenny.say(input.nick + ': Stopped pestering ' + input.group(2))
             
     pesters.conn.commit()
-pesters.rule = r'[.]pesters (dismiss|stop) (.*)'
+pesters.rule = r'[.]pesters (dismiss|stop) (\S+)'
 
+def admin_stop(phenny, input):
+    admin_stop.conn = sqlite3.connect(phenny.pester_db)
+    c = admin_stop.conn.cursor()
+    if input.nick in phenny.config.admins:
+        if c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.group(1)]).fetchall == []:
+            phenny.say(input.nick + ': ' + input.group(1) + ' is not pestering ' + input.group(2))
+        else:
+            c.execute('''DELETE FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.group(1)])
+            phenny.say(input.nick + ': ' + input.group(1) + ' is no longer pestering ' + input.group(2))
+    else:
+        phenny.say('You need to be admin to perform this function.')
+    admin_stop.conn.commit()
+admin_stop.rule = r'[.]pesters admin stop (\S+) to (\S+)'

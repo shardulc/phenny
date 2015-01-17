@@ -140,8 +140,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 title = data['pull_request']['title']
                 action = data['action']
                 date = data['pull_request']['updated_at']
-                msgs.append('[{:}] {:} * {:}: pull request #{:} "{:}" has been {:}' \
-                            .format(date, user, repo, number, title, action))
+                msgs.append('{:}: {:} * pull request #{:} "{:}" {:}' \
+                            .format(repo, user, number, title, action))
             elif event == 'pull_request_review_comment':
                 number = data['pull_request']['number']
                 comment = data['comment']['body']

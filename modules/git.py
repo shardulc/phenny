@@ -117,8 +117,13 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 number = data['issue']['number']
                 title = data['issue']['title']
                 action = data['action']
-                msgs.append('{:}: {:} * issue #{:} "{:}" {:}' \
-                            .format(repo, user, number, title, action))
+                opt = ''
+                if 'assignee' in data.keys():
+                    opt = 'to ' + data['assignee']
+                elif 'label' in data.keys():
+                    opt = 'with ' + data['label']
+                msgs.append('{:}: {:} * issue #{:} "{:}" {:} {:}' \
+                            .format(repo, user, number, title, action, opt))
             elif event == 'member':
                 new_user = data['member']['login']
                 action = data['action']

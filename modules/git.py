@@ -181,6 +181,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                             .format(name, team))
             else:
                 msgs.append('sorry, event {:} not supported yet.'.format(event))
+                msgs.append(data.keys())
         # not github
         elif "commits" in data:
             for commit in data['commits']:

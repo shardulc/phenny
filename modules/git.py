@@ -98,27 +98,40 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             if event == 'commit_comment':
                 commit = data['comment']['commit_id'][:7]
                 comment = data['comment']['body']
+                url = data['comment']['html_url']
                 msgs.append('{:}: {:} * new comment on commit {:}: {:}' \
                             .format(repo, user, commit, comment))
+                msgs.append(url)
             elif event == 'create' or event == 'delete':
                 ref = data['ref']
                 type_ = data['ref_type']
                 msgs.append('{:}: {:} * {:} {:} {:}d' \
                             .format(repo, user, type_, ref, event))
             elif event == 'fork':
+                url = data['forkee']['html_url']
                 msgs.append('{:}: {:} forked this repo' \
                             .format(repo, user))
+                msgs.append(url)
             elif event == 'issue_comment':
                 number = data['issue']['number']
                 comment = data['comment']['body']
+                url = data['issue']['html_url']
                 msgs.append('{:}: {:} * new comment on issue #{:}: {:}' \
                             .format(repo, user, number, comment))
+                msgs.append(url)
             elif event == 'issues':
                 number = data['issue']['number']
                 title = data['issue']['title']
                 action = data['action']
-                msgs.append('{:}: {:} * issue #{:} "{:}" {:}' \
-                            .format(repo, user, number, title, action))
+                url = data['issue']['html_url']
+                opt = ''
+                if 'assignee' in data:
+                    opt = 'to ' + data['assignee']
+                elif 'label' in data:
+                    opt = 'with ' + data['label']
+                msgs.append('{:}: {:} * issue #{:} "{:}" {:} {:}' \
+                            .format(repo, user, number, title, action, opt))
+                msgs.append(url)
             elif event == 'member':
                 new_user = data['member']['login']
                 action = data['action']
@@ -136,28 +149,38 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 number = data['number']
                 title = data['pull_request']['title']
                 action = data['action']
-                date = data['pull_request']['updated_at']
-                msgs.append('{:}: {:} * pull request #{:} "{:}" {:}' \
-                            .format(repo, user, number, title, action))
+                url = data['pull_request']['html_url']
+                opt = ''
+                if 'assignee' in data['pull_request']:
+                    opt = 'to ' + data['pull_request']['assignee']
+                msgs.append('{:}: {:} * pull request #{:} "{:}" {:} {:}' \
+                            .format(repo, user, number, title, action, opt))
+                msgs.append(url)
             elif event == 'pull_request_review_comment':
                 number = data['pull_request']['number']
                 comment = data['comment']['body']
+                url = data['comment']['html_url']
                 msgs.append('{:}: {:} * new comment on pull request #{:}: {:}' \
                             .format(repo, user, number, comment))
+                msgs.append(url)
             elif event == 'push':
                 for commit in data['commits']:
                     msgs.append(self.return_data("github", data, commit))
+                    msgs.append(commit['url'])
             elif event == 'release':
                 tag = data['release']['tag_name']
                 action = data['action']
+                url = data['release']['html_url']
                 msgs.append('{:}: {:} * release {:} {:}' \
                             .format(repo, user, tag, action))
+                msgs.append(url)
             elif event == 'repository':
                 name = data['repository']['name']
                 action = data['action']
                 url = data['repository']['url']
-                msgs.append('new repository {:} {:} by {:} (<{:}>)' \
+                msgs.append('new repository {:} {:} by {:}' \
                             .format(name, action, user, url))
+                msgs.append(url)
             elif event == 'team_add':
                 name = data['repository']['full_name']
                 team = data['team']['name']

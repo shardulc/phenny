@@ -127,4 +127,4 @@ def admin_stop(phenny, input):
             admin_stop.conn.commit()
     else:
         phenny.say('You need to be admin to perform this function.')
-admin_stop.rule = r'[.]pesters admin stop (\S+) to (\S+)'
+admin_stop.rule = r'[.]pesters stop (\S+) to (\S+)'

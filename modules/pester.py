@@ -71,8 +71,7 @@ def pester(phenny, input):
                         pass
                     delta = last_pestered - datetime.utcnow()
                     difference = delta.total_seconds() / 60 # in minutes
-                    if abs(difference) > phenny.config.pester_after_dismiss:
-                        phenny.say(str(difference))
+                    if abs(difference) > phenny.config.minutes_to_pester:
                         msg = input.nick + ': ' + pesterer + ' pesters you to ' + reason
                         phenny.say(msg)
                         c.execute('''UPDATE to_pester SET last_pestered=? WHERE pesteree=? AND pesterer=? AND reason=?''',

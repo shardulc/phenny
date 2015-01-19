@@ -25,7 +25,7 @@ def start_pester(phenny, input):
         current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         c.execute('''INSERT INTO to_pester VALUES(?,?,?,?,?);''', [input.group(2), input.nick, input.group(3), current_time, ""])
         start_pester.conn.commit()
-        msg = input.nick + ": I will start pestering " + input.group(2) + " to " + input.group(3)
+        msg = input.nick + ": I will start pestering " + input.group(2) + " " + input.group(3)
         phenny.say(msg)
     else:
         phenny.say(input.nick + ': You are already pestering ' + input.group(2))
@@ -33,7 +33,7 @@ def start_pester(phenny, input):
     start_pester.conn.commit()
     start_pester.conn.close()
 start_pester.conn = None
-start_pester.rule = ('$nick', ['pester'], r'(\S+) to (.*)')
+start_pester.rule = ('$nick', ['pester'], r'(\S+) (.*)')
 
 
 def pester(phenny, input):
@@ -72,7 +72,7 @@ def pester(phenny, input):
                     delta = last_pestered - datetime.utcnow()
                     difference = delta.total_seconds() / 60 # in minutes
                     if abs(difference) > phenny.config.minutes_to_pester:
-                        msg = input.nick + ': ' + pesterer + ' pesters you to ' + reason
+                        msg = input.nick + ': ' + pesterer + ' pesters you ' + reason
                         phenny.say(msg)
                         c.execute('''UPDATE to_pester SET last_pestered=? WHERE pesteree=? AND pesterer=? AND reason=?''',
                                 (current_time, input.nick, pesterer, reason))
@@ -82,7 +82,7 @@ def pester(phenny, input):
                     delta = dismissed - datetime.utcnow()
                     difference = delta.total_seconds() / 60 # in minutes
                     if abs(difference) > phenny.config.pester_after_dismiss:
-                        msg = input.nick + ': ' + pesterer + ' pesters you to ' + reason
+                        msg = input.nick + ': ' + pesterer + ' pesters you ' + reason
                         phenny.say(msg)
                         c.execute('''UPDATE to_pester SET last_pestered=? WHERE pesteree=? AND pesterer=? AND reason=?''',
                                 (current_time, input.nick, pesterer, reason))
@@ -90,7 +90,6 @@ def pester(phenny, input):
                         pester.conn.commit()
     else:
         pass
-pester.conn = None
 pester.rule = r'(.*)'
 
 def pesters(phenny, input):

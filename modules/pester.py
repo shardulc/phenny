@@ -17,7 +17,7 @@ def setup(self):
 
 
 def start_pester(phenny, input):
-    '''Start pestering someone. Usage: <bot_nick>: pester [someone] [to do something]'''
+    '''Start pestering someone. Usage: <bot_nick>: pester <someone> <to do something>'''
     start_pester.conn = sqlite3.connect(phenny.pester_db)
     c = start_pester.conn.cursor()
 

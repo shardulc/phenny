@@ -90,7 +90,6 @@ def pester(phenny, input):
                         pester.conn.commit()
     else:
         pass
-pester.conn = None
 pester.rule = r'(.*)'
 
 def pesters(phenny, input):

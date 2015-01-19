@@ -23,7 +23,7 @@ def start_pester(phenny, input):
     c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.nick])
     if c.fetchall() == []:
         current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        c.execute('''INSERT INTO to_pester VALUES(?,?,?,?,?);''', [input.group(2), input.nick, input.group(3), current_time, "", current_time])
+        c.execute('''INSERT INTO to_pester VALUES(?,?,?,?,?,?);''', [input.group(2), input.nick, input.group(3), current_time, "", current_time])
         start_pester.conn.commit()
         msg = input.nick + ": I will start pestering " + input.group(2) + " " + input.group(3)
         phenny.say(msg)

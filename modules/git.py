@@ -123,7 +123,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 action = data['action']
                 url = data['issue']['html_url']
                 opt = ''
-                if 'assignee' in data['issue']:
+                if data['issue']['assignee'] is not None:
                     opt = 'to ' + data['issue']['assignee']
                 elif 'label' in data:
                     opt = 'with ' + data['label']['name']
@@ -148,7 +148,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 action = data['action']
                 url = data['pull_request']['html_url']
                 opt = ''
-                if 'assignee' in data['pull_request']:
+                if data['pull_request']['assignee'] is not None:
                     opt = 'to ' + data['pull_request']['assignee']
                 msgs.append('{:}: {:} * pull request #{:} "{:}" {:} {:} {:}' \
                             .format(repo, user, number, title, action, opt, url))
@@ -181,6 +181,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                             .format(name, team))
             else:
                 msgs.append('sorry, event {:} not supported yet.'.format(event))
+                msgs.append(data.keys())
         # not github
         elif "commits" in data:
             for commit in data['commits']:

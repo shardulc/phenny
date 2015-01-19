@@ -59,24 +59,27 @@ def pester(phenny, input):
                 pesterers.append(name[0])
             
             for pesterer in pesterers:
-                c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=? AND reason=?''', (input.nick, pesterer, reason))
-                row = c.fetchone()
+                c.execute('''SELECT dismissed FROM to_pester WHERE pesteree=? AND pesterer=? AND reason=?''', (input.nick, pesterer, reason))
+                last_dismissed = c.fetchall()[0][0]
                 current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-                if row[3] == "":
-                    last_pester_str = row[4]
+                if last_dismissed == "":
+                    c.execute('''SELECT last_pestered FROM to_pester WHERE pesteree=? AND pesterer=? AND reason=?''', (input.nick, pesterer, reason))
+                    last_pester_str = c.fetchall()[0][0]
                     try:
                         last_pestered = datetime.strptime(last_pester_str, "%Y-%m-%d %H:%M:%S")
                     except ValueError:
                         pass
                     delta = last_pestered - datetime.utcnow()
                     difference = delta.total_seconds() / 60 # in minutes
-                    if difference > phenny.config.minutes_to_pester:
+                    if abs(difference) > phenny.config.pester_after_dismiss:
+                        phenny.say(str(difference))
                         msg = input.nick + ': ' + pesterer + ' pesters you to ' + reason
                         phenny.say(msg)
                         c.execute('''UPDATE to_pester SET last_pestered=? WHERE pesteree=? AND pesterer=? AND reason=?''',
                                 (current_time, input.nick, pesterer, reason))
+                        pester.conn.commit()
                 else:
-                    dismissed = datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S")
+                    dismissed = datetime.strptime(last_dismissed, "%Y-%m-%d %H:%M:%S")
                     delta = dismissed - datetime.utcnow()
                     difference = delta.total_seconds() / 60 # in minutes
                     if abs(difference) > phenny.config.pester_after_dismiss:
@@ -85,6 +88,7 @@ def pester(phenny, input):
                         c.execute('''UPDATE to_pester SET last_pestered=? WHERE pesteree=? AND pesterer=? AND reason=?''',
                                 (current_time, input.nick, pesterer, reason))
                         c.execute('''UPDATE to_pester SET dismissed=? WHERE pesteree=? AND pesterer=? AND reason=?''', ("", input.nick, pesterer, reason))
+                        pester.conn.commit()
     else:
         pass
 pester.conn = None
@@ -115,12 +119,12 @@ def admin_stop(phenny, input):
     admin_stop.conn = sqlite3.connect(phenny.pester_db)
     c = admin_stop.conn.cursor()
     if input.nick in phenny.config.admins:
-        if c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.group(1)]).fetchall == []:
+        if c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=?''', (input.group(2), input.group(1))).fetchall == []:
             phenny.say(input.nick + ': ' + input.group(1) + ' is not pestering ' + input.group(2))
         else:
-            c.execute('''DELETE FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.group(1)])
+            c.execute('''DELETE FROM to_pester WHERE pesteree=? AND pesterer=?''', (input.group(2), input.group(1)))
             phenny.say(input.nick + ': ' + input.group(1) + ' is no longer pestering ' + input.group(2))
+            admin_stop.conn.commit()
     else:
         phenny.say('You need to be admin to perform this function.')
-    admin_stop.conn.commit()
 admin_stop.rule = r'[.]pesters admin stop (\S+) to (\S+)'

@@ -33,7 +33,7 @@ def start_pester(phenny, input):
         
     start_pester.conn.commit()
     start_pester.conn.close()
-start_pester.name = 'start a new pester'
+start_pester.name = 'pester'
 start_pester.conn = None
 start_pester.rule = ('$nick', ['pester'], r'(\S+) (.*)')
 
@@ -120,7 +120,7 @@ pesters.name = 'pesters'
 pesters.rule = r'[.]pesters (snooze|dismiss) (\S+)'
 
 def admin_stop(phenny, input):
-    '''Usage: ".pesters [stop] <pesterer> to <pesteree>" to stop a pester from <pesterer> to <pesteree>.'''
+    '''Usage: ".pesters [stop] <pesterer> to <pesteree>" to stop a pester from <pesterer> to <pesteree>. This functions is for *admins only*.'''
     admin_stop.conn = sqlite3.connect(phenny.pester_db)
     c = admin_stop.conn.cursor()
     if input.nick in phenny.config.admins:
@@ -132,5 +132,5 @@ def admin_stop(phenny, input):
             admin_stop.conn.commit()
     else:
         phenny.say('You need to be admin to perform this function.')
-admin_stop.name = 'Stop function for admins.'
+admin_stop.name = 'pester stop'
 admin_stop.rule = r'[.]pesters stop (\S+) to (\S+)'

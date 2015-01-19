@@ -17,6 +17,7 @@ def setup(self):
 
 
 def start_pester(phenny, input):
+    '''Start pestering someone. Usage: <bot_nick>: pester [someone] [to do something]'''
     start_pester.conn = sqlite3.connect(phenny.pester_db)
     c = start_pester.conn.cursor()
 
@@ -32,6 +33,7 @@ def start_pester(phenny, input):
         
     start_pester.conn.commit()
     start_pester.conn.close()
+start_pester.name = 'start a new pester'
 start_pester.conn = None
 start_pester.rule = ('$nick', ['pester'], r'(\S+) (.*)')
 
@@ -95,6 +97,7 @@ def pester(phenny, input):
 pester.rule = r'(.*)'
 
 def pesters(phenny, input):
+    '''Usage: ".pesters [snooze] <person pestering you>" to 'snooze' a pester; ".pesters [dismiss] <person you are pestering>" to stop pestering someone.'''
     pesters.conn = sqlite3.connect(phenny.pester_db)
     c = pesters.conn.cursor()
     if input.group(1) == 'snooze':
@@ -113,9 +116,11 @@ def pesters(phenny, input):
             phenny.say(input.nick + ': Stopped pestering ' + input.group(2))
             
     pesters.conn.commit()
+pesters.name = 'pesters'
 pesters.rule = r'[.]pesters (snooze|dismiss) (\S+)'
 
 def admin_stop(phenny, input):
+    '''Usage: ".pesters [stop] <pesterer> to <pesteree>" to stop a pester from <pesterer> to <pesteree>.'''
     admin_stop.conn = sqlite3.connect(phenny.pester_db)
     c = admin_stop.conn.cursor()
     if input.nick in phenny.config.admins:
@@ -127,4 +132,5 @@ def admin_stop(phenny, input):
             admin_stop.conn.commit()
     else:
         phenny.say('You need to be admin to perform this function.')
+admin_stop.name = 'Stop function for admins.'
 admin_stop.rule = r'[.]pesters stop (\S+) to (\S+)'

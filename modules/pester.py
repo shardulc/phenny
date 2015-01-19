@@ -13,7 +13,7 @@ def setup(self):
     self.pester_conn = sqlite3.connect(self.pester_db)
 
     c = self.pester_conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS to_pester (pesteree TEXT, pesterer TEXT, reason TEXT, dismissed TEXT, last_pestered TEXT);''')
+    c.execute('''CREATE TABLE IF NOT EXISTS to_pester (pesteree TEXT, pesterer TEXT, reason TEXT, dismissed TEXT, last_pestered TEXT, created TEXT);''')
 
 
 def start_pester(phenny, input):
@@ -23,7 +23,7 @@ def start_pester(phenny, input):
     c.execute('''SELECT * FROM to_pester WHERE pesteree=? AND pesterer=?''', [input.group(2), input.nick])
     if c.fetchall() == []:
         current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        c.execute('''INSERT INTO to_pester VALUES(?,?,?,?,?);''', [input.group(2), input.nick, input.group(3), current_time, ""])
+        c.execute('''INSERT INTO to_pester VALUES(?,?,?,?,?);''', [input.group(2), input.nick, input.group(3), current_time, "", current_time])
         start_pester.conn.commit()
         msg = input.nick + ": I will start pestering " + input.group(2) + " " + input.group(3)
         phenny.say(msg)
@@ -62,6 +62,8 @@ def pester(phenny, input):
                 c.execute('''SELECT dismissed FROM to_pester WHERE pesteree=? AND pesterer=? AND reason=?''', (input.nick, pesterer, reason))
                 last_dismissed = c.fetchall()[0][0]
                 current_time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+                c.execute('''SELECT created FROM to_pester WHERE pesteree=? AND pesterer=? AND reason=?''', (input.nick, pesterer, reason))
+                created_str = c.fetchall()[0][0]
                 if last_dismissed == "":
                     c.execute('''SELECT last_pestered FROM to_pester WHERE pesteree=? AND pesterer=? AND reason=?''', (input.nick, pesterer, reason))
                     last_pester_str = c.fetchall()[0][0]
@@ -72,7 +74,7 @@ def pester(phenny, input):
                     delta = last_pestered - datetime.utcnow()
                     difference = delta.total_seconds() / 60 # in minutes
                     if abs(difference) > phenny.config.minutes_to_pester:
-                        msg = input.nick + ': ' + pesterer + ' pesters you ' + reason
+                        msg = input.nick + ': (' + created_str + ') ' + pesterer + ' pesters you ' + reason
                         phenny.say(msg)
                         c.execute('''UPDATE to_pester SET last_pestered=? WHERE pesteree=? AND pesterer=? AND reason=?''',
                                 (current_time, input.nick, pesterer, reason))
@@ -82,7 +84,7 @@ def pester(phenny, input):
                     delta = dismissed - datetime.utcnow()
                     difference = delta.total_seconds() / 60 # in minutes
                     if abs(difference) > phenny.config.pester_after_dismiss:
-                        msg = input.nick + ': ' + pesterer + ' pesters you ' + reason
+                        msg = input.nick + ': (' + created_str + ') ' + pesterer + ' pesters you ' + reason
                         phenny.say(msg)
                         c.execute('''UPDATE to_pester SET last_pestered=? WHERE pesteree=? AND pesterer=? AND reason=?''',
                                 (current_time, input.nick, pesterer, reason))

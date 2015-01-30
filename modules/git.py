@@ -219,7 +219,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
         # send OK code and notify firespeaker
         self.send_response(200)
-        self.phenny.bot.msg("firespeaker", "200 OK")
+        # self.phenny.bot.msg("firespeaker", "200 OK")
 
     def getBBFiles(self, filelist):
         '''Sort filelist into added, modified, and removed files

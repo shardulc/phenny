@@ -3,6 +3,7 @@
 botfun.py - activities that bots do
 author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 """
+import random
 
 def noexceptions(phenny, input):
    """Tells someone there aren't ever any exceptions"""
@@ -78,3 +79,15 @@ def particles(phenny, input):
 
 particles.rule = r'.*(?i)(particle|частиц|partikkel).*$'
 particles.priority = 'low'
+
+def unsupervised(phenny, input):
+   """various reactions to people talking about unsupervised stuff"""
+   message = random.choice(['beam search should improve the results', 'use a perceptron', 'use EM to improve your results', 'unsupervised'])
+   whouser = input.nick
+   if not whouser:
+      phenny.say(message)
+   else:
+      phenny.say("%s: %s" % (whouser, message))
+
+unsupervised.rule = r'.*(?i)(unsupervi(s|z)ed).*$'
+unsupervised.priority = 'low'

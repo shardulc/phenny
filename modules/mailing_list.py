@@ -130,11 +130,12 @@ def list_report(phenny, input):
             phenny.reply('Ok, polling.')
             if not check_mail(phenny):
                 phenny.reply('Sorry, no unread mailing list messages.')
-        elif input.group(3) in phenny.config.mailing_lists:
-            phenny.reply(last_message(phenny, input.group(3)))
         elif input.group(2) == "last":
             for i in phenny.config.mailing_lists:
                 phenny.reply(last_message(phenny, i))
+        #FIXME: if there's no group 3 this crashes
+        elif input.group(3) in phenny.config.mailing_lists:
+            phenny.reply(last_message(phenny, input.group(3)))
         else:
             phenny.reply(syntax.format(input.group(1), ', '.join(phenny.config.mailing_lists.keys())))
     else:

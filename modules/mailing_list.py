@@ -133,6 +133,7 @@ def list_report(phenny, input):
     else:
         phenny.reply(syntax.format(input.group(1), ', '.join(phenny.config.mailing_lists.keys())))
 list_report.name = "mailing list reporter"
-list_report.rule = r'.(mailinglist|ml)(?:\s(poll|last(?:\s([\w-]+))?))?'
+#list_report.rule = r'.(mailinglist|ml)(?:\s(poll|last(?:\s([\w-]+))?))?'
+list_report.commands = ['ml', 'mailinglist']
 list_report.priority = 'medium'
 list_report.thread = True

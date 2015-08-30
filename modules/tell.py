@@ -278,7 +278,7 @@ def messageAlert(phenny, input):
     remkeys = map(str.lower, phenny.reminders.keys())
     for alias in aliases:
         if alias.lower() in remkeys:
-            phenny.say(input.nick + ': You have messages.')
+            phenny.say(input.nick + ': You have messages. Say something, and I\'ll read them out.')
 messageAlert.event = 'JOIN'
 messageAlert.rule = r'.*'
 messageAlert.priority = 'low'

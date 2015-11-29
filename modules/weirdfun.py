@@ -37,7 +37,9 @@ def hug(phenny, input):
     if whouser:
         otherweird = whouser
 
-    if whouser.lower()==phenny.nick.lower():
+    if not whouser:
+        phenny.do('tries to hug himself but fails.')
+    elif whouser.lower()==phenny.nick.lower():
         phenny.do("tries but fails.")
     else:
         phenny.do("hugs %s" % otherweird)

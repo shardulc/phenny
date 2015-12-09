@@ -17,6 +17,7 @@ import datetime
 import web
 import os
 import threading
+import csv
 from lxml import html
 from decimal import Decimal as dec
 from tools import deprecated
@@ -60,6 +61,7 @@ def f_time(phenny, input):
             phenny.reply(msg)
             skip=True
             break
+    
     if skip ==False:
         if (TZ == 'UTC') or (TZ == 'Z'): 
             msg = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
@@ -68,7 +70,7 @@ def f_time(phenny, input):
             locale.setlocale(locale.LC_TIME, (tz[1:-1], 'UTF-8'))
             msg = time.strftime("%A, %d %B %Y %H:%M:%SZ", time.gmtime())
             phenny.reply(msg)
-        elif TZ in phenny.tz_data: 
+        elif TZ in phenny.tz_data:
             offset = phenny.tz_data[TZ] * 3600
             timenow = time.gmtime(time.time() + offset)
             msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(TZ), timenow)
@@ -114,27 +116,34 @@ def scrape_wiki_zones():
                 offset = 0
             offset = int(offset)
         data[code] = offset
-    url = 'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
-    resp = web.get(url)
-    h = html.document_fromstring(resp)
-    table = h.find_class('wikitable')[0]
-    for trs in table.findall('tr'):
-        tmr=0
-        for tds in trs.findall('td'):
-            tmr=tmr+1
-            if tmr==3:
-                ctz=tds.find('a').text[tds.find('a').text.find('/')+1:].replace('_',' ')
-                if ctz.find('/')!=-1:
-                    ctz=ctz[ctz.find('/')+1:]
-            if tmr==5:
-                ctu=tds.find('a').text
-                if ctu[ctu.find(':')+1]=='0':
-                    ctu=ctu[:ctu.find(':')]
+    with open("modules/raw_city_tz_data/cities.txt", "rt", encoding="UTF8") as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            tmr = 0
+            for elem in row:
+                tmr=tmr+1
+                if tmr==1:
+                    ctz=elem
+                elif tmr==2:
+                    if re.match("\(GMT\)", elem):
+                        ctu="+00:00"
+                    else:
+                        r = re.compile("\(GMT([+-]*\d*:\d*)\)")
+                        m = r.match(elem)
+                        if m.group(1) != None:
+                            ctu = m.group(1)
+                        else:
+                            return
+                    if ctu[ctu.find(':')+1]=='0':
+                        ctu=ctu[:ctu.find(':')]
+                    else:
+                        ctu=ctu[:ctu.find(':')]+'.5'
+                    if ctu[0]=='−':
+                        ctu='-'+ctu[1:]
+                    data[ctz.upper()]=float(ctu)
                 else:
-                    ctu=ctu[:ctu.find(':')]+'.5'
-                if ctu[0]=='−':
-                    ctu='-'+ctu[1:]
-                data[ctz.upper()]=float(ctu)
+                    break
+                                    
     return data
 
 def filename(phenny):

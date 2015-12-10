@@ -171,6 +171,7 @@ def w(phenny, input):
     word = input.group(2)
 
     if "->" in word: return
+    if "→" in word: return
 
     match_point_cmd = r'point\s(\S*)\s(.*)'
     matched_point = re.compile(match_point_cmd).match(word)

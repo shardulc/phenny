@@ -88,6 +88,7 @@ def awik(phenny, input):
    origterm = input.groups()[1]
 
    if "->" in origterm: return
+   if "→" in origterm: return
 
    if not origterm: 
       return phenny.say('Perhaps you meant ".wik Zen"?')

@@ -27,9 +27,11 @@ def f_time(phenny, input):
     """.time [timezone] - Show current time in defined timezone. Defaults to GMT."""
     tz = input.group(2) or 'GMT'
 
+    tz_complete = tz.upper()
+
     math_add = 0
-    if '+' or '-' in tz:
-        zone_and_add = tz.split('+')[1]
+    if '+' in tz or '-' in tz:
+        zone_and_add = tz.split('+') if '+' in tz else tz.split('-')
         to_add = zone_and_add[1]
         if ':' in to_add:
             parts = to_add.split(':')
@@ -69,7 +71,7 @@ def f_time(phenny, input):
         if slug[:longs]==TZ:
             offset = phenny.tz_data[slug] * 3600 + math_add
             timenow = time.gmtime(time.time() + offset)
-            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(slug), timenow)
+            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
             phenny.reply(msg)
             skip=True
             break
@@ -84,11 +86,11 @@ def f_time(phenny, input):
         elif TZ in phenny.tz_data:
             offset = phenny.tz_data[TZ] * 3600 + math_add
             timenow = time.gmtime(time.time() + offset)
-            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(TZ), timenow)
+            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
             phenny.reply(msg)
         elif tz and tz[0] in ('+', '-') and 4 <= len(tz) <= 6:
             timenow = time.gmtime(time.time() + (int(tz[:3]) * 3600))
-            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz), timenow)
+            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
             phenny.reply(msg)
         else:
             try: t = float(tz)
@@ -104,7 +106,7 @@ def f_time(phenny, input):
                     phenny.reply(error)
             else:
                 timenow = time.gmtime(time.time() + (t * 3600))
-                msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz), timenow)
+                msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
                 phenny.reply(msg)
 f_time.name = 'time'
 f_time.commands = ['time']

@@ -18,9 +18,11 @@ import web
 import os
 import threading
 import csv
+import zipfile, urllib.request, shutil
 from lxml import html
 from decimal import Decimal as dec
 from tools import deprecated
+
 
 r_local = re.compile(r'\([a-z]+_[A-Z]+\)')
 
@@ -89,7 +91,7 @@ def f_time(phenny, input):
                     proc = subprocess.Popen(cmd, shell=True, stdout=PIPE)
                     phenny.reply(proc.communicate()[0])
                 else: 
-                    error = "Sorry, I don't know about the '%s' timezone." % tz
+                    error = "Sorry, I don't know about the '%s' timezone. Suggest the city on http://www.citytimezones.info" % tz
                     phenny.reply(error)
             else: 
                 timenow = time.gmtime(time.time() + (t * 3600))
@@ -116,7 +118,17 @@ def scrape_wiki_zones():
                 offset = 0
             offset = int(offset)
         data[code] = offset
-    with open("modules/raw_city_tz_data/cities.txt", "rt", encoding="UTF8") as csvfile:
+
+    file_url = "http://www.citytimezones.info/database/cities_csv.zip"
+    file_name = "cities_csv.zip"
+
+    with urllib.request.urlopen(file_url) as response, open(file_name, 'wb') as out_file:
+        shutil.copyfileobj(response, out_file)
+        with zipfile.ZipFile(file_name) as zf:
+            a = zf.extractall()
+            print(zf)
+            
+    with open("cities.txt", "rt", encoding="UTF8") as csvfile:
         csvreader = csv.reader(csvfile)
         for row in csvreader:
             tmr = 0
@@ -143,6 +155,27 @@ def scrape_wiki_zones():
                     data[ctz.upper()]=float(ctu)
                 else:
                     break
+    url = 'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
+    resp = web.get(url)
+    h = html.document_fromstring(resp)
+    table = h.find_class('wikitable')[0]
+    for trs in table.findall('tr'):
+        tmr=0
+        for tds in trs.findall('td'):
+            tmr=tmr+1
+            if tmr==3:
+                ctz=tds.find('a').text[tds.find('a').text.find('/')+1:].replace('_',' ')
+                if ctz.find('/')!=-1:
+                    ctz=ctz[ctz.find('/')+1:]
+            if tmr==5:
+                ctu=tds.find('a').text
+                if ctu[ctu.find(':')+1]=='0':
+                    ctu=ctu[:ctu.find(':')]
+                else:
+                    ctu=ctu[:ctu.find(':')]+'.5'
+                if ctu[0]=='−':
+                    ctu='-'+ctu[1:]
+                data[ctz.upper()]=float(ctu)
                                     
     return data
 

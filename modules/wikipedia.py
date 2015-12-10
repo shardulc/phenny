@@ -121,7 +121,7 @@ def wik(phenny, input):
 
     origterm = input.group(3)
     if input.group(2):
-        lang = input.group(2)
+        lang = input.group(2)[1:]
     else:
         lang = "en"
 

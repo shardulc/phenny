@@ -116,8 +116,8 @@ def point_to(phenny, origterm, lang, nick):
 def wik(phenny, input): 
     """Search for something on Wikipedia or point 
     another user to a Wikipedia page"""
-    if "->" in input.group(3):
-        return
+    if "->" in input.group(3): return
+    if "→" in input.group(3): return
 
     origterm = input.group(3)
     if input.group(2):

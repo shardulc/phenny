@@ -226,7 +226,8 @@ thread_check_tz.commands = ['tzdb status']
 
 def setup(phenny):
     f = filename(phenny)
-    if os.path.exists(f):
+    # Recreate the file if it has been modified less than 31 days ago
+    if os.path.exists(f) and (time.time() - os.path.getmtime(f))/(60*60*24) < 31:
         try:
             phenny.tz_data = read_dict(f)
         except ValueError:

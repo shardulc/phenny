@@ -289,7 +289,7 @@ npl.commands = ['npl']
 npl.priority = 'high'
 
 def time_zone(phenny, input):
-    """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone."""
+    """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone. Example: (.tz 355EST in CET) or (.tz 355EST in London)."""
     
     format_regex = re.compile("(\d*)([a-zA-Z]*)\sin\s([a-zA-z]*)")
     input_txt = input.group(2)
@@ -309,7 +309,7 @@ def time_zone(phenny, input):
         time_hours = int(int(regex_match.groups()[0])/100)
         time_mins = int(regex_match.groups()[0])%100
         if (time_hours >= 24) or (time_hours < 0) or (time_mins >= 60) or (time_mins < 0):
-            phenny.reply("Please enter a vald time :P")
+            phenny.reply("Please enter a valid time :P")
             return
         time_diff_hours = int(to_tz_match-from_tz_match)
         time_diff_minutes = int(((to_tz_match-from_tz_match)-time_diff_hours)*60)

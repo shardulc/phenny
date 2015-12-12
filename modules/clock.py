@@ -292,7 +292,7 @@ npl.priority = 'high'
 def time_zone(phenny, input):
     """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone."""
     
-    format_regex = re.compile("(\d*)([a-zA-Z]*)\sin\s([a-zA-z]*)")
+    format_regex = re.compile("(\d*)([a-zA-Z\s,-]*)\sin\s([a-zA-z\s]*)")
     input_txt = input.group(2)
     if not input_txt:
         phenny.reply(time_zone.__doc__.strip())
@@ -301,11 +301,26 @@ def time_zone(phenny, input):
     if (not regex_match) or (regex_match.groups()[0] == "") or (regex_match.groups()[1] == "") or (regex_match.groups()[2] == ""):
         phenny.reply(time_zone.__doc__.strip())
     else:
-        from_tz_match = phenny.tz_data[regex_match.groups()[1].upper()]
-        to_tz_match = phenny.tz_data[regex_match.groups()[2].upper()]
+        from_tz_match = phenny.tz_data.get(regex_match.groups()[1].upper(), "")
+        to_tz_match = phenny.tz_data.get(regex_match.groups()[2].upper(), "")
+
         if (from_tz_match == "") or (to_tz_match == ""):
-            phenny.reply("Please enter valid time zone(s) :P")
-            return
+            TZ1 = regex_match.groups()[1].upper()
+            TZ2 = regex_match.groups()[2].upper()
+
+            longs1=int(len(TZ1))
+            longs2=int(len(TZ2))
+
+            for (slug, title) in phenny.tz_data.items():
+                if slug[:longs1]==TZ1 and from_tz_match == "":
+                    from_tz_match = phenny.tz_data[slug]
+                if slug[:longs2]==TZ2 and to_tz_match == "":
+                    to_tz_match = phenny.tz_data[slug]
+                if from_tz_match != "" and to_tz_match != "":
+                    break
+            if (from_tz_match == "") or (to_tz_match == ""):
+                phenny.reply("Please enter valid time zone(s) :P")
+                return
             
         time_hours = int(int(regex_match.groups()[0])/100)
         time_mins = int(regex_match.groups()[0])%100

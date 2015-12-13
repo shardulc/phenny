@@ -171,7 +171,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             elif event == 'repository':
                 name = data['repository']['name']
                 action = data['action']
-                url = data['repository']['url']
+                url = data['repository']['html_url']
                 msgs.append('new repository {:} {:} by {:} {:}' \
                             .format(name, action, user, url, url))
             elif event == 'team_add':
@@ -376,8 +376,7 @@ def get_recent_commit(phenny, input):
         # the * is for unpacking
         info, url = get_commit_info(phenny, repo, data[0]['sha'])
         msg = generate_report(repo, *info)
-        phenny.say(msg)
-        phenny.say(url)
+        phenny.say(msg + ' ' + url)
 
 # command metadata and invocation
 get_recent_commit.rule = ('$nick', 'recent')
@@ -410,8 +409,7 @@ def retrieve_commit_git(phenny, input):
         # info = get_commit_info(phenny, repo, rev)
         # the * is for unpacking
         msg = generate_report(repo, *info)
-        phenny.say(msg)
-        phenny.say(url)
+        phenny.say(msg + ' ' + url)
     except:
         phenny.reply("Invalid revision value!")
         return

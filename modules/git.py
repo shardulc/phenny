@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 """
 git.py - Github Post-Receive Hooks Module
 """

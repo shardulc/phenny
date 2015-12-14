@@ -153,10 +153,15 @@ def recentcommits(phenny, input):
 	for repo in phenny.config.svn_repositories:
 		#for (msg, revisions) in pollers[repo].check(phenny.revisions):
 		msg = pollers[repo].generateReport(pollers[repo].get_last_revision(), True)
-		if len(msg) > 200:
-			phenny.say(msg[:len(msg)-5] + "[...]")
+		url = phenny.config.svn_repositories[repo].rstrip('/')
+		if url.endswith('trunk'):
+			url = url[:-5] + '/%s' % rev
 		else:
-			phenny.say(msg)
+			url += '/%s' % rev
+		if len(msg) > 200:
+			phenny.say(msg[:len(msg)-5] + "[...] " + url)
+		else:
+			phenny.say(msg + ' ' + url)
 recentcommits.name = 'recent'
 recentcommits.rule = ('$nick', 'recent')
 recentcommits.example = 'begiak: recent'
@@ -165,7 +170,7 @@ recentcommits.example = 'begiak: recent'
 recentcommits.priority = 'medium'
 recentcommits.thread = True
 			
-def retrieve_commit(phenny, input):
+def retrieve_commit_svn(phenny, input):
 	data = input.group(1).split(' ')
 	
 	if len(data) != 2:
@@ -184,8 +189,13 @@ def retrieve_commit(phenny, input):
 	
 	poller = SVNPoller(repo, phenny.config.svn_repositories[repo])
 	msg = poller.generateReport(rev, True)
-	phenny.say(msg)
-retrieve_commit.rule = ('$nick', 'info(?: +(.*))')
+	url = phenny.config.svn_repositories[repo].rstrip('/')
+	if url.endswith('trunk'):
+	    url = url[:-5] + '/%s' % rev
+	else:
+	    url += '/%s' % rev
+	phenny.say(msg + ' ' + url)
+retrieve_commit_svn.rule = ('$nick', 'info(?: +(.*))')
 
 
 def pollsvn(phenny, input):

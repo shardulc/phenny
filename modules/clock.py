@@ -17,15 +17,54 @@ import datetime
 import web
 import os
 import threading
+import csv
+import zipfile, urllib.request, shutil
 from lxml import html
 from decimal import Decimal as dec
 from tools import deprecated
 
+
 r_local = re.compile(r'\([a-z]+_[A-Z]+\)')
 
-def f_time(phenny, input): 
+def f_time(phenny, input):
     """.time [timezone] - Show current time in defined timezone. Defaults to GMT."""
     tz = input.group(2) or 'GMT'
+
+    tz_complete = tz.upper()
+
+    math_add = 0
+    if '+' in tz or '-' in tz:
+        zone_and_add = tz.split('+') if '+' in tz else tz.split('-')
+        to_add = zone_and_add[1]
+        if ':' in to_add:
+            parts = to_add.split(':')
+            if len(parts[1]) > 2:
+                phenny.reply('Minutes to add allowed only upto 59. Please convert to hours if you want more.')
+                return
+            if int(parts[1]) > 59:
+                phenny.reply('Minutes to add allowed only upto 59. Please convert to hours if you want more.')
+                return
+            if len(parts[0]) > 2:
+                phenny.reply('Time to add allowed only upto 24 hours.')
+                return
+            if int(parts[0]) > 24:
+                phenny.reply('Time to add allowed only upto 24 hours.')
+                return
+            if int(parts[0]) == 24 and int(parts[1]) > 0:
+                phenny.reply('Time to add allowed only upto 24 hours.')
+                return
+            math_add = int(parts[0]) * 3600 + int(parts[1]) * 60
+        else:
+            if len(to_add) > 2:
+                phenny.reply('Time to add allowed only upto 24 hours.')
+                return
+            if int(to_add) > 24:
+                phenny.reply('Time to add allowed only upto 24 hours.')
+                return
+            math_add = int(to_add) * 3600
+        if '-' in tz:
+            math_add *= -1
+        tz = zone_and_add[0]
 
     f = filename(phenny)
     import os, re, subprocess
@@ -38,13 +77,13 @@ def f_time(phenny, input):
         print('timezone database read failed update it')
 
     # Personal time zones, because they're rad
-    if hasattr(phenny.config, 'timezones'): 
+    if hasattr(phenny.config, 'timezones'):
         People = phenny.config.timezones
     else: People = {}
 
-    if tz in People: 
+    if tz in People:
         tz = People[tz]
-    elif (not input.group(2)) and input.nick in People: 
+    elif (not input.group(2)) and input.nick in People:
         tz = People[input.nick]
 
     TZ = tz.upper()
@@ -54,44 +93,45 @@ def f_time(phenny, input):
     if len(tz) > 30: return
     for (slug, title) in phenny.tz_data.items():
         if slug[:longs]==TZ:
-            offset = phenny.tz_data[slug] * 3600
+            offset = phenny.tz_data[slug] * 3600 + math_add
             timenow = time.gmtime(time.time() + offset)
-            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(slug), timenow)
+            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
             phenny.reply(msg)
             skip=True
             break
+    
     if skip ==False:
-        if (TZ == 'UTC') or (TZ == 'Z'): 
+        if (TZ == 'UTC') or (TZ == 'Z'):
             msg = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
             phenny.reply(msg)
         elif r_local.match(tz): # thanks to Mark Shoulsdon (clsn)
             locale.setlocale(locale.LC_TIME, (tz[1:-1], 'UTF-8'))
             msg = time.strftime("%A, %d %B %Y %H:%M:%SZ", time.gmtime())
             phenny.reply(msg)
-        elif TZ in phenny.tz_data: 
-            offset = phenny.tz_data[TZ] * 3600
+        elif TZ in phenny.tz_data:
+            offset = phenny.tz_data[TZ] * 3600 + math_add
             timenow = time.gmtime(time.time() + offset)
-            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(TZ), timenow)
+            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
             phenny.reply(msg)
-        elif tz and tz[0] in ('+', '-') and 4 <= len(tz) <= 6: 
+        elif tz and tz[0] in ('+', '-') and 4 <= len(tz) <= 6:
             timenow = time.gmtime(time.time() + (int(tz[:3]) * 3600))
-            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz), timenow)
+            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
             phenny.reply(msg)
-        else: 
+        else:
             try: t = float(tz)
-            except ValueError: 
+            except ValueError:
                 import os, re, subprocess
                 r_tz = re.compile(r'^[A-Za-z]+(?:/[A-Za-z_]+)*$')
-                if r_tz.match(tz) and os.path.isfile('/usr/share/zoneinfo/' + tz): 
+                if r_tz.match(tz) and os.path.isfile('/usr/share/zoneinfo/' + tz):
                     cmd, PIPE = 'TZ=%s date' % tz, subprocess.PIPE
                     proc = subprocess.Popen(cmd, shell=True, stdout=PIPE)
                     phenny.reply(proc.communicate()[0])
                 else: 
-                    error = "Sorry, I don't know about the '%s' timezone." % tz
+                    error = "Sorry, I don't know about the '%s' timezone. Suggest the city on http://www.citytimezones.info" % tz
                     phenny.reply(error)
-            else: 
+            else:
                 timenow = time.gmtime(time.time() + (t * 3600))
-                msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz), timenow)
+                msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
                 phenny.reply(msg)
 f_time.name = 'time'
 f_time.commands = ['time']
@@ -114,6 +154,43 @@ def scrape_wiki_zones():
                 offset = 0
             offset = int(offset)
         data[code] = offset
+
+    file_url = "http://www.citytimezones.info/database/cities_csv.zip"
+    file_name = "cities_csv.zip"
+
+    with urllib.request.urlopen(file_url) as response, open(file_name, 'wb') as out_file:
+        shutil.copyfileobj(response, out_file)
+        with zipfile.ZipFile(file_name) as zf:
+            a = zf.extractall()
+            print(zf)
+            
+    with open("cities.txt", "rt", encoding="UTF8") as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            tmr = 0
+            for elem in row:
+                tmr=tmr+1
+                if tmr==1:
+                    ctz=elem
+                elif tmr==2:
+                    if re.match("\(GMT\)", elem):
+                        ctu="+00:00"
+                    else:
+                        r = re.compile("\(GMT([+-]*\d*:\d*)\)")
+                        m = r.match(elem)
+                        if m.group(1) != None:
+                            ctu = m.group(1)
+                        else:
+                            return
+                    if ctu[ctu.find(':')+1]=='0':
+                        ctu=ctu[:ctu.find(':')]
+                    else:
+                        ctu=ctu[:ctu.find(':')]+'.5'
+                    if ctu[0]=='−':
+                        ctu='-'+ctu[1:]
+                    data[ctz.upper()]=float(ctu)
+                else:
+                    break
     url = 'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
     resp = web.get(url)
     h = html.document_fromstring(resp)
@@ -135,6 +212,7 @@ def scrape_wiki_zones():
                 if ctu[0]=='−':
                     ctu='-'+ctu[1:]
                 data[ctz.upper()]=float(ctu)
+                                    
     return data
 
 def filename(phenny):
@@ -184,7 +262,8 @@ thread_check_tz.commands = ['tzdb status']
 
 def setup(phenny):
     f = filename(phenny)
-    if os.path.exists(f):
+    # Recreate the file if it has been modified less than 31 days ago
+    if os.path.exists(f) and (time.time() - os.path.getmtime(f))/(60*60*24) < 31:
         try:
             phenny.tz_data = read_dict(f)
         except ValueError:
@@ -195,7 +274,7 @@ def setup(phenny):
         phenny.tz_data = scrape_wiki_zones()
         write_dict(f, phenny.tz_data)
 
-def beats(phenny, input): 
+def beats(phenny, input):
     """Shows the internet time in Swatch beats."""
     beats = ((time.time() + 3600) % 86400) / 86.4
     beats = int(math.floor(beats))
@@ -203,15 +282,15 @@ def beats(phenny, input):
 beats.commands = ['beats']
 beats.priority = 'low'
 
-def divide(input, by): 
+def divide(input, by):
     return (input // by), (input % by)
 
-def yi(phenny, input): 
+def yi(phenny, input):
     """Shows whether it is currently yi or not."""
     quadraels, remainder = divide(int(time.time()), 1753200)
     raels = quadraels * 4
     extraraels, remainder = divide(remainder, 432000)
-    if extraraels == 4: 
+    if extraraels == 4:
         return phenny.say('Yes! PARTAI!')
     elif extraraels == 3:
           return phenny.say('Soon...')
@@ -219,20 +298,20 @@ def yi(phenny, input):
 yi.commands = ['yi']
 yi.priority = 'low'
 
-def tock(phenny, input): 
+def tock(phenny, input):
     """Shows the time from the USNO's atomic clock."""
     info = web.head('http://tycho.usno.navy.mil/cgi-bin/timer.pl')
     phenny.say('"' + info['Date'] + '" - tycho.usno.navy.mil')
 tock.commands = ['tock']
 tock.priority = 'high'
 
-def npl(phenny, input): 
+def npl(phenny, input):
     """Shows the time from NPL's SNTP server."""
-    # for server in ('ntp1.npl.co.uk', 'ntp2.npl.co.uk'): 
+    # for server in ('ntp1.npl.co.uk', 'ntp2.npl.co.uk'):
     client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     client.sendto(b'\x1b' + 47 * b'\0', ('ntp1.npl.co.uk', 123))
     data, address = client.recvfrom(1024)
-    if data: 
+    if data:
         buf = struct.unpack('B' * 48, data)
         d = dec('0.0')
         for i in range(8):
@@ -249,7 +328,7 @@ npl.priority = 'high'
 def time_zone(phenny, input):
     """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone."""
     
-    format_regex = re.compile("(\d*)([a-zA-Z]*)\sin\s([a-zA-z]*)")
+    format_regex = re.compile("(\d*)([a-zA-Z\s,-]*)\sin\s([a-zA-z\s]*)")
     input_txt = input.group(2)
     if not input_txt:
         phenny.reply(time_zone.__doc__.strip())
@@ -258,38 +337,53 @@ def time_zone(phenny, input):
     if (not regex_match) or (regex_match.groups()[0] == "") or (regex_match.groups()[1] == "") or (regex_match.groups()[2] == ""):
         phenny.reply(time_zone.__doc__.strip())
     else:
-        from_tz_match = phenny.tz_data[regex_match.groups()[1].upper()]
-        to_tz_match = phenny.tz_data[regex_match.groups()[2].upper()]
+        from_tz_match = phenny.tz_data.get(regex_match.groups()[1].upper(), "")
+        to_tz_match = phenny.tz_data.get(regex_match.groups()[2].upper(), "")
+
         if (from_tz_match == "") or (to_tz_match == ""):
-            phenny.reply("Please enter valid time zone(s) :P")
-            return
-            
+            TZ1 = regex_match.groups()[1].upper()
+            TZ2 = regex_match.groups()[2].upper()
+
+            longs1=int(len(TZ1))
+            longs2=int(len(TZ2))
+
+            for (slug, title) in phenny.tz_data.items():
+                if slug[:longs1]==TZ1 and from_tz_match == "":
+                    from_tz_match = phenny.tz_data[slug]
+                if slug[:longs2]==TZ2 and to_tz_match == "":
+                    to_tz_match = phenny.tz_data[slug]
+                if from_tz_match != "" and to_tz_match != "":
+                    break
+            if (from_tz_match == "") or (to_tz_match == ""):
+                phenny.reply("Please enter valid time zone(s) :P")
+                return
+                
         time_hours = int(int(regex_match.groups()[0])/100)
         time_mins = int(regex_match.groups()[0])%100
         if (time_hours >= 24) or (time_hours < 0) or (time_mins >= 60) or (time_mins < 0):
-            phenny.reply("Please enter a vald time :P")
+            phenny.reply("Please enter a valid time :P")
             return
         time_diff_hours = int(to_tz_match-from_tz_match)
         time_diff_minutes = int(((to_tz_match-from_tz_match)-time_diff_hours)*60)
-        
+
         dest_time_hours = time_hours + time_diff_hours
         dest_time_mins = time_mins + time_diff_minutes
-                
+
         if dest_time_mins >= 60:
             dest_time_mins = dest_time_mins - 60
             dest_time_hours = dest_time_hours + 1
         elif dest_time_mins < 0:
             dest_time_mins = dest_time_mins + 60
             dest_time_hours = dest_time_hours - 1
-            
+
         if dest_time_hours >= 24:
             dest_time_hours = dest_time_hours - 24
         elif dest_time_hours < 0:
             dest_time_hours = dest_time_hours + 24
-            
+
         phenny.reply(format(dest_time_hours, '02d') + format(dest_time_mins, '02d') + regex_match.groups()[2].upper())
 time_zone.commands = ['tz']
 time_zone.priority = 'high'
-    
-if __name__ == '__main__': 
+
+if __name__ == '__main__':
     print(__doc__.strip())

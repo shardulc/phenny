@@ -9,6 +9,7 @@ from urllib.error import HTTPError
 from tools import GrumbleError
 import web
 import json
+import more
 
 #FIXME: need to implement
 #def quote(phenny, input):
@@ -121,56 +122,6 @@ randquote.commands = ['randquote']
 randquote.example = '.randquote (linguistics)'
 randquote.priority = 'low'
 
-
-def randquote2(phenny, input):
-    _, topic, __, nick = input.groups()
-
-    randquote_fetcher(phenny, topic, to_user=nick)
-
-randquote2.rule = r'\.(randquote)\s(.*)\s(->|→)\s(\S*)'
-randquote2.example = '.randquote Linguistics -> svineet'
-
-
-def randquote3(phenny, input):
-    _, __, nick = input.groups()
-
-    randquote_fetcher(phenny, "", to_user=nick)
-
-randquote3.rule = r'\.(randquote)\s(->|→)\s(\S*)'
-randquote3.example = '.randquote -> svineet'
-
-
-def randquote4(phenny, input):
-    nick, _, __, topic = input.groups()
-
-    randquote_fetcher(phenny, topic, to_user=nick)
-
-randquote4.rule = r'(\S*)(:|,)\s\.(randquote)\s(.*)'
-randquote4.example = 'svineet: .randquote Linguistics'
-
-
-def randquote5(phenny, input):
-    nick, _, __ = input.groups()
-
-    randquote_fetcher(phenny, "", to_user=nick)
-
-randquote5.rule = r'(\S*)(:|,)\s\.(randquote)$'
-randquote5.example = 'svineet: .randquote'
-
-
-def more(phenny, input):
-    global buff
-    if buff:
-        res = buff.pop(0)
-        if buff:
-            res += ' ({0} more messages)'.format(len(buff))
-        phenny.say(res)
-        return
-
-more.name = 'more'
-more.commands = ['more']
-more.example = '.more'
-more.priority = 'low'
 #urbandict.rule = (['urb'], r'(.*)')
 
 if __name__ == '__main__':

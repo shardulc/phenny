@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #!/usr/bin/env python
 """
 git.py - Github Post-Receive Hooks Module

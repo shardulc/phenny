@@ -66,6 +66,15 @@ def g(phenny, input):
     if "->" in query: return
     if "→" in query: return
 
+    match_point_cmd = r'point\s(\S*)\s(.*)'
+    matched_point = re.compile(match_point_cmd).match(query)
+    if matched_point:
+        to_nick = matched_point.groups()[0]
+        query2 = matched_point.groups()[1]
+
+        google_it(phenny, query2, input.sender, to_user=to_nick)
+        return
+
     google_it(phenny, query, input.sender)
 
 g.commands = ['g']

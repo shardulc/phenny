@@ -7,6 +7,7 @@ author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 from tools import GrumbleError
 import web
 import json
+import re
 
 
 def get_definition(phenny, word, to_user=None):
@@ -51,6 +52,15 @@ def urbandict(phenny, input):
     #    ('User-agent', web.Grab().version),
     #    ('Referer', "http://m.urbandictionary.com"),
     #]
+
+    match_point_cmd = r'point\s(\S*)\s(.*)'
+    matched_point = re.compile(match_point_cmd).match(word)
+    if matched_point:
+        to_nick = matched_point.groups()[0]
+        word2 = matched_point.groups()[1]
+        
+        get_definition(phenny, word2, to_user=to_nick)
+        return
 
     get_definition(phenny, word)
 

@@ -339,6 +339,7 @@ def get_commit_info(phenny, repo, sha):
     data = json.loads(html)
     author = data['commit']['committer']['name']
     comment = data['commit']['message']
+    html_url = data['html_url']
 
     # create summary of commit
     modified_paths = []
@@ -358,11 +359,8 @@ def get_commit_info(phenny, repo, sha):
                          "%Y-%m-%dT%H:%M:%SZ")
     date = time.strftime("%d %b %Y %H:%M:%S", date)
 
-    # hack to convert github API link to commit webpage link
-    link_url = repoUrl[:8] + repoUrl[12:23] + repoUrl[29:] + 'commit/%s' % sha 
-
     return (author, comment, modified_paths, added_paths, removed_paths, rev,\
-        date), link_url
+        date), html_url
     # return author, comment, modified_paths, added_paths, removed_paths, rev,\
     #    date
 

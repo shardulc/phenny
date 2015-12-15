@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python
+#!/usr/bin/env python
 """
 git.py - Github Post-Receive Hooks Module
 """
@@ -171,7 +171,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             elif event == 'repository':
                 name = data['repository']['name']
                 action = data['action']
-                url = data['repository']['html_url']
+                url = data['repository']['url']
                 msgs.append('new repository {:} {:} by {:} {:}' \
                             .format(name, action, user, url, url))
             elif event == 'team_add':
@@ -331,7 +331,7 @@ def get_commit_info(phenny, repo, sha):
     if repoUrl.find("code.google.com") >= 0:
         locationurl = '/source/detail?r=%s'
     elif repoUrl.find("api.github.com") >= 0:
-        locationurl = 'commits/%s'
+        locationurl = '/commits/%s'
     elif repoUrl.find("bitbucket.org") >= 0:
         locationurl = ''
     html = web.get(repoUrl + locationurl % sha)
@@ -339,7 +339,6 @@ def get_commit_info(phenny, repo, sha):
     data = json.loads(html)
     author = data['commit']['committer']['name']
     comment = data['commit']['message']
-    html_url = data['html_url']
 
     # create summary of commit
     modified_paths = []
@@ -359,30 +358,27 @@ def get_commit_info(phenny, repo, sha):
                          "%Y-%m-%dT%H:%M:%SZ")
     date = time.strftime("%d %b %Y %H:%M:%S", date)
 
-    return (author, comment, modified_paths, added_paths, removed_paths, rev,\
-        date), html_url
-    # return author, comment, modified_paths, added_paths, removed_paths, rev,\
-    #    date
+    return author, comment, modified_paths, added_paths, removed_paths, rev,\
+        date
+
 
 def get_recent_commit(phenny, input):
     '''Get recent commit information for each repository Begiak monitors. This
     command is called as 'begiak: recent'.'''
 
     for repo in phenny.config.git_repositories:
-        html = web.get(phenny.config.git_repositories[repo] + 'commits')
+        html = web.get(phenny.config.git_repositories[repo] + '/commits')
         data = json.loads(html)
         # the * is for unpacking
-        info, url = get_commit_info(phenny, repo, data[0]['sha'])
-        msg = generate_report(repo, *info)
-        phenny.say(msg + ' ' + url)
-
+        msg = generate_report(repo, *get_commit_info())
+        phenny.say(msg)
 # command metadata and invocation
 get_recent_commit.rule = ('$nick', 'recent')
 get_recent_commit.priority = 'medium'
 get_recent_commit.thread = True
 
 
-def retrieve_commit_git(phenny, input):
+def retrieve_commit(phenny, input):
     '''Retreive commit information for a given repository and revision. This
     command is called as 'begiak: info <repo> <rev>'.'''
 
@@ -403,13 +399,11 @@ def retrieve_commit_git(phenny, input):
         phenny.reply("That repository is not monitored by me!")
         return
     try:
-        info, url = get_commit_info(phenny, repo, rev)
-        # info = get_commit_info(phenny, repo, rev)
-        # the * is for unpacking
-        msg = generate_report(repo, *info)
-        phenny.say(msg + ' ' + url)
+        info = get_commit_info(phenny, repo, rev)
     except:
         phenny.reply("Invalid revision value!")
         return
-
-retrieve_commit_git.rule = ('$nick', 'info(?: +(.*))')
+    # the * is for unpacking
+    msg = generate_report(repo, *info)
+    phenny.say(msg)
+retrieve_commit.rule = ('$nick', 'info(?: +(.*))')

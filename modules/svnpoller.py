@@ -155,6 +155,7 @@ def recentcommits(phenny, input):
 		msg = pollers[repo].generateReport(pollers[repo].get_last_revision(), True)
 		url = phenny.config.svn_repositories[repo].rstrip('/')
 		if url.endswith('trunk'):
+			# remove the 'trunk' part from the url
 			url = url[:-5] + '/%s' % rev
 		else:
 			url += '/%s' % rev
@@ -190,8 +191,8 @@ def retrieve_commit_svn(phenny, input):
 	poller = SVNPoller(repo, phenny.config.svn_repositories[repo])
 	msg = poller.generateReport(rev, True)
 	url = phenny.config.svn_repositories[repo].rstrip('/')
-        if url.endswith('trunk'):
-            # remove the 'trunk' part from the url
+	if url.endswith('trunk'):
+	    # remove the 'trunk' part from the url
 	    url = url[:-5] + '/%s' % rev
 	else:
 	    url += '/%s' % rev

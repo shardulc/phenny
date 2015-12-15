@@ -88,11 +88,9 @@ information.example = '.information (installing apertium)'
 information.priority = 'low'
 
 
-def randquote(phenny, input):
-    """.randquote (<topic>) - Get a random quote from quotes.firespeaker.org (about topic)."""
+def randquote_fetcher(phenny, topic, to_user=None):
     global buff
     buff = []
-    topic = input.group(2)
 
     # create opener
     opener = urllib.request.build_opener()
@@ -136,12 +134,62 @@ def randquote(phenny, input):
         phenny.say("Sorry, no quotes returned!")
         return
 
-    phenny.say(res)
+    if to_user:
+        phenny.say(to_user+', '+res)
+    else:
+        phenny.say(res)
+
+
+def randquote(phenny, input):
+    """.randquote (<topic>) - Get a random quote from quotes.firespeaker.org (about topic)."""
+    topic = input.group(2)
+
+    if "->" in topic: return
+    if "→" in topic: return
+
+    randquote_fetcher(phenny, topic)
 
 randquote.name = 'randquote'
 randquote.commands = ['randquote']
 randquote.example = '.randquote (linguistics)'
 randquote.priority = 'low'
+
+
+def randquote2(phenny, input):
+    _, topic, __, nick = input.groups()
+
+    randquote_fetcher(phenny, topic, to_user=nick)
+
+randquote2.rule = r'\.(randquote)\s(.*)\s(->|→)\s(\S*)'
+randquote2.example = '.randquote Linguistics -> svineet'
+
+
+def randquote3(phenny, input):
+    _, __, nick = input.groups()
+
+    randquote_fetcher(phenny, "", to_user=nick)
+
+randquote3.rule = r'\.(randquote)\s(->|→)\s(\S*)'
+randquote3.example = '.randquote -> svineet'
+
+
+def randquote4(phenny, input):
+    nick, _, __, topic = input.groups()
+
+    randquote_fetcher(phenny, topic, to_user=nick)
+
+randquote4.rule = r'(\S*)(:|,)\s\.(randquote)\s(.*)'
+randquote4.example = 'svineet: .randquote Linguistics'
+
+
+def randquote5(phenny, input):
+    nick, _, __ = input.groups()
+
+    randquote_fetcher(phenny, "", to_user=nick)
+
+randquote5.rule = r'(\S*)(:|,)\s\.(randquote)$'
+randquote5.example = 'svineet: .randquote'
+
 
 def more(phenny, input):
     global buff

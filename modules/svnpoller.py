@@ -192,10 +192,10 @@ def retrieve_commit_svn(phenny, input):
 	msg = poller.generateReport(rev, True)
 	url = phenny.config.svn_repositories[repo].rstrip('/')
 	if url.endswith('trunk'):
-	    # remove the 'trunk' part from the url
-	    url = url[:-5] + '/%s' % rev
+		# remove the 'trunk' part from the url
+		url = url[:-5] + '/%s' % rev
 	else:
-	    url += '/%s' % rev
+		url += '/%s' % rev
 	phenny.say(msg + ' ' + url)
 retrieve_commit_svn.rule = ('$nick', 'info(?: +(.*))')
 

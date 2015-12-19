@@ -84,7 +84,7 @@ def apertium_wiki(phenny, origterm, to_nick=None):
 
 def awik(phenny, input):
    """Search for something on Apertium wiki or 
-   point another user to a page on Apertium wiki"""
+   point another user to a page on Apertium wiki (supports pointing)"""
    origterm = input.groups()[1]
 
    if "->" in origterm: return

@@ -113,7 +113,7 @@ def randquote_fetcher(phenny, topic, to_user):
     more.add_messages(to_user, phenny, response, break_up=(lambda x, y: x.split('\n')))
 
 def randquote(phenny, input):
-    """.randquote (<topic>) - Get a random quote from quotes.firespeaker.org (about topic)."""
+    """.randquote (<topic>) - Get a random quote from quotes.firespeaker.org (about topic). (supports pointing)"""
     topic = input.group(2)
 
     if topic:

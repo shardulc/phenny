@@ -26,9 +26,12 @@ def break_up_fn(string, max_length):
 def add_messages(target, phenny, msg, break_up=break_up_fn):
     max_length = 428 - len(target) - 5
     msgs = break_up(str(msg), max_length)
-    phenny.say(target + ': ' + msgs[0])
-    
-    if len(msgs) > 1:
+
+    if len(msgs) == 2:
+        phenny.reply(msgs[0][:-4]) # strip out ' ...'
+        phenny.reply(msgs[1])
+    else:
+        phenny.reply(msgs[0])
         msgs = msgs[1:]
         phenny.say(target + ': you have ' + str(len(msgs)) + ' more message(s). Please type ".more" to view them.')
         phenny.messages[target] = msgs

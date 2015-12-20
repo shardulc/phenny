@@ -157,7 +157,7 @@ def give_time(phenny, tz, input_nick, to_user=None):
                     phenny.reply(msg)
 
 def f_time(phenny, input):
-    """.time [timezone] - Show current time in defined timezone. Defaults to GMT."""
+    """.time [timezone] - Show current time in defined timezone. Defaults to GMT. (supports pointing)"""
     tz = input.group(2) or 'GMT'
 
     match_point_cmd = r'point\s(\S*)\s(.*)'
@@ -401,11 +401,11 @@ npl.priority = 'high'
 def time_zone_convert(phenny, input_txt, to_user=None):
     format_regex = re.compile("(\d*)([a-zA-Z\s,-]*)\sin\s([a-zA-z\s]*)")
     if not input_txt:
-        phenny.reply(time_zone.__doc__.strip())
+        phenny.reply(tz.__doc__.strip())
         return
     regex_match = format_regex.search(input_txt)
     if (not regex_match) or (regex_match.groups()[0] == "") or (regex_match.groups()[1] == "") or (regex_match.groups()[2] == ""):
-        phenny.reply(time_zone.__doc__.strip())
+        phenny.reply(tz.__doc__.strip())
     else:
         from_tz_match = phenny.tz_data.get(regex_match.groups()[1].upper(), "")
         to_tz_match = phenny.tz_data.get(regex_match.groups()[2].upper(), "")
@@ -461,10 +461,13 @@ def time_zone_convert(phenny, input_txt, to_user=None):
                          format(dest_time_mins, '02d') +
                          regex_match.groups()[2].upper())
 
-def time_zone(phenny, input):
-    """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone."""
+def tz(phenny, input):
+    """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone. (supports pointing)"""
     
     input_txt = input.group(2)
+    if not input_txt:
+        phenny.reply(tz.__doc__.strip())
+        return
 
     if "->" in input_txt: return
     if "→" in input_txt: return
@@ -481,8 +484,8 @@ def time_zone(phenny, input):
     time_zone_convert(phenny, input_txt)
     
 
-time_zone.commands = ['tz']
-time_zone.priority = 'high'
+tz.commands = ['tz']
+tz.priority = 'high'
 
 
 def time_zone2(phenny, input):

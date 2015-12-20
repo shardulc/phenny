@@ -165,7 +165,7 @@ def wikitionary_lookup(phenny, word, to_user=None):
 
 
 def w(phenny, input): 
-    """Look up a word on Wiktionary."""
+    """Look up a word on Wiktionary. (supports pointing)"""
     if not input.group(2):
         return phenny.reply("Nothing to define.")
     word = input.group(2)

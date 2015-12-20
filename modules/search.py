@@ -58,7 +58,7 @@ def google_it(phenny, query, sender, to_user=None):
 
 
 def g(phenny, input): 
-    """Queries Google for the specified input."""
+    """Queries Google for the specified input. (supports pointing)"""
     query = input.group(2)
     if not query: 
         return phenny.reply('.g what?')

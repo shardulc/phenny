@@ -102,9 +102,9 @@ def translate(translate_me, input_lang, output_lang='en'):
     
     responseArray = json.loads(response)
     if int(responseArray['responseStatus']) != 200:
-        raise GrumbleError(APIerrorHttp % (responseArray['responseStatus'], responseArray['responseDetails']))
+        raise GrumbleError('APIerrorHttp' % (responseArray['responseStatus'], responseArray['responseDetails']))
     if responseArray['responseData']['translatedText'] == []:
-        raise GrumbleError(APIerrorData)
+        raise GrumbleError('APIerrorData')
 
     translated_text = responseArray['responseData']['translatedText']
     return translated_text

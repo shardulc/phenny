@@ -36,6 +36,9 @@ def get_page(domain, url, encoding='utf-8'): #get the HTML of a webpage.
 
 def follow(phenny, input): #follow a user
 	"""Follow someone and translate as they speak."""
+        # TODO: what if the nick is not present in the channel?
+        # phenny possibly informs sender that the nick is not present and continues?
+
 	global follows
 	
 	if input.groups()[1] != None:
@@ -82,10 +85,10 @@ def unfollow(phenny, input): #unfollow a user
 	global follows
 	
 	following = False
-	for i in range(len(follows)):
-		if follows[i].nick == input.groups()[1] and follows[i].sender == input.nick:
+	for i in follows:
+		if i.nick == input.groups()[1] and i.sender == input.nick:
 			#if this person is indeed being followed (and is indeed the creator of the follow)
-			follows[i] = Eleda('', '', ['', ''])
+			follows.remove(i)
 			following = True
 	if following == True:
 		phenny.reply(input.groups()[1] + " is no longer being followed.")
@@ -96,30 +99,30 @@ def following(phenny, input): #list followed users
 	"""List people currently being followed."""
 	text = []
 	for i in follows:
-		if i.nick != '':
-			#populate list with following list
-			text.append(i.nick + " (" + '-'.join(i.dir) + ") by " + i.sender)
+		#populate list with following list
+		text.append(i.nick + " (" + '-'.join(i.dir) + ") by " + i.sender)
 	if len(text) < 1:
 		phenny.reply("No one is being followed at the moment.")
 	else:
 		phenny.say('Users currently being followed: ' + ', '.join(text) + '. (Translations are private)')
 
-def test(phenny, input): #filter through each message in the channel
-	if input.sender == '#apertium' or input.sender == '#apertium_test':
-		if input.groups()[0][0] == '.' or 'begiak: ' in input.groups()[0].split(' ')[0]:
+def checkMessages(phenny, input): #filter through each message in the channel
+	if input.sender in phenny.channels:
+		if input.groups()[0][0] == '.' or (phenny.nick + ': ' or phenny.nick + ', ') in input.groups()[0].split(' ')[0]:
 			#do not translate if it is a begiak function
 			return
 		
+		translations = {}
 		for i in follows:
-			if i.nick != '':
-				if i.nick == input.nick:
+			if i.nick == input.nick:
+				if (i.nick, i.dir) not in translations:
 					#this user is being followed, translate them
 					direction = '-'.join(i.dir)
-					translation = translate(input.group(0), i.dir[0], i.dir[1])
-					translation = translation.replace('*', '')
-					if translation != input.group(0):
-						#don't bother sending a notice if the input is the same as the output
-						phenny.write(['NOTICE', i.sender], i.nick + ' (' + '-'.join(i.dir) + '): ' + translation)
+					translations[(i.nick, i.dir)] = translate(input.group(0), i.dir[0], i.dir[1])
+					translations[(i.nick, i.dir)] = translations[(i.nick, i.dir)].replace('*', '')
+				if translations[(i.nick, i.dir)] != input.group(0):
+					#don't bother sending a notice if the input is the same as the output
+					phenny.msg(i.sender, i.nick + ' (' + '-'.join(i.dir) + '): ' + translations[(i.nick, i.dir)])
 
 follow.commands = ['follow']
 follow.example = '.follow Qasim en-es'
@@ -127,4 +130,4 @@ unfollow.commands = ['unfollow']
 unfollow.example = '.unfollow Qasim'
 following.commands = ['following']
 following.example = '.following'
-test.rule = r'(.*)'
+checkMessages.rule = r'(.*)'

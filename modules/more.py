@@ -27,9 +27,9 @@ def add_messages(target, phenny, msg, break_up=break_up_fn):
     max_length = 428 - len(target) - 5
     msgs = break_up(str(msg), max_length)
 
-    if len(msgs) == 2:
-        phenny.reply(msgs[0][:-4]) # strip out ' ...'
-        phenny.reply(msgs[1])
+    if len(msgs) <= 2:
+        for msg in msgs:
+            phenny.reply(msg)
     else:
         phenny.reply(msgs[0])
         msgs = msgs[1:]

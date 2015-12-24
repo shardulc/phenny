@@ -140,7 +140,10 @@ class SVNPoller:
 		return msg
 
 	def sourceforgeURL(self, rev):
-	    return 'https://sourceforge.net/p/' + self.repo + '/svn/%s' % str(rev)
+	    if self.root.endswith('svn'):
+		    return 'https://sourceforge.net/p/' + self.repo + '/svn/%s' % str(rev)
+	    else:
+		    return 'https://sourceforge.net/p/' + self.repo + '/code/%s' % str(rev)
 
 def truncate(msg, length):
 	while len(msg) > length:
@@ -215,9 +218,14 @@ def pollsvn(phenny, input):
 			if msg is not None:
 				results = True
 				print("msg: %s" % msg)
-				for chan in input.chans:
-					print("chan, msg: %s, %s" % (chan, msg))
-					phenny.bot.msg(chan, msg)
+				if repo in phenny.config.svn_channels:
+					for chan in phenny.config.svn_channels[repo]:
+						print("chan, msg: %s, %s" % (chan, msg))
+						phenny.bot.msg(chan, msg)
+				else:
+					for chan in input.chans:
+						print("chan, msg: %s, %s" % (chan, msg))
+						phenny.bot.msg(chan, msg)
 			if global_revisions:
 				if len(global_revisions) > 0:
 					print("dumping revisions")

@@ -89,7 +89,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
         # msgs will contain both commit reports and error reports
         msgs = []
-        
+        repo = ''
         # handle GitHub triggers
         if 'GitHub' in self.headers['User-Agent']:
             event = self.headers['X-Github-Event']
@@ -212,10 +212,15 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             msgs = ["Something went wrong: " + str(data.keys())]
 
         # post all messages to all channels
+        # except where specified in the config
         for msg in msgs:
-            for chan in self.phInput.chans:
-                if msg != None:
-                    self.phenny.bot.msg(chan, msg)
+            if msg != None:
+                if repo in self.phenny.config.git_channels:
+                    for chan in self.phenny.config.git_channels[repo]:
+                        self.phenny.bot.msg(chan, msg)
+                else:
+                    for chan in self.phInput.chans:
+                        self.phenny.bot.msg(chan, msg)
 
         # send OK code and notify firespeaker
         self.send_response(200)

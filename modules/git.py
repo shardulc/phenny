@@ -215,10 +215,13 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         # except where specified in the config
         for msg in msgs:
             if msg != None:
-                if repo in self.phenny.config.git_channels:
-                    for chan in self.phenny.config.git_channels[repo]:
-                        self.phenny.bot.msg(chan, msg)
-                else:
+                try:
+                    if repo in self.phenny.config.git_channels:
+                        for chan in self.phenny.config.git_channels[repo]:
+                            self.phenny.bot.msg(chan, msg)
+                    else:
+                        raise AttributeError()
+                except AttributeError:
                     for chan in self.phInput.chans:
                         self.phenny.bot.msg(chan, msg)
 

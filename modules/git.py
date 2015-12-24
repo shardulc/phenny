@@ -215,14 +215,11 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         # except where specified in the config
         for msg in msgs:
             if msg != None:
-                try:
-                    if repo in self.phenny.config.git_channels:
-                        for chan in self.phenny.config.git_channels[repo]:
-                            self.phenny.bot.msg(chan, msg)
-                    else:
-                        raise AttributeError()
-                except AttributeError:
-                    for chan in self.phInput.chans:
+                if hasattr(self.phenny.config, 'git_channels') and repo in self.phenny.config.git_channels:
+                   for chan in self.phenny.config.git_channels[repo]:
+                       self.phenny.bot.msg(chan, msg)
+                else:
+                   for chan in self.phInput.chans:
                         self.phenny.bot.msg(chan, msg)
 
         # send OK code and notify firespeaker

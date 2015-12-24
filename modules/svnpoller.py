@@ -218,14 +218,11 @@ def pollsvn(phenny, input):
 			if msg is not None:
 				results = True
 				print("msg: %s" % msg)
-				try:
-					if repo in phenny.config.svn_channels:
-						for chan in phenny.config.svn_channels[repo]:
-							print("chan, msg: %s, %s" % (chan, msg))
-							phenny.bot.msg(chan, msg)
-					else:
-					    raise AttributeError()
-				except AttributeError:
+				if hasattr(phenny.config, 'svn_channels') and repo in phenny.config.svn_channels:
+					for chan in phenny.config.svn_channels[repo]:
+						print("chan, msg: %s, %s" % (chan, msg))
+						phenny.bot.msg(chan, msg)
+				else:
 					for chan in input.chans:
 						print("chan, msg: %s, %s" % (chan, msg))
 						phenny.bot.msg(chan, msg)

@@ -33,18 +33,18 @@ def add_messages(target, phenny, msg, break_up=break_up_fn):
     else:
         phenny.reply(msgs[0])
         msgs = msgs[1:]
-        phenny.say(target + ': you have ' + str(len(msgs)) + ' more message(s). Please type ".more" to view them.')
+        phenny.reply('you have ' + str(len(msgs)) + ' more message(s). Please type ".more" to view them.')
         phenny.messages[target] = msgs
 
 def more(phenny, input):
+    print(phenny.messages)
     if input.nick in phenny.messages.keys():
         msg = phenny.messages[input.nick][0]
         phenny.messages[input.nick].remove(phenny.messages[input.nick][0])
         remaining = ' (' + str(len(phenny.messages[input.nick])) + ')' if phenny.messages[input.nick] else ''
-        phenny.say(input.nick + ': ' + msg + remaining)
+        phenny.reply(msg + remaining)
         if not phenny.messages[input.nick]:
             del phenny.messages[input.nick]
-    else:
-        phenny.say(input.nick + ': you do not have any pending messages.')
+
 more.name = 'more'
 more.rule = r'[.]more'

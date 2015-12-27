@@ -37,7 +37,6 @@ def add_messages(target, phenny, msg, break_up=break_up_fn):
         phenny.messages[target] = msgs
 
 def more(phenny, input):
-    print(phenny.messages)
     if input.nick in phenny.messages.keys():
         msg = phenny.messages[input.nick][0]
         phenny.messages[input.nick].remove(phenny.messages[input.nick][0])

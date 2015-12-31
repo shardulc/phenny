@@ -26,7 +26,7 @@ class Eleda(object):
 	def __init__(self, sender, nick, dir):
 		self.sender = sender
 		self.nick = nick
-		self.dir = dir
+		self.dir = tuple(dir)
 
 def get_page(domain, url, encoding='utf-8'): #get the HTML of a webpage.
 	conn = http.client.HTTPConnection(domain, 80, timeout=60)
@@ -40,27 +40,32 @@ def follow(phenny, input): #follow a user
         # phenny possibly informs sender that the nick is not present and continues?
 
 	global follows
-	
+
 	if input.groups()[1] != None:
 		data = input.group(2).split(' ')
 		nick = data[0]
-		
+
 		if nick.lower() == phenny.config.nick.lower():
 			phenny.reply(phenny.config.nick.upper() + " DOES NOT LIKE TO BE FOLLOWED.")
 			return
-			
+
 		try:
 			dir = data[1].split('-')
 			dir[1] = dir[1]
 		except:
 			phenny.reply("Need language pair!")
 			return
-			
+
 		pairs = get_page('api.apertium.org', '/json/listPairs')
 		if '{"sourceLanguage":"'+dir[0]+'","targetLanguage":"'+dir[1]+'"}' not in pairs:
-			phenny.reply("That language pair does not exist!")
-			return
-		
+			if (not(phenny.iso_conversion_data.get(dir[0])) or not(phenny.iso_conversion_data.get(dir[1])) or
+				'{"sourceLanguage":"'+phenny.iso_conversion_data.get(dir[0])+'","targetLanguage":"'+phenny.iso_conversion_data.get(dir[1])+'"}' not in pairs):
+				phenny.reply("That language pair does not exist!")
+				return
+			else:
+				dir[0] = phenny.iso_conversion_data[dir[0]]
+				dir[1] = phenny.iso_conversion_data[dir[1]]
+
 		if len(data) in [2,3]:
 			sender = input.nick
 			if len(data) == 3 and input.admin == True:
@@ -69,12 +74,12 @@ def follow(phenny, input): #follow a user
 		else:
 			phenny.reply("Unexpected error.")
 			return
-			
+
 		for i in follows:
-			if i.nick == nick and i.dir == dir and i.sender == sender:
+			if i.nick == nick and i.dir == tuple(dir) and i.sender == sender:
 				phenny.say(sender + " is already following " + nick + " with " + '-'.join(dir) + '.')
 				return
-				
+
 		follows.append(Eleda(sender, nick, dir))
 		phenny.reply(sender + " now following " + nick + " (" + '-'.join(dir) + ").")
 	else:
@@ -83,7 +88,7 @@ def follow(phenny, input): #follow a user
 def unfollow(phenny, input): #unfollow a user
 	"""Stop following someone."""
 	global follows
-	
+
 	following = False
 	for i in follows:
 		if i.nick == input.groups()[1] and i.sender == input.nick:
@@ -111,7 +116,7 @@ def checkMessages(phenny, input): #filter through each message in the channel
 		if input.groups()[0][0] == '.' or (phenny.nick + ': ' or phenny.nick + ', ') in input.groups()[0].split(' ')[0]:
 			#do not translate if it is a begiak function
 			return
-		
+
 		translations = {}
 		for i in follows:
 			if i.nick == input.nick:

@@ -96,7 +96,7 @@ def give_time(phenny, tz, input_nick, to_user=None):
             if slug[:longs]==TZ:
                 offset = phenny.tz_data[slug] * 3600 + math_add
                 timenow = time.gmtime(time.time() + offset)
-                msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
+                msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(slug), timenow)
                 if to_user:
                     phenny.say(to_user+', '+msg)
                 else:

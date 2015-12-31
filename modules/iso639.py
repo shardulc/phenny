@@ -12,6 +12,7 @@ from lxml import html
 import web
 import os
 import threading
+import re
 
 template = "%s = %s"
 
@@ -92,8 +93,31 @@ def scrape_wiki_codes():
 
     return data
 
+def scrape_wiki_codes_convert():
+    data = {}
+    base_url = 'http://en.wikipedia.org/wiki/List_of_ISO_639'
+    #639-1
+    resp = web.get(base_url + '-1_codes')
+    h = html.document_fromstring(resp)
+    table = h.find_class('wikitable')[0]
+    for row in table.findall('tr')[1:]:
+        iso3code = row.findall('td')[7].text
+        code = row.findall('td')[4].text
+        if iso3code:
+            r = re.match("(.*) \+ .*", iso3code)
+            if r:
+                iso3code = r.group(1)
+            print(iso3code)
+            data[iso3code] = code
+
+    return data
+
 def iso_filename(phenny):
     name = phenny.nick + '-' + phenny.config.host + '.iso-codes.db'
+    return os.path.join(os.path.expanduser('~/.phenny'), name)
+
+def iso_one_to_three_filename(phenny):
+    name = phenny.nick + '-' + phenny.config.host + '.iso-codes-conversion.db'
     return os.path.join(os.path.expanduser('~/.phenny'), name)
 
 def write_dict(filename, data):
@@ -119,6 +143,11 @@ def refresh_database(phenny, raw=None):
         phenny.iso_data.update(phenny.ethno_data)
         write_dict(f, phenny.iso_data)
         phenny.say('ISO code database successfully written')
+
+        f2 = iso_one_to_three_filename(phenny)
+        phenny.iso_conversion_data = scrape_wiki_codes_convert()
+        write_dict(f, phenny.iso_conversion_data)
+        print('ISO conversion db read failed, refreshing it')
     else:
         phenny.say('Only admins can execute that command!')
 
@@ -145,6 +174,19 @@ def setup(phenny):
         phenny.iso_data = scrape_wiki_codes()
         phenny.iso_data.update(phenny.ethno_data)
         write_dict(f, phenny.iso_data)
+
+    # Conversion hash
+    f2 = iso_one_to_three_filename(phenny)
+    if os.path.exists(f2):
+        try:
+            phenny.iso_conversion_data = read_dict(f)
+        except ValueError:
+            print('iso conversion db read failed, refreshing it')
+            phenny.iso_conversion_data = scrape_wiki_codes_convert()
+            write_dict(f, phenny.iso_conversion_data)
+    else:
+        phenny.iso_conversion_data = scrape_wiki_codes_convert()
+        write_dict(f, phenny.iso_conversion_data)
 
 
 iso639.name = 'iso639'

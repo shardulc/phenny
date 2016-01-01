@@ -90,19 +90,28 @@ def give_time(phenny, tz, input_nick, to_user=None):
     TZ = tz.upper()
     longs=int(len(tz))
     skip=False
-    print(phenny.tz_data)
     if len(tz) > 30: return
-    for (slug, title) in phenny.tz_data.items():
-        if slug[:longs]==TZ:
-            offset = phenny.tz_data[slug] * 3600 + math_add
-            timenow = time.gmtime(time.time() + offset)
-            msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
-            if to_user:
-                phenny.say(to_user+', '+msg)
-            else:
-                phenny.reply(msg)
-            skip=True
-            break
+    if phenny.tz_data.get(TZ) == None:
+        for (slug, title) in phenny.tz_data.items():
+            if slug[:longs]==TZ:
+                offset = phenny.tz_data[slug] * 3600 + math_add
+                timenow = time.gmtime(time.time() + offset)
+                msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(slug), timenow)
+                if to_user:
+                    phenny.say(to_user+', '+msg)
+                else:
+                    phenny.reply(msg)
+                skip=True
+                break
+    else:
+        offset = phenny.tz_data[TZ] * 3600 + math_add
+        timenow = time.gmtime(time.time() + offset)
+        msg = time.strftime("%a, %d %b %Y %H:%M:%S " + str(tz_complete), timenow)
+        if to_user:
+            phenny.say(to_user+', '+msg)
+        else:
+            phenny.reply(msg)
+        skip=True
     
     if skip ==False:
         if (TZ == 'UTC') or (TZ == 'Z'):

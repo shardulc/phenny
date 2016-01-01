@@ -28,8 +28,8 @@ class Eleda(object):
 		self.nick = nick
 		self.dir = tuple(dir)
 
-def get_page(domain, url, encoding='utf-8'): #get the HTML of a webpage.
-	conn = http.client.HTTPConnection(domain, 80, timeout=60)
+def get_page(domain, url, encoding='utf-8', port=80): #get the HTML of a webpage.
+	conn = http.client.HTTPConnection(domain, port, timeout=60)
 	conn.request("GET", url, headers=headers)
 	res = conn.getresponse()
 	return res.read().decode(encoding)
@@ -56,7 +56,11 @@ def follow(phenny, input): #follow a user
 			phenny.reply("Need language pair!")
 			return
 
-		pairs = get_page('api.apertium.org', '/json/listPairs')
+		pairs = ""
+		if hasattr(phenny.config, 'translate_url'):
+			pairs = get_page(self.phenny.config.translate_url, '/listPairs')
+		else:
+			pairs = get_page('apy.projectjj.com', '/listPairs', port=2737)
 		if '{"sourceLanguage":"'+dir[0]+'","targetLanguage":"'+dir[1]+'"}' not in pairs:
 			if (not(phenny.iso_conversion_data.get(dir[0])) or not(phenny.iso_conversion_data.get(dir[1])) or
 				'{"sourceLanguage":"'+phenny.iso_conversion_data.get(dir[0])+'","targetLanguage":"'+phenny.iso_conversion_data.get(dir[1])+'"}' not in pairs):

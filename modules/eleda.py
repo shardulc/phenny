@@ -58,12 +58,12 @@ def follow(phenny, input): #follow a user
 
 		pairs = ""
 		if hasattr(phenny.config, 'translate_url'):
-			pairs = get_page(self.phenny.config.translate_url, '/listPairs')
+			pairs = json.loads(get_page(self.phenny.config.translate_url, '/listPairs'))
 		else:
-			pairs = get_page('apy.projectjj.com', '/listPairs', port=2737)
-		if '{"sourceLanguage":"'+dir[0]+'","targetLanguage":"'+dir[1]+'"}' not in pairs:
+			pairs = json.loads(get_page('apy.projectjj.com', '/listPairs', port=2737))
+		if {"targetLanguage":dir[1], "sourceLanguage":dir[0]} not in pairs["responseData"]:
 			if (not(phenny.iso_conversion_data.get(dir[0])) or not(phenny.iso_conversion_data.get(dir[1])) or
-				'{"sourceLanguage":"'+phenny.iso_conversion_data.get(dir[0])+'","targetLanguage":"'+phenny.iso_conversion_data.get(dir[1])+'"}' not in pairs):
+				{"targetLanguage":phenny.iso_conversion_data.get(dir[1]),"sourceLanguage":phenny.iso_conversion_data.get(dir[0])} not in pairs):
 				phenny.reply("That language pair does not exist!")
 				return
 			else:
@@ -127,7 +127,7 @@ def checkMessages(phenny, input): #filter through each message in the channel
 				if (i.nick, i.dir) not in translations:
 					#this user is being followed, translate them
 					direction = '-'.join(i.dir)
-					translations[(i.nick, i.dir)] = translate(input.group(0), i.dir[0], i.dir[1])
+					translations[(i.nick, i.dir)] = translate(phenny, input.group(0), i.dir[0], i.dir[1])
 					translations[(i.nick, i.dir)] = translations[(i.nick, i.dir)].replace('*', '')
 				if translations[(i.nick, i.dir)] != input.group(0):
 					#don't bother sending a notice if the input is the same as the output

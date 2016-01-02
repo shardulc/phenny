@@ -107,7 +107,6 @@ def scrape_wiki_codes_convert():
             r = re.match("(.*) \+ .*", iso3code)
             if r:
                 iso3code = r.group(1)
-            print(iso3code)
             data[iso3code] = code
 
     return data
@@ -146,8 +145,8 @@ def refresh_database(phenny, raw=None):
 
         f2 = iso_one_to_three_filename(phenny)
         phenny.iso_conversion_data = scrape_wiki_codes_convert()
-        write_dict(f, phenny.iso_conversion_data)
-        print('ISO conversion db read failed, refreshing it')
+        write_dict(f2, phenny.iso_conversion_data)
+        print('ISO conversion db successfully written')
     else:
         phenny.say('Only admins can execute that command!')
 
@@ -183,10 +182,10 @@ def setup(phenny):
         except ValueError:
             print('iso conversion db read failed, refreshing it')
             phenny.iso_conversion_data = scrape_wiki_codes_convert()
-            write_dict(f, phenny.iso_conversion_data)
+            write_dict(f2, phenny.iso_conversion_data)
     else:
         phenny.iso_conversion_data = scrape_wiki_codes_convert()
-        write_dict(f, phenny.iso_conversion_data)
+        write_dict(f2, phenny.iso_conversion_data)
 
 
 iso639.name = 'iso639'

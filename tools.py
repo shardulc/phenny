@@ -88,17 +88,20 @@ def generate_report(repo, author, comment, modified_paths, added_paths, removed_
     #if final_path is None: final_path = "empty"
 
     
-def get_page(domain, url, encoding='utf-8'): #get the HTML of a webpage.
-    conn = http.client.HTTPConnection(domain, 80, timeout=60)
+def get_page(domain, url, encoding='utf-8', port=80): #get the HTML of a webpage.
+    conn = http.client.HTTPConnection(domain, port, timeout=60)
     conn.request("GET", url, headers=headers)
     res = conn.getresponse()
     return res.read().decode(encoding)
 
-def translate(translate_me, input_lang, output_lang='en'): 
+def translate(phenny, translate_me, input_lang, output_lang='en'): 
     input_lang, output_lang = urllib.parse.quote(input_lang), urllib.parse.quote(output_lang)
     translate_me = urllib.parse.quote(translate_me)
-    
-    response = get_page('api.apertium.org', '/json/translate?q=%s&langpair=%s|%s' % (translate_me, input_lang, output_lang))
+    response = ""
+    if hasattr(phenny.config, 'translate_url'):
+        response = get_page(self.phenny.config.translate_url, '/translate?q=%s&langpair=%s|%s' % (translate_me, input_lang, output_lang))
+    else:
+        response = get_page('apy.projectjj.com', '/translate?q=%s&langpair=%s|%s' % (translate_me, input_lang, output_lang), port=2737)	
     
     responseArray = json.loads(response)
     if int(responseArray['responseStatus']) != 200:

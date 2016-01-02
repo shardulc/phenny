@@ -56,14 +56,14 @@ def follow(phenny, input): #follow a user
 			phenny.reply("Need language pair!")
 			return
 
-		pairs = ""
+		pairs = {}
 		if hasattr(phenny.config, 'translate_url'):
 			pairs = json.loads(get_page(self.phenny.config.translate_url, '/listPairs'))
 		else:
 			pairs = json.loads(get_page('apy.projectjj.com', '/listPairs', port=2737))
 		if {"targetLanguage":dir[1], "sourceLanguage":dir[0]} not in pairs["responseData"]:
 			if (not(phenny.iso_conversion_data.get(dir[0])) or not(phenny.iso_conversion_data.get(dir[1])) or
-				{"targetLanguage":phenny.iso_conversion_data.get(dir[1]),"sourceLanguage":phenny.iso_conversion_data.get(dir[0])} not in pairs):
+				{"targetLanguage":phenny.iso_conversion_data.get(dir[1]),"sourceLanguage":phenny.iso_conversion_data.get(dir[0])} not in pairs["responseData"]):
 				phenny.reply("That language pair does not exist!")
 				return
 			else:

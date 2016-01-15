@@ -9,6 +9,7 @@ import urllib.request
 import json
 import web
 from tools import GrumbleError, translate
+import more
 
 headers = [(
     'User-Agent', 'Mozilla/5.0' +
@@ -217,9 +218,13 @@ def apertium_analyse(phenny, input):
         return
 
     jobj = json.loads(response.decode('utf-8'))
+    messages = []
     for analysis, original in jobj:
-        phenny.say(original + " → " + analysis)
+        messages.append(original + " → " + analysis)
 
+    more.add_messages(input.nick, phenny,
+                      "\n".join(messages),
+                      break_up=lambda x, y: x.split('\n'))
 
 apertium_analyse.name = 'analyse'
 apertium_analyse.rule = r'\.analy[sz]e\s(\S*)\s(.*)'
@@ -228,7 +233,7 @@ apertium_analyse.priority = 'high'
 
 
 def apertium_generate(phenny, input):
-    """User Apertium APY's generate functionality"""
+    """Use Apertium APY's generate functionality"""
     lang, text = input.groups()
 
     opener = urllib.request.build_opener()
@@ -249,9 +254,13 @@ def apertium_generate(phenny, input):
         return
 
     jobj = json.loads(response.decode('utf-8'))
+    messages = []
     for generation, original in jobj:
-        phenny.say(original + " → " + generation)
+        messages.append(original + " → " + generation)
 
+    more.add_messages(input.nick, phenny,
+                      "\n".join(messages),
+                      break_up=lambda x, y: x.split('\n'))
 
 apertium_generate.name = 'generate'
 apertium_generate.rule = r'\.(?:generate|gen)\s(\S*)\s(.*)'

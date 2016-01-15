@@ -208,12 +208,17 @@ def apertium_analyse(phenny, input):
     try:
         response = opener.open(constructed_url).read()
     except urllib.error.HTTPError as error:
-        phenny.say('An error occurred while fetching analysis: ' + str(error))
+        response = error.read()
+        jobj = json.loads(response.decode('utf-8'))
+        if 'explanation' in jobj:
+            phenny.say('The following error occurred: ' + jobj['explanation'])
+        else:
+            phenny.say('An error occurred: ' + str(error))
         return
 
     jobj = json.loads(response.decode('utf-8'))
-    for analysis, _ in jobj:
-        phenny.say(analysis)
+    for analysis, original in jobj:
+        phenny.say(original + " → " + analysis)
 
 
 apertium_analyse.name = 'analyse'
@@ -235,13 +240,17 @@ def apertium_generate(phenny, input):
     try:
         response = opener.open(constructed_url).read()
     except urllib.error.HTTPError as error:
-        phenny.say('An error occurred while fetching generation: '
-                   + str(error))
+        response = error.read()
+        jobj = json.loads(response.decode('utf-8'))
+        if 'explanation' in jobj:
+            phenny.say('The following error occurred: ' + jobj['explanation'])
+        else:
+            phenny.say('An error occurred: ' + str(error))
         return
 
     jobj = json.loads(response.decode('utf-8'))
-    for generation, _ in jobj:
-        phenny.say(generation)
+    for generation, original in jobj:
+        phenny.say(original + " → " + generation)
 
 
 apertium_generate.name = 'generate'

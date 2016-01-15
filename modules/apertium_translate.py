@@ -17,6 +17,7 @@ headers = [(
 )]
 
 APIurl = "http://apy.projectjj.com"
+APIanalyseURL = "http://turkic.apertium.org:8080"
 
 APIerrorData = 'Sorry, the apertium API did not return any data ☹'
 APIerrorHttp = 'Sorry, the apertium API gave HTTP error %s: %s ☹'
@@ -192,3 +193,58 @@ apertium_translate.name = 't'
 apertium_translate.commands = ['t']
 apertium_translate.example = '.t I like pie en-es'
 apertium_translate.priority = 'high'
+
+
+def apertium_analyse(phenny, input):
+    """Analyse text using Apertium APY"""
+    lang, text = input.groups()
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = headers
+
+    constructed_url = APIanalyseURL + '/analyse?lang=' + web.quote(lang)
+    constructed_url += '&q=' + web.quote(text.strip())
+
+    try:
+        response = opener.open(constructed_url).read()
+    except urllib.error.HTTPError as error:
+        phenny.say('An error occurred while fetching analysis: ' + str(error))
+        return
+
+    jobj = json.loads(response.decode('utf-8'))
+    for analysis, _ in jobj:
+        phenny.say(analysis)
+
+
+apertium_analyse.name = 'analyse'
+apertium_analyse.rule = r'\.analy[sz]e\s(\S*)\s(.*)'
+apertium_analyse.example = '.analyse kaz Сен бардың ба'
+apertium_analyse.priority = 'high'
+
+
+def apertium_generate(phenny, input):
+    """User Apertium APY's generate functionality"""
+    lang, text = input.groups()
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = headers
+
+    constructed_url = APIanalyseURL + '/generate?lang=' + web.quote(lang)
+    constructed_url += '&q=' + web.quote(text.strip())
+
+    try:
+        response = opener.open(constructed_url).read()
+    except urllib.error.HTTPError as error:
+        phenny.say('An error occurred while fetching generation: '
+                   + str(error))
+        return
+
+    jobj = json.loads(response.decode('utf-8'))
+    for generation, _ in jobj:
+        phenny.say(generation)
+
+
+apertium_generate.name = 'generate'
+apertium_generate.rule = r'\.(?:generate|gen)\s(\S*)\s(.*)'
+apertium_generate.example = '.gen kaz ^сен<v><tv><imp><p2><sg>$'
+apertium_generate.priority = 'high'

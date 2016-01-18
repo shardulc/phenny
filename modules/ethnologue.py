@@ -82,6 +82,8 @@ def ethnologue(phenny, input):
     iso = []
     if len(raw) == 3 and raw in phenny.ethno_data:
         iso.append(raw)
+    elif len(raw) == 2 and raw in phenny.iso_conversion_data:
+        iso.append(phenny.iso_conversion_data[raw])
     elif len(raw) > 3:
         for code, lang in phenny.ethno_data.items():
             if raw in lang.lower():

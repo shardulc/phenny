@@ -9,7 +9,7 @@ import urllib.request
 import json
 import web
 from tools import GrumbleError, translate
-import more
+from modules import more
 
 headers = [(
     'User-Agent', 'Mozilla/5.0' +

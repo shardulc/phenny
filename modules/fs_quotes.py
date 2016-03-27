@@ -9,7 +9,7 @@ from urllib.error import HTTPError
 from tools import GrumbleError
 import web
 import json
-import more
+from modules import more
 
 #FIXME: need to implement
 #def quote(phenny, input):

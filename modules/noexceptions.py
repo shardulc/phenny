@@ -77,7 +77,7 @@ def particles(phenny, input):
    else:
       phenny.say("%s: %s" % (whouser, message))
 
-particles.rule = r'.*(?i)(particle|частиц|partikkel).*$'
+particles.rule = r'.*(?i)(particle|частиц|partikkel|pcle).*$'
 particles.priority = 'low'
 
 def unsupervised(phenny, input):

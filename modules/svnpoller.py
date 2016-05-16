@@ -157,6 +157,7 @@ def recentcommits(phenny, input):
 		phenny.say("SVN module cannot function without repositories being set in the config file!")
 		return
 	for repo in phenny.config.svn_repositories:
+		#phenny.say("{}: {}".format(repo, phenny.config.svn_repositories[repo]))
 		poller = SVNPoller(repo, phenny.config.svn_repositories[repo])
 		#for (msg, revisions) in pollers[repo].check(phenny.revisions):
 		rev = poller.get_last_revision()
@@ -213,15 +214,17 @@ def pollsvn(phenny, input):
 	for repo in phenny.config.svn_repositories:
 		pollers[repo] = SVNPoller(repo, phenny.config.svn_repositories[repo])
 	for repo in phenny.config.svn_repositories:
+		#phenny.say(str(pollers[repo]))
 		for (msg, revisions) in pollers[repo].check(global_revisions):
 			#phenny.say("NEW REVISION NUMBERS: " + str(global_revisions))
 			if msg is not None:
 				results = True
 				print("msg: %s" % msg)
-				if hasattr(phenny.config, 'svn_channels') and repo in phenny.config.svn_channels:
-					for chan in phenny.config.svn_channels[repo]:
-						print("chan, msg: %s, %s" % (chan, msg))
-						phenny.bot.msg(chan, msg)
+				if hasattr(phenny.config, 'svn_channels'):
+					if repo in phenny.config.svn_channels:
+						for chan in phenny.config.svn_channels[repo]:
+							print("chan, msg: %s, %s" % (chan, msg))
+							phenny.bot.msg(chan, msg)
 				else:
 					for chan in input.chans:
 						print("chan, msg: %s, %s" % (chan, msg))

@@ -233,6 +233,7 @@ def scrape_wiki_zones():
         else:
             if offset == '':
                 offset = 0
+            offset = offset.strip('±')
             offset = int(offset)
         data[code] = offset
 

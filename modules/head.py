@@ -14,7 +14,6 @@ import requests
 from html.entities import name2codepoint
 import web
 from tools import deprecated
-from modules.linx import get_title as linx_gettitle
 
 from modules.apertium_wiki import awik
 from modules.wikipedia import wikipedia
@@ -94,21 +93,17 @@ noteuri.priority = 'low'
 
 
 def snarfuri(phenny, input):
-    uri = input.group(1)
-
-    if phenny.config.linx_api_key != "":
-        title = linx_gettitle(phenny, uri, input.sender)
-    else:
-        title = gettitle(phenny, uri)
+    uri = input.group(2)
+    title = gettitle(phenny, input, uri)
 
     if title:
         phenny.msg(input.sender, title)
-snarfuri.rule = r'.*(http[s]?://[^<> "\x01]+)[,.]?'
+snarfuri.rule = r'([^\.].*)?(http[s]?://[^<> "\x01]+)[,.]?'
 snarfuri.priority = 'low'
 snarfuri.thread = True
 
 
-def gettitle(phenny, uri):
+def gettitle(phenny, input, uri):
     if not ':' in uri:
         uri = 'http://' + uri
     uri = uri.replace('#!', '?_escaped_fragment_=')
@@ -196,7 +191,7 @@ def gettitle(phenny, uri):
         #bytes = u.read(262144)
         #u.close()
 
-    except web.ConnectionError:
+    except:
         return
 
     m = r_title.search(bytes)
@@ -228,6 +223,16 @@ def gettitle(phenny, uri):
             title = title.replace('\n', '')
             title = title.replace('\r', '')
             title = "[ {0} ]".format(title)
+
+            if "posted" in phenny.variables:
+                from modules.posted import check_posted
+                
+                posted = check_posted(phenny, input, uri)
+
+                if posted:
+                    title = "{0} (posted: {1})".format(title, posted)
+
+
         else:
             title = None
     return title

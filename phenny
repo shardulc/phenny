@@ -39,7 +39,7 @@ def create_default_config(fn):
     # password = 'example'
     # serverpass = 'serverpass'
 
-    # linx-enabled features (.linx, .posted, .lines, snarfuri with special capabilities)
+    # linx-enabled features (.linx, .lnx)
     # leave the api key blank to not use them and be sure to add the 'linx' module to the ignore list.
     linx_api_key = ""
 
@@ -179,6 +179,9 @@ def main(argv=None):
  
         if not hasattr(module, 'ssl'):
             module.ssl = False
+
+        if not hasattr(module, 'ca_certs'):
+            module.ca_certs = None
  
         if not hasattr(module, 'ipv6'):
             module.ipv6 = False

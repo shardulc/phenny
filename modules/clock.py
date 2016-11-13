@@ -23,7 +23,6 @@ from lxml import html
 from decimal import Decimal as dec
 from tools import deprecated
 
-
 r_local = re.compile(r'\([a-z]+_[A-Z]+\)')
 
 

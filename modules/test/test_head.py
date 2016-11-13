@@ -13,7 +13,7 @@ class TestHead(unittest.TestCase):
         self.phenny = MagicMock()
 
     def test_head(self):
-        input = Mock(group=lambda x: 'http://vtluug.org')
+        input = Mock(group=lambda x: 'https://vtluug.org')
         head(self.phenny, input)
 
         out = self.phenny.reply.call_args[0][0]
@@ -22,20 +22,20 @@ class TestHead(unittest.TestCase):
         self.assertTrue(m)
 
     def test_head_404(self):
-        input = Mock(group=lambda x: 'http://vtluug.org/trigger_404')
+        input = Mock(group=lambda x: 'https://vtluug.org/trigger_404')
         head(self.phenny, input)
 
         out = self.phenny.say.call_args[0][0]
         self.assertEqual(out, '404')
 
     def test_header(self):
-        input = Mock(group=lambda x: 'http://vtluug.org Server')
+        input = Mock(group=lambda x: 'https://vtluug.org Server')
         head(self.phenny, input)
 
         self.phenny.say.assert_called_once_with("Server: nginx")
 
     def test_header_bad(self):
-        input = Mock(group=lambda x: 'http://vtluug.org truncatedcone')
+        input = Mock(group=lambda x: 'https://vtluug.org truncatedcone')
         head(self.phenny, input)
 
         self.phenny.say.assert_called_once_with("There was no truncatedcone "\
@@ -44,8 +44,17 @@ class TestHead(unittest.TestCase):
     def test_snarfuri(self):
         self.phenny.config.prefix = '.'
         self.phenny.config.linx_api_key = ""
-        input = Mock(group=lambda x=0: 'http://google.com',
+        input = Mock(group=lambda x=0: 'https://www.google.com',
                 sender='#phenny')
         snarfuri(self.phenny, input)
 
         self.phenny.msg.assert_called_once_with('#phenny', "[ Google ]")
+
+    def test_snarfuri_405(self):
+        self.phenny.config.prefix = '.'
+        self.phenny.config.linx_api_key = ""
+        input = Mock(group=lambda x=0: 'http://ozuma.sakura.ne.jp/httpstatus/405',
+                sender='#phenny')
+        snarfuri(self.phenny, input)
+
+        self.assertEqual(self.phenny.msg.called, False)

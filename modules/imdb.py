@@ -39,3 +39,4 @@ def imdb(phenny, input):
         phenny.reply("No results found for '%s'." % query)
 imdb.example = '.imdb Prometheus'
 imdb.commands = ['imdb']
+imdb.example = '.imdb Promethius'

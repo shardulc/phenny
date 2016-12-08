@@ -91,3 +91,15 @@ def unsupervised(phenny, input):
 
 unsupervised.rule = r'.*(?i)(unsupervi(s|z)ed).*$'
 unsupervised.priority = 'low'
+
+def nightnight(phenny, input):
+   """when people go to bed"""
+   message = random.choice(['nn', 'night', 'жашкы жат', 'later', 'sweet dreams', 'o/'])
+   whouser = input.nick
+   if not whouser:
+      phenny.say(message)
+   else:
+      phenny.say("%s, %s!" % (message, whouser))
+
+nightnight.rule = r'(.* )?(?i)nn(\.|\!|)$'
+unsupervised.priority = 'low'

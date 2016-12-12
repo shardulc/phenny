@@ -17,8 +17,6 @@ headers = [(
     'Gecko/20071127 Firefox/2.0.0.11'
 )]
 
-APIurl = "http://apy.projectjj.com"
-APIanalyseURL = "http://turkic.apertium.org:8080"
 
 APIerrorData = 'Sorry, the apertium API did not return any data ☹'
 APIerrorHttp = 'Sorry, the apertium API gave HTTP error %s: %s ☹'
@@ -31,7 +29,7 @@ def translate(translate_me, input_lang, output_lang='en'):
     input_lang, output_lang = web.quote(input_lang), web.quote(output_lang)
     translate_me = web.quote(translate_me)
 
-    response = opener.open(APIurl+'/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
+    response = opener.open(phenny.config.APIurl+'/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
 
     responseArray = json.loads(response.decode('utf-8'))
     if int(responseArray['responseStatus']) != 200:
@@ -94,7 +92,7 @@ def apertium_listlangs(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    response = opener.open(APIurl+'/listPairs').read()
+    response = opener.open(phenny.config.APIurl+'/listPairs').read()
 
     langs = json.loads(response.decode('utf-8'))
     if int(langs['responseStatus']) != 200:
@@ -131,7 +129,7 @@ def apertium_listpairs(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    response = opener.open(APIurl+'/listPairs').read()
+    response = opener.open(phenny.config.APIurl+'/listPairs').read()
 
     langs = json.loads(response.decode('utf-8'))
 
@@ -203,7 +201,7 @@ def apertium_analyse(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = APIanalyseURL + '/analyse?lang=' + web.quote(lang)
+    constructed_url = phenny.config.APIanalyseURL + '/analyse?lang=' + web.quote(lang)
     constructed_url += '&q=' + web.quote(text.strip())
 
     try:
@@ -239,7 +237,7 @@ def apertium_generate(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = APIanalyseURL + '/generate?lang=' + web.quote(lang)
+    constructed_url = phenny.config.APIanalyseURL + '/generate?lang=' + web.quote(lang)
     constructed_url += '&q=' + web.quote(text.strip())
 
     try:
@@ -266,3 +264,92 @@ apertium_generate.name = 'generate'
 apertium_generate.rule = r'\.(?:generate|gen)\s(\S*)\s(.*)'
 apertium_generate.example = '.gen kaz ^сен<v><tv><imp><p2><sg>$'
 apertium_generate.priority = 'high'
+
+def apertium_identlang(phenny, input):
+    """Identify Language using Apertium APY"""
+    lang, text = input.groups()
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = headers
+
+    constructed_url = phenny.config.APIurl + '/identifyLang?q=' + web.quote(text.strip())
+
+    try:
+        response = opener.open(constructed_url).read()
+        jsdata = json.loads(response.decode('utf-8'))
+    except urllib.error.HTTPError as error:
+        response = error.read()
+        phenny.say(response)
+    messages = []
+    for key, value in jsdata.items():
+        messages.append(key + " = " + str(value))
+    more.add_messages(input.nick, phenny,
+                      "\n".join(messages),
+                      break_up=lambda x, y: x.split('\n'))
+
+apertium_identlang.name = 'identlang'
+apertium_identlang.commands = ['identlang']
+apertium_identlang.example = '.identlang Whereas disregard and contempt for which have outraged the conscience of mankind'
+apertium_identlang.priority = 'high'
+
+def apertium_stats(phenny,input):
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = headers
+
+    constructed_url = phenny.config.APIurl + '/stats'
+
+    try:
+        response = opener.open(constructed_url).read()
+        jdata = json.loads(response.decode('utf-8'))
+        holdingPipes = jdata['responseData']['holdingPipes']
+        uptime = jdata['responseData']['uptime']
+        periodStats = jdata['responseData']['periodStats']
+        useCount = jdata['responseData']['useCount']
+        phenny.say("HoldingPipes: " + str(holdingPipes) + " UpTime: " + str(uptime))
+    except urllib.error.HTTPError as error:
+        response = error.read()
+        phenny.say(response)
+    messages = ""
+    for key, value in periodStats.items():
+        messages += key + " = " + str(value) + " "
+
+    phenny.say("Period Stats:")
+    phenny.say(messages)
+    messages = ""
+    for key, value in useCount.items():
+        messages += key + " = " + str(value) + " "
+    phenny.say("Use Count:")
+    phenny.say(messages)
+apertium_stats.name = 'statsapy'
+apertium_stats.commands = ['statsapy']
+apertium_stats.example = '.statsapy'
+apertium_stats.priority = 'high'
+
+def apertium_calccoverage(phenny, input):
+    """Get Coverage using Apertium APY"""
+    lang, text = input.groups()
+
+    opener = urllib.request.build_opener()
+    opener.addheaders = headers
+
+    constructed_url = phenny.config.APIurl + '/getCoverage?lang=' + web.quote(lang)
+    constructed_url += '&q=' + web.quote(text.strip())
+
+    try:
+        response = opener.open(constructed_url).read()
+        jsdata = json.loads(response.decode('utf-8'))
+    except urllib.error.HTTPError as error:
+        response = error.read()
+        phenny.say(response)
+    messages = []
+    for key, value in jsdata.items():
+        messages.append(key + " = " + str(value))
+    more.add_messages(input.nick, phenny,
+                      "\n".join(messages),
+                      break_up=lambda x, y: x.split('\n'))
+
+apertium_calccoverage.name = 'calccoverage'
+apertium_calccoverage.commands = ['calccoverage']
+apertium_calccoverage.example = '.calccoverage en-es Whereas disregard and contempt for which have outraged the conscience of mankind'
+apertium_identlang.priority = 'high'

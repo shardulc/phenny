@@ -29,7 +29,7 @@ def translate(translate_me, input_lang, output_lang='en'):
     input_lang, output_lang = web.quote(input_lang), web.quote(output_lang)
     translate_me = web.quote(translate_me)
 
-    response = opener.open(phenny.config.APIurl+'/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
+    response = opener.open(phenny.config.APy_url+'/translate?q='+translate_me+'&langpair='+input_lang+"|"+output_lang).read()
 
     responseArray = json.loads(response.decode('utf-8'))
     if int(responseArray['responseStatus']) != 200:
@@ -92,7 +92,7 @@ def apertium_listlangs(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    response = opener.open(phenny.config.APIurl+'/listPairs').read()
+    response = opener.open(phenny.config.APy_url+'/listPairs').read()
 
     langs = json.loads(response.decode('utf-8'))
     if int(langs['responseStatus']) != 200:
@@ -129,7 +129,7 @@ def apertium_listpairs(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    response = opener.open(phenny.config.APIurl+'/listPairs').read()
+    response = opener.open(phenny.config.APy_url+'/listPairs').read()
 
     langs = json.loads(response.decode('utf-8'))
 
@@ -201,7 +201,7 @@ def apertium_analyse(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = phenny.config.APIanalyseURL + '/analyse?lang=' + web.quote(lang)
+    constructed_url = phenny.config.APy_analyseURL + '/analyse?lang=' + web.quote(lang)
     constructed_url += '&q=' + web.quote(text.strip())
 
     try:
@@ -237,7 +237,7 @@ def apertium_generate(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = phenny.config.APIanalyseURL + '/generate?lang=' + web.quote(lang)
+    constructed_url = phenny.config.APy_analyseURL + '/generate?lang=' + web.quote(lang)
     constructed_url += '&q=' + web.quote(text.strip())
 
     try:
@@ -272,7 +272,7 @@ def apertium_identlang(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = phenny.config.APIurl + '/identifyLang?q=' + web.quote(text.strip())
+    constructed_url = phenny.config.APy_url + '/identifyLang?q=' + web.quote(text.strip())
 
     try:
         response = opener.open(constructed_url).read()
@@ -297,7 +297,7 @@ def apertium_stats(phenny,input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = phenny.config.APIurl + '/stats'
+    constructed_url = phenny.config.APy_url + '/stats'
 
     try:
         response = opener.open(constructed_url).read()
@@ -310,20 +310,22 @@ def apertium_stats(phenny,input):
     except urllib.error.HTTPError as error:
         response = error.read()
         phenny.say(response)
-    messages = ""
+    messages = []
     for key, value in periodStats.items():
-        messages += key + " = " + str(value) + " "
+        messages.append(key + " = " + str(value))
+    more.add_messages(input.nick, phenny,
+                      "\nPeriod Stats: ".join(messages),
+                      break_up=lambda x, y: x.split('\n'))
 
-    phenny.say("Period Stats:")
-    phenny.say(messages)
-    messages = ""
+    messages = []
     for key, value in useCount.items():
-        messages += key + " = " + str(value) + " "
-    phenny.say("Use Count:")
-    phenny.say(messages)
-apertium_stats.name = 'statsapy'
-apertium_stats.commands = ['statsapy']
-apertium_stats.example = '.statsapy'
+        messages.append(key + " = " + str(value))
+    more.add_messages(input.nick, phenny,
+                      "\nUse Count: ".join(messages),
+                      break_up=lambda x, y: x.split('\n'))
+apertium_stats.name = 'apystats'
+apertium_stats.commands = ['apystats']
+apertium_stats.example = '.apystats'
 apertium_stats.priority = 'high'
 
 def apertium_calccoverage(phenny, input):
@@ -333,7 +335,7 @@ def apertium_calccoverage(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = phenny.config.APIurl + '/getCoverage?lang=' + web.quote(lang)
+    constructed_url = phenny.config.APy_url + '/getCoverage?lang=' + web.quote(lang)
     constructed_url += '&q=' + web.quote(text.strip())
 
     try:

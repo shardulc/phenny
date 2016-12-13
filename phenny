@@ -43,8 +43,8 @@ def create_default_config(fn):
     # leave the api key blank to not use them and be sure to add the 'linx' module to the ignore list.
     linx_api_key = ""
    
-    APIurl = "http://apy.projectjj.com"
-    APIanalyseURL = "http://turkic.apertium.org:8080"
+    APy_url = "http://apy.projectjj.com"
+    APy_analyseURL = "http://turkic.apertium.org:8080"
 
 
     # These are people who will be able to use admin.py's functions...

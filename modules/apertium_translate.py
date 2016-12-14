@@ -307,14 +307,13 @@ def apertium_stats(phenny,input):
         uptime = jdata['responseData']['uptime']
         periodStats = jdata['responseData']['periodStats']
         useCount = jdata['responseData']['useCount']
-        print(useCount)
     except urllib.error.HTTPError as error:
         response = error.read()
         phenny.say(response)
     messages = []
     for key, value in periodStats.items():
         messages.append(key + " = " + str(value))
-    phenny.say("HoldingPipes: " + str(holdingPipes) + " UpTime: " + str(uptime) + "Period Stats:" + " ".join(messages))
+    f_message = "HoldingPipes: " + str(holdingPipes) + " UpTime: " + str(uptime) + " Period Stats: " + " ".join(messages)
     messages = []
     for key, value in useCount.items():
         messages.append(key + " = " + str(value))
@@ -327,8 +326,7 @@ def apertium_stats(phenny,input):
         x = x.replace("'", "")
         x = x.replace(",", ":")
         replaced_messages.append(x)
-    print(replaced_messages)
-    phenny.say("Use Count: " + " ".join(replaced_messages[:9]))
+    phenny.say(f_message + " " + "Use Count: " + " ".join(replaced_messages[:9]))
 apertium_stats.name = 'apystats'
 apertium_stats.commands = ['apystats']
 apertium_stats.example = '.apystats'

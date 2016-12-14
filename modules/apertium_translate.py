@@ -328,7 +328,7 @@ def apertium_stats(phenny,input):
         x = x.replace(",", ":")
         replaced_messages.append(x)
     print(replaced_messages)
-    phenny.say("Use Count: " + " ".join(replaced_messages))
+    phenny.say("Use Count: " + " ".join(replaced_messages[:9]))
 apertium_stats.name = 'apystats'
 apertium_stats.commands = ['apystats']
 apertium_stats.example = '.apystats'

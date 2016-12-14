@@ -10,6 +10,7 @@ import json
 import web
 from tools import GrumbleError, translate
 from modules import more
+import operator
 
 headers = [(
     'User-Agent', 'Mozilla/5.0' +
@@ -306,6 +307,7 @@ def apertium_stats(phenny,input):
         uptime = jdata['responseData']['uptime']
         periodStats = jdata['responseData']['periodStats']
         useCount = jdata['responseData']['useCount']
+        print(useCount)
     except urllib.error.HTTPError as error:
         response = error.read()
         phenny.say(response)
@@ -316,8 +318,17 @@ def apertium_stats(phenny,input):
     messages = []
     for key, value in useCount.items():
         messages.append(key + " = " + str(value))
-    messages = sorted(useCount, key = lamda t:t[1])
-    phenny.say("Use Count: " + " ".join(messages))
+    lines = sorted(useCount.items(), key=operator.itemgetter(1),reverse=True)
+    replaced_messages = []
+    for x in lines:
+        x = "".join(str(x))
+        x = x.replace("(", "")
+        x = x.replace(")", "")
+        x = x.replace("'", "")
+        x = x.replace(",", ":")
+        replaced_messages.append(x)
+    print(replaced_messages)
+    phenny.say("Use Count: " + " ".join(replaced_messages))
 apertium_stats.name = 'apystats'
 apertium_stats.commands = ['apystats']
 apertium_stats.example = '.apystats'

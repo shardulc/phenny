@@ -312,7 +312,7 @@ def apertium_stats(phenny,input):
         phenny.say(response)
     messages = []
     for key, value in periodStats.items():
-        messages.append(key + " = " + str(double(value)))
+        messages.append(key + " = " + str(value))
     f_message = "HoldingPipes: " + str(holdingPipes) + " UpTime: " + str(uptime) + " Period Stats: " + " ".join(messages)
     messages = []
     for key, value in useCount.items():
@@ -329,7 +329,7 @@ def apertium_stats(phenny,input):
     y =9
     while(y<99):
          r = f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y])
-         max_length = 428 - len(r)
+         max_length = 428 - len(input.nick)
          rs = f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y+1])         
          rst = len(rs)
          if(max_length>=rst):

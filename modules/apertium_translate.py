@@ -333,10 +333,10 @@ def apertium_stats(phenny,input):
          rs = f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y+1])         
          rst = len(rs)
          if(max_length>=rst):
-             y=y+1
+             y+=1
          else:
              break
-    phenny.say(f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y]))
+    phenny.say(input.nick + ": " + r)
 apertium_stats.name = 'apystats'
 apertium_stats.commands = ['apystats']
 apertium_stats.example = '.apystats'

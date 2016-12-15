@@ -19,8 +19,8 @@ headers = [(
 )]
 
 
-ApyerrorData = 'Sorry, the apertium APy did not return any data ☹'
-ApyerrorHttp = 'Sorry, the apertium APy gave HTTP error %s: %s ☹'
+Apy_errorData = 'Sorry, the apertium APy did not return any data ☹'
+Apy_errorHttp = 'Sorry, the apertium APy gave HTTP error %s: %s ☹'
 
 
 def translate(translate_me, input_lang, output_lang='en'):
@@ -34,9 +34,9 @@ def translate(translate_me, input_lang, output_lang='en'):
 
     responseArray = json.loads(response.decode('utf-8'))
     if int(responseArray['responseStatus']) != 200:
-        raise GrumbleError(ApyerrorHttp % (responseArray['responseStatus'], responseArray['responseDetails']))
+        raise GrumbleError(Apy_errorHttp % (responseArray['responseStatus'], responseArray['responseDetails']))
     if responseArray['responseData']['translatedText'] == []:
-        raise GrumbleError(ApyerrorData)
+        raise GrumbleError(Apy_errorData)
 
     translated_text = responseArray['responseData']['translatedText']
     return translated_text
@@ -97,9 +97,9 @@ def apertium_listlangs(phenny, input):
 
     langs = json.loads(response.decode('utf-8'))
     if int(langs['responseStatus']) != 200:
-        raise GrumbleError(ApyerrorHttp % (langs['responseStatus'], langs['responseDetails']))
+        raise GrumbleError(Apy_errorHttp % (langs['responseStatus'], langs['responseDetails']))
     if langs['responseData'] == []:
-        raise GrumbleError(ApyerrorData)
+        raise GrumbleError(Apy_errorData)
 
     outlangs = []
     # phenny.say(str(langs))
@@ -136,9 +136,9 @@ def apertium_listpairs(phenny, input):
 
     langs = json.loads(response.decode('utf-8'))
     if langs['responseData'] is []:
-        raise GrumbleError(ApyerrorData)
+        raise GrumbleError(Apy_errorData)
     if int(langs['responseStatus']) != 200:
-        raise GrumbleError(ApyerrorHttp % (langs['responseStatus'], langs['responseDetails']))
+        raise GrumbleError(Apy_errorHttp % (langs['responseStatus'], langs['responseDetails']))
 
     if not lang:
         allpairs = ""
@@ -331,8 +331,7 @@ def apertium_stats(phenny,input):
          r = f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y])
          max_length = 428 - len(input.nick)
          rs = f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y+1])         
-         rst = len(rs)
-         if(max_length>=rst):
+         if(max_length>=len(rs)):
              y+=1
          else:
              break

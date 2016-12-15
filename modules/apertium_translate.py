@@ -326,13 +326,13 @@ def apertium_stats(phenny,input):
         x = x.replace("'", "")
         x = x.replace(",", ":")
         replaced_messages.append(x)
-    y =9
-    while(y<99):
+    y = 0
+    while(y<len(replaced_messages)):
          r = f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y])
          max_length = 428 - len(input.nick)
          rs = f_message + " " + "Use Count: " + ", ".join(replaced_messages[:y+1])         
          if(max_length>=len(rs)):
-             y+=1
+             y += 1
          else:
              break
     phenny.say(input.nick + ": " + r)

@@ -6,6 +6,7 @@ author: andreim <andreim@andreim.net>
 import os
 import sqlite3
 from humanize import naturaltime
+import requests
 
 def setup(self):
     fn = self.nick + '-' + self.config.host + '.posted.db'
@@ -26,11 +27,14 @@ def setup(self):
 
 def check_posted(phenny, input, url):
     if url:
+        if ':' not in url:
+            url = 'http://' + url
+        dest_url = requests.get(url).url
         conn = sqlite3.connect(phenny.posted_db, 
             detect_types=sqlite3.PARSE_DECLTYPES)
         c = conn.cursor()
         c.execute("SELECT nick, time FROM posted WHERE channel=? AND url=?", 
-            (input.sender, url))
+            (input.sender, dest_url))
         res = c.fetchone()
 
         posted = None
@@ -44,7 +48,7 @@ def check_posted(phenny, input, url):
 
         else:
             c.execute("INSERT INTO posted (channel, nick, url) VALUES (?, ?, ?)", 
-                (input.sender, input.nick, url))
+                (input.sender, input.nick, dest_url))
             conn.commit()
 
         conn.close()

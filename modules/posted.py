@@ -5,8 +5,7 @@ author: andreim <andreim@andreim.net>
 """
 import os
 import sqlite3
-from ago import human
-
+from humanize import naturaltime
 
 def setup(self):
     fn = self.nick + '-' + self.config.host + '.posted.db'
@@ -38,7 +37,7 @@ def check_posted(phenny, input, url):
 
         if res:
             nickname = res[0]
-            time = human(res[1])
+            time = naturaltime(res[1])
 
             posted = "{0} by {1}".format(time, nickname)
 

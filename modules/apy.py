@@ -116,17 +116,7 @@ def apertium_listlangs(phenny, input):
         if pair['targetLanguage'] not in outlangs:
             outlangs.append(pair['targetLanguage'])
 
-    extra = '; more info: .listpairs lg'
-
-    first = True
-    allLangs = ''
-    for lang in outlangs:
-        if not first:
-            allLangs += ', '
-        else:
-            first = False
-        allLangs += lang
-    phenny.say(allLangs + extra)
+    phenny.say(', '.join(outlangs) + '; more info: .listpairs lg')
 
 apertium_listlangs.name = 'listlangs'
 apertium_listlangs.commands = ['listlangs']
@@ -151,15 +141,9 @@ def apertium_listpairs(phenny, input):
     check_no_data(langs)
 
     if not lang:
-        allpairs = ''
-        first = True
-        for pair in langs['responseData']:
-            if not first:
-                allpairs += ','
-            else:
-                first = False
-            allpairs += '{:s}  →  {:s}'.format(pair['sourceLanguage'], pair['targetLanguage'])
-        phenny.say(allpairs)
+        phenny.say(', '.join(map(lambda pair: '{:s}  →  {:s}'
+                                 .format(pair['sourceLanguage'], pair['targetLanguage']),
+                                 langs['responseData'])))
     else:
         toLang = []
         fromLang = []
@@ -168,25 +152,7 @@ def apertium_listpairs(phenny, input):
                 fromLang.append(pair['targetLanguage'])
             if pair['targetLanguage'] == lang:
                 toLang.append(pair['sourceLanguage'])
-        first = True
-        froms = ''
-        for lg in fromLang:
-            if not first:
-                froms += ', '
-            else:
-                first = False
-            froms += lg
-        first = True
-        tos = ''
-        for lg in toLang:
-            if not first:
-                tos += ', '
-            else:
-                first = False
-            tos += lg
-        finals = tos + ('  →  {:s}  →  '.format(lang)) + froms
-
-        phenny.say(finals)
+        phenny.say(', '.join(toLang) + '  →  {:s}  →  '.format(lang) + ', '.join(fromLang))
 
 apertium_listpairs.name = 'listpairs'
 apertium_listpairs.commands = ['listpairs']
@@ -304,11 +270,11 @@ def apertium_stats(phenny, input):
     def plural(num, word, be=False):
         if num == 1:
             if be:
-                return 'is ' + str(num) + ' ' + word
-            return str(num) + ' ' + word
+                return 'is {:d} {:s}'.format(num, word)
+            return '{:d} {:s}'.format(num, word)
         if be:
-            return 'are ' + str(num) + ' ' + word + 's'
-        return str(num) + ' ' + word + 's'
+            return 'are {:d} {:s}s'.format(num, word)
+        return '{:d} {:s}s'.format(num, word)
 
     phenny.say('In the last hour, APy has processed {:s}, totalling {:s} '
                'and {:.2f} seconds, averaging {:.2f} characters per second.'.format(
@@ -354,23 +320,19 @@ apertium_calccoverage.priority = 'medium'
 
 def apertium_perword(phenny, input):
     '''Perform APy's tagger, morph, translate, and biltrans functions on individual words.'''
-    valid_funcs = ['tagger', 'disambig', 'biltrans', 'translate', 'morph']
+    valid_funcs = {'tagger', 'disambig', 'biltrans', 'translate', 'morph'}
 
     # validate requested functions
     funcs = input.group(2).split(' ')
-    for func in funcs:
-        if func not in valid_funcs:
-            phenny.say('The requested functions must be from the set ' + str(valid_funcs) + '.')
-            return
+    if not set(funcs) <= valid_funcs:
+        phenny.say('The requested functions must be from the set ' + str(valid_funcs) + '.')
+        return
 
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    request_url = phenny.config.APy_url + '/perWord?lang=' + web.quote(input.group(1)) + '&modes='
-    for func in funcs[:-1]:
-        request_url += func + '+'
-    request_url += funcs[-1]
-    request_url += '&q=' + web.quote(input.group(3))
+    request_url = phenny.config.APy_url + '/perWord?lang=' + web.quote(input.group(1)) + \
+        '&modes=' + '+'.join(funcs) + '&q=' + web.quote(input.group(3))
 
     try:
         response = opener.open(request_url).read()
@@ -382,10 +344,7 @@ def apertium_perword(phenny, input):
     for word in jsdata:
         phenny.say(word['input'] + ':')
         for func in funcs:
-            msg = '  {:9s}: '.format(func)
-            for out in word[func]:
-                msg += '{:s} '.format(out)
-            phenny.say(msg)
+            phenny.say('  {:9s}: '.format(func) + ' '.join(word[func]))
 
 apertium_perword.name = 'perword'
 apertium_perword.rule = '.perword\s(\S+)\s\((.+)\)\s(.+)'

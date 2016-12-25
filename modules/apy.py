@@ -235,19 +235,17 @@ def apertium_stats(phenny, input):
     opener = urllib.request.build_opener()
     opener.addheaders = headers
 
-    constructed_url = phenny.config.APy_url + '/stats'
-
     try:
-        response = opener.open(constructed_url).read()
-        jdata = json.loads(response.decode('utf-8'))
-        periodStats = jdata['responseData']['periodStats']
-        runningPipes = jdata['responseData']['runningPipes']
-        holdingPipes = jdata['responseData']['holdingPipes']
-        useCount = jdata['responseData']['useCount']
-        uptime = jdata['responseData']['uptime']
+        response = opener.open(phenny.config.APy_url + '/stats').read()
     except urllib.error.HTTPError as error:
         handle_error(error)
-        return
+
+    jdata = json.loads(response.decode('utf-8'))
+    periodStats = jdata['responseData']['periodStats']
+    runningPipes = jdata['responseData']['runningPipes']
+    holdingPipes = jdata['responseData']['holdingPipes']
+    useCount = jdata['responseData']['useCount']
+    uptime = jdata['responseData']['uptime']
 
     # rudimentary pluralizer
     def plural(num, word, be=False):
@@ -259,14 +257,33 @@ def apertium_stats(phenny, input):
             return 'are {:d} {:s}s'.format(num, word)
         return '{:d} {:s}s'.format(num, word)
 
+    pipe = input.group(2)
+    if pipe:
+        runningPipes = jdata['responseData']['runningPipes']
+        useCount = jdata['responseData']['useCount']
+        if pipe in runningPipes:
+            phenny.say('The {:s} pipe has {:s} and has been used {:s}.'.format(
+                pipe, plural(runningPipes[pipe], 'instance'), plural(useCount[pipe], 'time')))
+        else:
+            phenny.say('There is no running pipe called {:s}. (You can run .apystats in a '
+                       'private query for details about all pipes.)'.format(pipe))
+        return
+
     phenny.say('In the last hour, APy has processed {:s}, totalling {:s} '
                'and {:.2f} seconds, averaging {:.2f} characters per second.'.format(
                    plural(periodStats['requests'], 'request'), plural(periodStats['totChars'], 'character'),
                    periodStats['totTimeSpent'], periodStats['charsPerSec']))
-    phenny.say('There {:s}:'.format(plural(len(runningPipes), 'running translation pipe', be=True)))
-    for langs in runningPipes:
-        phenny.say('  {:s}: {:s}, used {:s}'.format(
-            langs, plural(runningPipes[langs], 'instance'), plural(useCount[langs], 'time')))
+
+    if input.sender.startswith('#'):
+        phenny.say('There {:s}.'.format(plural(len(runningPipes), 'running translation pipe', be=True)))
+        phenny.say('(Run .apystats <pipe> for details about <pipe>, or '
+                   'run .apystats in a private query for details about all pipes.)')
+    else:
+        phenny.say('There {:s}:'.format(plural(len(runningPipes), 'running translation pipe', be=True)))
+        for langs in runningPipes:
+            phenny.say('  {:s}: {:s}, used {:s}'.format(
+                langs, plural(runningPipes[langs], 'instance'), plural(useCount[langs], 'time')))
+
     phenny.say('There {:s}.'.format(plural(holdingPipes, 'holding pipe', be=True)))
     phenny.say('APy has been up for {:s}.'.format(naturaldelta(uptime)))
 

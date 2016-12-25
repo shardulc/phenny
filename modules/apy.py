@@ -20,6 +20,16 @@ headers = [(
 )]
 
 Apy_errorData = 'Sorry, Apertium APy did not return any data.'
+langRE = r'[a-z]{2,3}(?:_[A-Za-z]+)?'
+
+
+def strict_check(pattern, string, function):
+    if not string:
+        raise GrumbleError('Usage: ' + function.example)
+    string = re.fullmatch(pattern, string)
+    if not string:
+        raise GrumbleError('Usage: ' + function.example)
+    return string
 
 
 def handle_error(error):
@@ -59,21 +69,9 @@ def translate(phenny, translate_me, input_lang, output_lang='en'):
 
 def apertium_translate(phenny, input):
     '''Translates a phrase using APy.'''
-    line = input.group(2)
-    if not line:
-        raise GrumbleError('Need something to translate!')
-
-    pairs = []
-    guidelines = line.split('|')
-    if len(guidelines) > 1:
-        for guideline in guidelines[1:]:
-            pairs.append(guideline.strip().split('-'))
-    guidelines = guidelines[0]
-    stuff = re.search('(.*) ([a-z]+-[a-z]+)', guidelines)
-    pairs.insert(0, stuff.group(2).split('-'))
-    translate_me = stuff.group(1)
-
-    if (len(translate_me) > 350) and (not input.admin):
+    line = strict_check(r'((?:' + langRE + r'-' + langRE + r' ?)+)\s+(.*)',
+                        input.group(2), apertium_translate)
+    if (len(line.group(2)) > 350) and (not input.admin):
         raise GrumbleError('Phrase must be under 350 characters.')
 
     msg = translate_me
@@ -81,17 +79,14 @@ def apertium_translate(phenny, input):
     for (input_lang, output_lang) in pairs:
         if input_lang == output_lang:
             raise GrumbleError('Stop trying to confuse me! Pick different languages ;)')
-        msg = translate(phenny, msg, input_lang, output_lang)
-        if not msg:
+        translated = translate(phenny, line.group(2), input_lang, output_lang)
+        if not translated:
             raise GrumbleError('The {:s} to {:s} translation failed, sorry!'.format(input_lang, output_lang))
-        msg = web.decode(msg)
-        translated = msg
-
-    phenny.reply(translated)
+        phenny.reply(web.decode(translated))
 
 apertium_translate.name = 't'
 apertium_translate.commands = ['t']
-apertium_translate.example = '.t I like pie en-es'
+apertium_translate.example = '.t en-es en-fr I like pie'
 apertium_translate.priority = 'high'
 
 
@@ -162,7 +157,7 @@ apertium_listpairs.priority = 'low'
 
 def apertium_analyse(phenny, input):
     '''Analyse text using Apertium APy'''
-    lang, text = input.groups()
+    cmd = strict_check(r'(' + langRE + r')\s+(.*)', input.group(2), apertium_analyse)
 
     opener = urllib.request.build_opener()
     opener.addheaders = headers
@@ -186,14 +181,14 @@ def apertium_analyse(phenny, input):
                       break_up=lambda x, y: x.split('\n'))
 
 apertium_analyse.name = 'analyse'
-apertium_analyse.rule = r'\.analy[sz]e\s(\S*)\s(.*)'
+apertium_analyse.commands = ['analyse', 'analyze']
 apertium_analyse.example = '.analyse kaz Сен бардың ба'
 apertium_analyse.priority = 'medium'
 
 
 def apertium_generate(phenny, input):
     '''Use Apertium APy's generate functionality'''
-    lang, text = input.groups()
+    cmd = strict_check(r'(' + langRE + r')\s+(.*)', input.group(2), apertium_generate)
 
     opener = urllib.request.build_opener()
     opener.addheaders = headers
@@ -215,14 +210,14 @@ def apertium_generate(phenny, input):
     more.add_messages(input.nick, phenny, '\n'.join(messages), break_up=lambda x, y: x.split('\n'))
 
 apertium_generate.name = 'generate'
-apertium_generate.rule = r'\.(?:generate|gen)\s(\S*)\s(.*)'
-apertium_generate.example = '.gen kaz ^сен<v><tv><imp><p2><sg>$'
+apertium_generate.commands = ['generate']
+apertium_generate.example = '.generate kaz ^сен<v><tv><imp><p2><sg>$'
 apertium_generate.priority = 'medium'
 
 
 def apertium_identlang(phenny, input):
     '''Identify the language for a given input.'''
-    text = input.group(1)
+    text = strict_check(r'.*', input.group(2), apertium_identlang).group(0)
 
     opener = urllib.request.build_opener()
     opener.addheaders = headers
@@ -295,7 +290,7 @@ apertium_stats.priority = 'low'
 
 def apertium_calccoverage(phenny, input):
     '''Calculate translation coverage for a language and a given input.'''
-    lang, text = input.groups()
+    cmd = strict_check(r'(' + langRE + r')\s+(.*)', input.group(2), apertium_calccoverage)
 
     opener = urllib.request.build_opener()
     opener.addheaders = headers
@@ -313,17 +308,18 @@ def apertium_calccoverage(phenny, input):
     phenny.say('Coverage is {:.1%}'.format(jsdata[0]))
 
 apertium_calccoverage.name = 'calccoverage'
-apertium_calccoverage.rule = '.calccoverage\s(\S*)\s(.*)'
-apertium_calccoverage.example = '.calccoverage en-es Whereas disregard and contempt for which have outraged the conscience of mankind'
+apertium_calccoverage.commands = ['calccoverage', 'coverage']
+apertium_calccoverage.example = '.calccoverage en Whereas disregard and contempt for which have outraged the conscience of mankind'
 apertium_calccoverage.priority = 'medium'
 
 
 def apertium_perword(phenny, input):
     '''Perform APy's tagger, morph, translate, and biltrans functions on individual words.'''
+    cmd = strict_check(r'(' + langRE + r')\s+\((.*)\)\s+(.*)', input.group(2), apertium_perword)
     valid_funcs = {'tagger', 'disambig', 'biltrans', 'translate', 'morph'}
 
     # validate requested functions
-    funcs = input.group(2).split(' ')
+    funcs = cmd.group(2).split(' ')
     if not set(funcs) <= valid_funcs:
         phenny.say('The requested functions must be from the set ' + str(valid_funcs) + '.')
         return
@@ -347,6 +343,6 @@ def apertium_perword(phenny, input):
             phenny.say('  {:9s}: '.format(func) + ' '.join(word[func]))
 
 apertium_perword.name = 'perword'
-apertium_perword.rule = '.perword\s(\S+)\s\((.+)\)\s(.+)'
+apertium_perword.commands = ['perword']
 apertium_perword.example = '.perword fr (tagger morph) Bonjour tout le monde!'
 apertium_perword.priority = 'medium'

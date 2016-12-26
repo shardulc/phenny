@@ -77,10 +77,11 @@ def apertium_translate(phenny, input):
     for (input_lang, output_lang) in pairs:
         if input_lang == output_lang:
             raise GrumbleError('Stop trying to confuse me! Pick different languages ;)')
-        translated = translate(phenny, line.group(2), input_lang, output_lang)
-        if not translated:
-            raise GrumbleError('The {:s} to {:s} translation failed, sorry!'.format(input_lang, output_lang))
-        phenny.reply(web.decode(translated))
+        try:
+            translated = translate(phenny, line.group(2), input_lang, output_lang)
+            phenny.reply(web.decode(translated))
+        except GrumbleError as err:
+            phenny.say('Error with pair {:s}-{:s}: {:s}'.format(input_lang, output_lang, str(err)))
 
 apertium_translate.name = 't'
 apertium_translate.commands = ['t']

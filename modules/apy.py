@@ -81,7 +81,7 @@ def apertium_translate(phenny, input):
             translated = translate(phenny, line.group(2), input_lang, output_lang)
             phenny.reply(web.decode(translated))
         except GrumbleError as err:
-            phenny.say('Error with pair {:s}-{:s}: {:s}'.format(input_lang, output_lang, str(err)))
+            phenny.say('{:s}-{:s}: {:s}'.format(input_lang, output_lang, str(err)))
 
 apertium_translate.name = 't'
 apertium_translate.commands = ['t']

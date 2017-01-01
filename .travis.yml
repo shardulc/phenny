@@ -10,13 +10,12 @@ python:
     - "3.6"
     - "nightly"
 
-# uncomment if needed
-#install:
-#    - pip install -r requirements.txt
-
 script: nosetests -v --with-coverage
 
 notifications:
     irc:
         channels:
             - "chat.freenode.net#punegeeks"
+        template:
+            - "%{repository_slug} -- commit https://github.com/shardulc/phenny/commit/%{commit} on branch %{branch}:"
+            - "%{message} (%{result})"

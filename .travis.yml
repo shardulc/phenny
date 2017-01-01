@@ -15,3 +15,8 @@ python:
 #    - pip install -r requirements.txt
 
 script: nosetests -v --with-coverage
+
+notifications:
+    irc:
+        channels:
+            - "chat.freenode.net#punegeeks"

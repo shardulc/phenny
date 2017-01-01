@@ -17,5 +17,4 @@ notifications:
         channels:
             - "chat.freenode.net#punegeeks"
         template:
-            - "%{repository_slug} -- commit https://github.com/shardulc/phenny/commit/%{commit} on branch %{branch}:"
-            - "%{message} (%{result})"
+            - "%{repository_slug}/%{branch}, commit https://github.com/shardulc/phenny/commit/%{commit}: %{message}"

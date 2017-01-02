@@ -2,10 +2,10 @@
 test_mylife.py - tests for the mylife module
 author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 """
-
 import unittest
 from mock import MagicMock
 from modules import mylife
+from tools import is_up
 
 
 class TestMylife(unittest.TestCase):
@@ -13,9 +13,13 @@ class TestMylife(unittest.TestCase):
         self.phenny = MagicMock()
 
     def test_fml(self):
+        if not is_up('http://fmylife.com'):
+            self.skipTest('FML website is down, skipping test.')
         mylife.fml(self.phenny, None)
-        assert self.phenny.say.called is True
+        self.assertTrue(self.phenny.say.called)
 
     def test_mlia(self):
+        if not is_up('http://mylifeisaverage.com'):
+            self.skipTest('MLIA website is down, skipping test.')
         mylife.mlia(self.phenny, None)
-        assert self.phenny.say.called is True
+        self.assertTrue(self.phenny.say.called)

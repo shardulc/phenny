@@ -14,7 +14,7 @@ import os
 import threading
 import re
 
-template = "%s = %s"
+template = "{} = {}"
 
 def flatten(s):
     #match against accented characters
@@ -44,17 +44,26 @@ def iso639(phenny, input):
         thisCode = random.choice(list(phenny.iso_data.keys()))
         #ISOcodes[random.randint(0,len(ISOcodes)-1)]
         #random.choice(ISOcodes)
-    if thisCode in phenny.iso_data:
-        response = template % (thisCode, phenny.iso_data[thisCode])
     else:
         if len(thisCode) > 3:      # so that we don't get e.g. 'a'
             for oneCode, oneLang in phenny.iso_data.items():
                 if thisCode in flatten(oneLang.lower()):
                     if response != "":
-                        response += ", " + template % (oneCode, oneLang)
+                        response += ", " + template.format(oneCode, oneLang)
                     else:
-                        response = template % (oneCode, oneLang)
+                        response = template.format(oneCode, oneLang)
                     #phenny.say("%s %s %s" % (oneCode, oneLang.lower(), thisCode.lower()))
+        elif thisCode in phenny.iso_data:
+            altCode = None
+            if len(thisCode) == 2 and thisCode in phenny.iso_conversion_data:
+                altCode = phenny.iso_conversion_data[thisCode]
+            elif len(thisCode) == 3:
+                for iso1, iso3 in phenny.iso_conversion_data.items():
+                    if thisCode == iso3:
+                        altCode = iso1
+                        break
+            response = template.format(thisCode + (", " + altCode if altCode else ""), phenny.iso_data[thisCode])
+
     if response == "":
         response = "Sorry, %s not found" % thisCode
 

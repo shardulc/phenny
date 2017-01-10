@@ -74,12 +74,16 @@ def apertium_translate(phenny, input):
         raise GrumbleError('Phrase must be under 350 characters.')
 
     pairs = [tuple(langs.split('-')) for langs in line.group(1).split(' ')]
+    lastPair = len(pairs)
+    translated = line.group(2)
     for (input_lang, output_lang) in pairs:
         if input_lang == output_lang:
             raise GrumbleError('Stop trying to confuse me! Pick different languages ;)')
         try:
-            translated = translate(phenny, line.group(2), input_lang, output_lang)
-            phenny.reply(web.decode(translated))
+            translated = translate(phenny, translated, input_lang, output_lang)
+            if lastPair <= 1:
+                phenny.reply(web.decode(translated))
+            else: lastPair = lastPair - 1
         except GrumbleError as err:
             phenny.say('{:s}-{:s}: {:s}'.format(input_lang, output_lang, str(err)))
 

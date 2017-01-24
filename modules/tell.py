@@ -10,19 +10,9 @@ http://inamidst.com/phenny/
 import os, re, datetime, random
 import web
 from collections import Counter
+from modules import caseless_list
 
 maximum = 4
-lispchannels = frozenset([ '#lisp', '#scheme', '#opendarwin', '#macdev',
-'#fink', '#jedit', '#dylan', '#emacs', '#xemacs', '#colloquy', '#adium',
-'#growl', '#chicken', '#quicksilver', '#svn', '#slate', '#squeak', '#wiki',
-'#nebula', '#myko', '#lisppaste', '#pearpc', '#fpc', '#hprog',
-'#concatenative', '#slate-users', '#swhack', '#ud', '#t', '#compilers',
-'#erights', '#esp', '#scsh', '#sisc', '#haskell', '#rhype', '#sicp', '#darcs',
-'#hardcider', '#lisp-it', '#webkit', '#launchd', '#mudwalker', '#darwinports',
-'#muse', '#chatkit', '#kowaleba', '#vectorprogramming', '#opensolaris',
-'#oscar-cluster', '#ledger', '#cairo', '#idevgames', '#hug-bunny', '##parsers',
-'#perl6', '#sdlperl', '#ksvg', '#rcirc', '#code4lib', '#linux-quebec',
-'#programmering', '#maxima', '#robin', '##concurrency', '#paredit' ])
 
 # nick aliases (saved in ~/<User phenny dir>/<nick>-<host>.alias.db)
 # format (each row is an alias group, aliases are separated by '\t'): 
@@ -239,7 +229,7 @@ def message(phenny, input):
     if not input.sender.startswith('#'): return
 
     tellee = input.nick
-    aliases = aliasGroupFor(tellee)
+    aliases = caseless_list(aliasGroupFor(tellee))
     channel = input.sender
 
     if not os: return
@@ -250,9 +240,9 @@ def message(phenny, input):
     remkeys = list(reversed(sorted(phenny.reminders.keys())))
     for remkey in remkeys:
         if not remkey.endswith('*') or remkey.endswith(':'): 
-            if remkey in aliases or remkey.lower() in aliases:
+            if remkey.casefold() in aliases:
                 reminders.extend(getReminders(phenny, channel, remkey, tellee))
-        elif tellee.lower().startswith(remkey.rstrip('*:')) or tellee.lower().startswith(remkey.lower().rstrip('*:')): 
+        elif tellee.casefold().startswith(remkey.casefold().rstrip('*:')): 
             reminders.extend(getReminders(phenny, channel, remkey, tellee))
 
     for line in reminders[:maximum]: 

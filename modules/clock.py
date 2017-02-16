@@ -236,42 +236,43 @@ def scrape_wiki_zones():
             offset = int(offset)
         data[code] = offset
 
-    file_url = "http://www.citytimezones.info/database/cities_csv.zip"
-    file_name = "cities_csv.zip"
-
-    with urllib.request.urlopen(file_url) as response, open(file_name, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-        with zipfile.ZipFile(file_name) as zf:
-            a = zf.extractall()
-            print(zf)
-            
-    with open("cities.txt", "rt", encoding="UTF8") as csvfile:
-        csvreader = csv.reader(csvfile)
-        for row in csvreader:
-            tmr = 0
-            for elem in row:
-                tmr=tmr+1
-                if tmr==1:
-                    ctz=elem
-                elif tmr==2:
-                    if re.match("\(GMT\)", elem):
-                        ctu="+00:00"
-                    else:
-                        r = re.compile("\(GMT([+-]*\d*:\d*)\)")
-                        m = r.match(elem)
-                        if m.group(1) != None:
-                            ctu = m.group(1)
-                        else:
-                            return
-                    if ctu[ctu.find(':')+1]=='0':
-                        ctu=ctu[:ctu.find(':')]
-                    else:
-                        ctu=ctu[:ctu.find(':')]+'.5'
-                    if ctu[0]=='−':
-                        ctu='-'+ctu[1:]
-                    data[ctz.upper()]=float(ctu)
-                else:
-                    break
+    #this is now broken
+    #file_url = "http://www.citytimezones.info/database/cities_csv.zip"
+    #file_name = "cities_csv.zip"
+    #
+    #with urllib.request.urlopen(file_url) as response, open(file_name, 'wb') as out_file:
+    #    shutil.copyfileobj(response, out_file)
+    #    with zipfile.ZipFile(file_name) as zf:
+    #        a = zf.extractall()
+    #        print(zf)
+    #        
+    #with open("cities.txt", "rt", encoding="UTF8") as csvfile:
+    #    csvreader = csv.reader(csvfile)
+    #    for row in csvreader:
+    #        tmr = 0
+    #        for elem in row:
+    #            tmr=tmr+1
+    #            if tmr==1:
+    #                ctz=elem
+    #            elif tmr==2:
+    #                if re.match("\(GMT\)", elem):
+    #                    ctu="+00:00"
+    #                else:
+    #                    r = re.compile("\(GMT([+-]*\d*:\d*)\)")
+    #                    m = r.match(elem)
+    #                    if m.group(1) != None:
+    #                        ctu = m.group(1)
+    #                    else:
+    #                        return
+    #                if ctu[ctu.find(':')+1]=='0':
+    #                    ctu=ctu[:ctu.find(':')]
+    #                else:
+    #                    ctu=ctu[:ctu.find(':')]+'.5'
+    #                if ctu[0]=='−':
+    #                    ctu='-'+ctu[1:]
+    #                data[ctz.upper()]=float(ctu)
+    #            else:
+    #                break
     url = 'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
     resp = web.get(url)
     h = html.document_fromstring(resp)

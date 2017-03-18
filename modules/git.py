@@ -288,6 +288,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 def setup(phenny):
     # called on start-up or module reload, so we check for previous server
+    # NameError is thrown if the variables don't exist yet; a hack, but it works
     global Handler, httpd, prev_server_exists
     try:
         tmp = Handler
@@ -296,6 +297,8 @@ def setup(phenny):
         prev_server_exists = False
         Handler = None
         httpd = None
+    else:
+        prev_server_exists = True
 
 
 def setup_server(phenny, input=None):

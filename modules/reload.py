@@ -7,8 +7,7 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import sys, os.path, time, imp
-import irc
+import sys, os.path, time, importlib
 
 def f_reload(phenny, input): 
     """Reloads a module, for use by admins only.""" 
@@ -26,17 +25,17 @@ def f_reload(phenny, input):
 
     if name not in sys.modules: 
         return phenny.reply('%s: no such module!' % name)
+    module = sys.modules[name]
 
     # Thanks to moot for prodding me on this
-    path = sys.modules[name].__file__
+    path = module.__file__
     if path.endswith('.pyc') or path.endswith('.pyo'): 
         path = path[:-1]
     if not os.path.isfile(path): 
         return phenny.reply('Found %s, but not the source file' % name)
 
-    module = imp.load_source(name, path)
-    sys.modules[name] = module
-    if hasattr(module, 'setup'): 
+    importlib._bootstrap._exec(module.__spec__, module) # because importlib.reload() has a bug, cause unknown
+    if hasattr(module, 'setup'):
         module.setup(phenny)
 
     mtime = os.path.getmtime(module.__file__)

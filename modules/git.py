@@ -4,6 +4,7 @@ git.py - Github Post-Receive Hooks Module
 """
 
 import http.server
+from threading import Thread
 from io import StringIO
 import json
 import os
@@ -20,10 +21,6 @@ PORT = 1234
 # overriden if MAX_MSG_LEN exists in the config
 MAX_MSG_LEN = 430
 
-# module-global variables
-Handler = None
-httpd = None
-
 
 def truncate(non_trunc, trunc):
     while len(non_trunc + trunc) > MAX_MSG_LEN:
@@ -34,7 +31,6 @@ def truncate(non_trunc, trunc):
 # githooks handler
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     phenny = None
-    phInput = None
 
     def return_data(self, site, data, commit):
         '''Generates a report for the specified site and commit.'''
@@ -269,7 +265,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                     for chan in self.phenny.config.git_channels[repo]:
                         self.phenny.bot.msg(chan, msg)
                 else:
-                    for chan in self.phInput.chans:
+                    for chan in self.phenny.config.channels:
                         self.phenny.bot.msg(chan, msg)
 
         # send OK code and notify firespeaker
@@ -288,55 +284,27 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         return toReturn
 
 
-def setup_server(phenny, input):
+def setup_server(phenny):
     '''Set up and start hooks server.'''
 
     global Handler, httpd, MAX_MSG_LEN
     Handler = MyHandler
     Handler.phenny = phenny
-    Handler.phInput = input
     if hasattr(phenny.config, 'MAX_MSG_LEN'):
         MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
     httpd = socketserver.TCPServer(("", PORT), Handler)
-    phenny.say("Server is up and running on port %s" % PORT)
-    httpd.serve_forever()
+    Thread(target=httpd.serve_forever).start()
 
 
-def github(phenny, input):
-    '''Set up and start server automatically on successfully connecting to an
-    IRC network (called automatically).'''
-
-    global Handler, httpd
-    if Handler is None and httpd is None:
-        if httpd is not None:
-            httpd.shutdown()
-            httpd = None
-        if Handler is not None:
-            Handler = None
-        setup_server(phenny, input)
-# command metadata and invocation event
-github.name = 'start githook server'
-github.event = "PONG"
-github.rule = r'.*'
-github.priority = 'medium'
-
-
-def stopserver(phenny, input):
+def stopserver(phenny):
     '''Stop hooks server. This command, 'stopserver', is the same as
     '.gitserver stop' and can only be run by an admin.'''
 
     global Handler, httpd
-    if input.admin:
-        # we're admin
-        if httpd is not None:
-            httpd.shutdown()
-            httpd = None
-        Handler = None
-        phenny.say("Server has stopped on port %s" % PORT)
-    else:
-        phenny.reply("That is an admin-only command.")
-# command invocation
-stopserver.commands = ['stopserver']
+    if httpd is not None:
+        httpd.shutdown()
+        httpd = None
+    Handler = None
 
 
 def gitserver(phenny, input):
@@ -347,6 +315,20 @@ def gitserver(phenny, input):
 
     global Handler, httpd
 
+    # begin HACK
+    # when phenny is first started, NameError will be thrown and the variables initializes to None
+    # but when this module is reloaded through importlib, the variables will be preserved
+    # (so the '= None' cannot be at the top of the file)
+    try:
+        tmp = Handler
+    except NameError:
+        Handler = None
+    try:
+        tmp = httpd
+    except NameError:
+        httpd = None
+    # end HACK
+
     command = input.group(1).strip()
     if input.admin:
         # we're admin
@@ -354,12 +336,14 @@ def gitserver(phenny, input):
         # running at the moment
         if command == "stop":
             if httpd is not None:
-                stopserver(phenny, input)
+                stopserver(phenny)
+                phenny.say("Server has stopped on port %s" % PORT)
             else:
                 phenny.reply("Server is already down!")
         elif command == "start":
             if httpd is None:
-                setup_server(phenny, input)
+                setup_server(phenny)
+                phenny.say("Server is up and running on port %s" % PORT)
             else:
                 phenny.reply("Server is already up!")
         elif command == "status":

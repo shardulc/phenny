@@ -7,7 +7,7 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import sys, os, re, threading, imp
+import sys, os, re, threading, importlib
 import irc
 import tools
 
@@ -64,7 +64,9 @@ class Phenny(irc.Bot):
             if name in excluded_modules: continue
             # if name in sys.modules: 
             #     del sys.modules[name]
-            try: module = imp.load_source(name, filename)
+            try:
+                module_loader = importlib.machinery.SourceFileLoader(name, filename)
+                module = module_loader.load_module()
             except Exception as e: 
                 print("Error loading %s: %s (in bot.py)" % (name, e), file=sys.stderr)
             else: 

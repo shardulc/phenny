@@ -20,8 +20,6 @@ PORT = 1234
 # maximum message length (see msg() in irc.py)
 # overriden if MAX_MSG_LEN exists in the config
 MAX_MSG_LEN = 430
-# does the gitserver already exist? (actual value in setup())
-prev_server_exists = True
 
 
 def truncate(non_trunc, trunc):
@@ -286,34 +284,16 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         return toReturn
 
 
-def setup(phenny):
-    # called on start-up or module reload, so we check for previous server
-    # NameError is thrown if the variables don't exist yet; a hack, but it works
-    global Handler, httpd, prev_server_exists
-    try:
-        tmp = Handler
-        tmp = httpd
-    except NameError:
-        prev_server_exists = False
-        Handler = None
-        httpd = None
-    else:
-        prev_server_exists = True
-
-
-def setup_server(phenny, input=None):
+def setup_server(phenny):
     '''Set up and start hooks server.'''
 
     global Handler, httpd, MAX_MSG_LEN
-    if (not prev_server_exists) or (Handler is None or httpd is None):
-        Handler = MyHandler
-        Handler.phenny = phenny
-        if hasattr(phenny.config, 'MAX_MSG_LEN'):
-            MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
-        httpd = socketserver.TCPServer(("", PORT), Handler)
-        Thread(target=httpd.serve_forever).start()
-setup_server.rule = r'(.*)'
-setup_server.event = 'JOIN'
+    Handler = MyHandler
+    Handler.phenny = phenny
+    if hasattr(phenny.config, 'MAX_MSG_LEN'):
+        MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
+    httpd = socketserver.TCPServer(("", PORT), Handler)
+    Thread(target=httpd.serve_forever).start()
 
 
 def stopserver(phenny):
@@ -334,6 +314,20 @@ def gitserver(phenny, input):
         .gitserver stop (admins only)'''
 
     global Handler, httpd
+
+    # begin HACK
+    # when phenny is first started, NameError will be thrown and the variables initializes to None
+    # but when this module is reloaded through importlib, the variables will be preserved
+    # (so the '= None' cannot be at the top of the file)
+    try:
+        tmp = Handler
+    except NameError:
+        Handler = None
+    try:
+        tmp = httpd
+    except NameError:
+        httpd = None
+    # end HACK
 
     command = input.group(1).strip()
     if input.admin:

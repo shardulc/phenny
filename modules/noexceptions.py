@@ -28,7 +28,7 @@ def harglebargleP(phenny, input):
    response = "HARGLE BARGLE, %s!"
    phenny.say(response % whouser)
 
-harglebargleP.commands = ['harglebargle']
+harglebargleP.commands = ['harglebargle', 'hargle']
 harglebargleP.example = '.harglebargle firespeaker'
 harglebargleP.priority = 'low'
 
@@ -102,4 +102,16 @@ def nightnight(phenny, input):
       phenny.say("%s, %s!" % (message, whouser))
 
 nightnight.rule = r'(.* )?(?i)nn(\.|\!|)$'
-unsupervised.priority = 'low'
+nightnight.priority = 'low'
+
+def uderp(phenny, input):
+   """when people talk about #u_dep"""
+   message = random.choice(['\o/ UD \o/', '（。々°） #u_dep', 'ᕕ(ᐛ)ᕗ #u_dep', 'universal derpendencies!'])
+   whouser = input.nick
+   if not whouser:
+      phenny.say(message)
+   else:
+      phenny.say("%s, %s!" % (message, whouser))
+
+uderp.rule = r'.*(?i)(u_dep|u_derp)$'
+uderp.priority = 'low'

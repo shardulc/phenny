@@ -20,6 +20,9 @@ PORT = 1234
 # maximum message length (see msg() in irc.py)
 # overriden if MAX_MSG_LEN exists in the config
 MAX_MSG_LEN = 430
+# module-global variables
+Handler = None
+httpd = None
 
 
 def truncate(non_trunc, trunc):
@@ -284,7 +287,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         return toReturn
 
 
-def setup_server(phenny):
+def setup_server(phenny, input=None):
     '''Set up and start hooks server.'''
 
     global Handler, httpd, MAX_MSG_LEN
@@ -294,17 +297,18 @@ def setup_server(phenny):
         MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
     httpd = socketserver.TCPServer(("", PORT), Handler)
     Thread(target=httpd.serve_forever).start()
+    phenny.say("Server is up and running on port %s" % PORT)
+setup_server.rule = '(.*)'
+setup_server.event = 'MODE'
 
 
-def stopserver(phenny):
-    '''Stop hooks server. This command, 'stopserver', is the same as
-    '.gitserver stop' and can only be run by an admin.'''
-
+def teardown(phenny):
     global Handler, httpd
     if httpd is not None:
         httpd.shutdown()
         httpd = None
-    Handler = None
+        Handler = None
+        phenny.say("Server has stopped on port %s" % PORT)
 
 
 def gitserver(phenny, input):
@@ -315,20 +319,6 @@ def gitserver(phenny, input):
 
     global Handler, httpd
 
-    # begin HACK
-    # when phenny is first started, NameError will be thrown and the variables initializes to None
-    # but when this module is reloaded through importlib, the variables will be preserved
-    # (so the '= None' cannot be at the top of the file)
-    try:
-        tmp = Handler
-    except NameError:
-        Handler = None
-    try:
-        tmp = httpd
-    except NameError:
-        httpd = None
-    # end HACK
-
     command = input.group(1).strip()
     if input.admin:
         # we're admin
@@ -336,14 +326,12 @@ def gitserver(phenny, input):
         # running at the moment
         if command == "stop":
             if httpd is not None:
-                stopserver(phenny)
-                phenny.say("Server has stopped on port %s" % PORT)
+                teardown(phenny)
             else:
                 phenny.reply("Server is already down!")
         elif command == "start":
             if httpd is None:
                 setup_server(phenny)
-                phenny.say("Server is up and running on port %s" % PORT)
             else:
                 phenny.reply("Server is already up!")
         elif command == "status":

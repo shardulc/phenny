@@ -106,7 +106,7 @@ nightnight.priority = 'low'
 
 def uderp(phenny, input):
    """when people talk about #u_dep"""
-   message = random.choice(['\o/ UD \o/', '（。々°） #u_dep', 'ᕕ(ᐛ)ᕗ #u_dep', 'universal derpendencies!'])
+   message = random.choice(['\o/ UD \o/', '（。々°） #u_dep', 'ᕕ(ᐛ)ᕗ #u_dep', 'universal derpendencies!', 'treegrams ftw!'])
    whouser = input.nick
    if not whouser:
       phenny.say(message)

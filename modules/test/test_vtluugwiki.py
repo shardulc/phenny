@@ -22,7 +22,7 @@ class TestVtluugwiki(unittest.TestCase):
         self.input.groups.return_value = ['', "VT-Wireless"]
         vtluugwiki.vtluug(self.phenny, self.input)
         out = self.phenny.say.call_args[0][0]
-        m = re.match('^.* - https:\/\/vtluug\.org\/wiki\/VT-Wireless$',
+        m = re.search(r'https://vtluug[.]org/wiki/VT-Wireless',
                 out, flags=re.UNICODE)
         self.assertTrue(m)
 

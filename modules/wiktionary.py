@@ -26,7 +26,7 @@ r_template1 = re.compile(r'{{.+?\|(.+?)}}')
 r_template2 = re.compile(r'{{(.+?)}}')
 r_sqrbracket = re.compile(r'\[.+?\]')
 
-def text(html): 
+def text(html):
     text = r_li.sub('', html).strip()
     text = r_img.sub('', text)
     text = r_link1.sub(r'\1', text)
@@ -38,7 +38,7 @@ def text(html):
     text = r_sqrbracket.sub('', text)
     return text
 
-def wiktionary(phenny, word): 
+def wiktionary(phenny, word):
     bytes = web.get(wikiapi.format(web.quote(word)))
     pages = json.loads(bytes)
     pages = pages['query']['pages']
@@ -52,41 +52,45 @@ def wiktionary(phenny, word):
     mode = None
     etymology = None
     definitions = {}
-    for line in result.splitlines(): 
+    for line in result.splitlines():
         if line == '===Etymology===':
             mode = 'etymology'
-        elif '=Noun=' in line: 
+        elif '=Noun=' in line:
             mode = 'noun'
-        elif '=Verb=' in line: 
+        elif '=Verb=' in line:
             mode = 'verb'
-        elif '=Adjective=' in line: 
+        elif '=Adjective=' in line:
             mode = 'adjective'
-        elif '=Adverb=' in line: 
+        elif '=Adverb=' in line:
             mode = 'adverb'
-        elif '=Interjection=' in line: 
+        elif '=Interjection=' in line:
             mode = 'interjection'
-        elif '=Particle=' in line: 
+        elif '=Particle=' in line:
             mode = 'particle'
-        elif '=Preposition=' in line: 
+        elif '=Preposition=' in line:
             mode = 'preposition'
         elif mode == 'etymology':
             etymology = text(line)
-        
-        if mode is not None and "#" in line and "#:" not in line:
+
+        # in wiki markup format
+        # '#' is an ordered list (used for definition entires)
+        # '#*' is an unordered list within an ordered list (used for listing quotations)
+        # '#:' is an indented line (used for quotations themselves)
+        if mode is not None and "#" in line and "#:" not in line and "#*" not in line:
             definitions.setdefault(mode, []).append(text(line))
 
-        if '====Synonyms====' in line: 
+        if '====Synonyms====' in line:
             break
 
     return etymology, definitions
-    
+
 def get_between(strSource, strStart, strEnd): #get first string between 2 other strings
     try:
         parse = strSource.split(strStart, 2)[1]
         parse = parse[:parse.find(strEnd)]
     except:
         parse = None
-    return parse 
+    return parse
 
 def get_between_all(strSource, strStart, strEnd): #get all the strings between the 2 strings
     list = []
@@ -115,7 +119,7 @@ def etymology(phenny, word):
         ety_value = ety_value.replace('from ', '← ')
         ety_value = word + ": " + ety_value.replace(".", '') + "."
         ety_value = r_sqrbracket.sub('', ety_value)
-        
+
         if len(ety_value) > 300:
             ety_value = ety_value[:295] + " [...]"
     except:
@@ -123,13 +127,13 @@ def etymology(phenny, word):
     return ety_value
 
 
-parts = ('preposition', 'particle', 'noun', 'verb', 
+parts = ('preposition', 'particle', 'noun', 'verb',
     'adjective', 'adverb', 'interjection')
 
-def format(word, definitions, number=2): 
+def format(word, definitions, number=2):
     result = '%s' % word
-    for part in parts: 
-        if part in definitions: 
+    for part in parts:
+        if part in definitions:
             defs = definitions[part][:number]
             result += ' \u2014 ' + ('%s: ' % part)
             n = ['%s. %s' % (i + 1, e.strip(' .')) for i, e in enumerate(defs)]
@@ -137,37 +141,39 @@ def format(word, definitions, number=2):
     return result.strip(' .,')
 
 
-def wikitionary_lookup(phenny, word, to_user=None):
+def wikitionary_lookup(phenny, word, to_user=None, suggests=True):
     etymology, definitions = wiktionary(phenny, word)
 
     if definitions:
         result = format(word, definitions)
-        if len(result) < 150: 
+        if len(result) < 150:
             result = format(word, definitions, 3)
-        if len(result) < 150: 
+        if len(result) < 150:
             result = format(word, definitions, 5)
-            
+
         result = result.replace('|_|', ' ').replace('|', ' ')
 
-        if len(result) > 300: 
+        if len(result) > 300:
             result = result[:295] + '[...]'
         if to_user:
             phenny.say(to_user+", "+result)
         else:
             phenny.say(result)
-    else:
+    elif suggests:
         apiResponse = json.loads(str(web.get(wikisearchapi.format(word))))
         if 'suggestion' in apiResponse['query']['searchinfo']:
             word = apiResponse['query']['searchinfo']['suggestion']
             phenny.say("Perhaps you meant %s?" % repr(word))
+            wikitionary_lookup(phenny, word, to_user, False)
         elif len(apiResponse['query']['search']):
             word = apiResponse['query']['search'][0]['title']
             phenny.say("Perhaps you meant %s?" % repr(word))
+            wikitionary_lookup(phenny, word, to_user, False)
         else:
             phenny.say("Couldn't find any definitions for %s." % word)
 
 
-def w(phenny, input): 
+def w(phenny, input):
     """Look up a word on Wiktionary. (supports pointing)"""
     if not input.group(2):
         return phenny.reply("Nothing to define.")
@@ -181,7 +187,7 @@ def w(phenny, input):
     if matched_point:
         to_nick = matched_point.groups()[0]
         word2 = matched_point.groups()[1]
-        
+
         wikitionary_lookup(phenny, word2, to_user=to_nick)
         return
 
@@ -210,19 +216,19 @@ w3.rule = r'\.(w)(\.[a-z]{2,3})?\s(.*)\s(->|→)\s(\S*)'
 w3.example = '.w Seppuku -> svineet'
 
 
-def ety(phenny, input): 
+def ety(phenny, input):
     """Find the etymology of a word."""
     if not input.group(2):
         return phenny.reply("Nothing to define.")
     word = input.group(2)
     ety_val = ''
     ety_val = etymology(phenny, word)
-    if not ety_val or ety_val == word + ' .': 
+    if not ety_val or ety_val == word + ' .':
         phenny.say("Couldn't get any etymology for %s." % word)
         return
     phenny.say(text(ety_val))
 ety.commands = ['ety']
 ety.example = '.ety bailiwick'
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     print(__doc__.strip())

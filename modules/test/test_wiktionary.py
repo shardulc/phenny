@@ -37,7 +37,9 @@ class TestWiktionary(unittest.TestCase):
         word = 'boook'
         self.input.group.return_value = word
         wiktionary.w(self.phenny, self.input)
-        self.phenny.say.assert_called_once_with('Perhaps you meant \'book\'?')
+        out = self.phenny.say.call_args_list
+        self.assertEqual('Perhaps you meant \'book\'?', out[0][0][0])
+        self.assertTrue(re.match(r'^book — noun:', out[1][0][0], flags=re.UNICODE))
         self.phenny.say.reset_mock()
 
         word = 'vnuericjnrfu'

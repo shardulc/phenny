@@ -7,34 +7,37 @@ Licensed under the Eiffel Forum License 2.
 http://inamidst.com/phenny/
 """
 
-import sys, os.path, time, importlib
+import sys, os.path, time, imp
 
-def f_reload(phenny, input): 
-    """Reloads a module, for use by admins only.""" 
+def f_reload(phenny, input):
+    """Reloads a module, for use by admins only."""
     if not input.admin: return
 
     name = input.group(2)
-    if name == phenny.config.owner: 
+    if name == phenny.config.owner:
         return phenny.reply('What?')
 
-    if (not name) or (name == '*'): 
+    if (not name) or (name == '*'):
         phenny.variables = None
         phenny.commands = None
         phenny.setup()
         return phenny.reply('done')
 
-    if name not in sys.modules: 
+    if name not in sys.modules:
         return phenny.reply('%s: no such module!' % name)
     module = sys.modules[name]
 
     # Thanks to moot for prodding me on this
     path = module.__file__
-    if path.endswith('.pyc') or path.endswith('.pyo'): 
+    if path.endswith('.pyc') or path.endswith('.pyo'):
         path = path[:-1]
-    if not os.path.isfile(path): 
+    if not os.path.isfile(path):
         return phenny.reply('Found %s, but not the source file' % name)
 
-    importlib._bootstrap._exec(module.__spec__, module) # because importlib.reload() has a bug, cause unknown
+    if hasattr(module, 'teardown'):
+        module.teardown(phenny)
+    module = imp.load_source(name, path)
+    sys.modules[name] = module
     if hasattr(module, 'setup'):
         module.setup(phenny)
 
@@ -50,5 +53,5 @@ f_reload.rule = ('$nick', ['reload'], r'(\S+)?')
 f_reload.priority = 'low'
 f_reload.thread = False
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     print(__doc__.strip())

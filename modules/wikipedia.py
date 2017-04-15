@@ -56,8 +56,9 @@ def parse_wiki_page(url, term, section = None):
             return "That subsection does not exist."
         text = text.getparent().getnext()
 
+        content_tags = ["p", "ul", "ol"]
         #a div tag may come before the text
-        while text.tag is not None and text.tag != "p":
+        while text.tag is not None and text.tag not in content_tags:
             text = text.getnext()
         url += "#" + format_term_display(section)
     else:
@@ -65,11 +66,11 @@ def parse_wiki_page(url, term, section = None):
 
         text = page.get_element_by_id('mw-content-text').find('p')
 
-    sentences = text.text_content().split(". ")   
+    sentences = [x.strip() for x in text.text_content().split(".")]
     sentence = '"' + sentences[0] + '"'
 
     maxlength = 430 - len((' - ' + url).encode('utf-8'))
-    if len(sentence.encode('utf-8')) > maxlength: 
+    if len(sentence.encode('utf-8')) > maxlength:
         sentence = sentence.encode('utf-8')[:maxlength].decode('utf-8', 'ignore')
         words = sentence[:-5].split(' ')
         words.pop()
@@ -81,9 +82,9 @@ def wikipedia(phenny, input, origterm, lang, to_user = None):
     origterm = origterm.strip()
     lang = lang.strip()
 
-    if not origterm: 
+    if not origterm:
         return phenny.say('Perhaps you meant ".wik Zen"?')
-    
+
     section = None
 
     if "#" in origterm:
@@ -99,7 +100,7 @@ def wikipedia(phenny, input, origterm, lang, to_user = None):
         error = "Can't connect to en.wikipedia.org ({0})".format(wikiuri.format(term))
         return phenny.say(error)
 
-    if result is not None: 
+    if result is not None:
         #Disregarding [0], the snippet
         url = result.split("|")[-1]
         check_posted(phenny, input, url)
@@ -115,7 +116,7 @@ def point_to(phenny, input, origterm, lang, nick):
     wikipedia(phenny, input, origterm, lang, to_user=nick)
 
 
-def wik(phenny, input): 
+def wik(phenny, input):
     """Search for something on Wikipedia (supports pointing)"""
     if "->" in input.group(3): return
     if "→" in input.group(3): return
@@ -131,10 +132,10 @@ def wik(phenny, input):
     if matched_point:
         to_nick = matched_point.groups()[0]
         origterm2 = matched_point.groups()[1]
-        
+
         point_to(phenny, input, origterm2, lang, to_nick)
         return
-    
+
     wikipedia(phenny, input, origterm, lang)
 
 wik.rule = r'\.(wik|wiki|wikipedia)(\.[a-z]{2,3})?\s(.*)'
@@ -169,7 +170,7 @@ def pointing(phenny, input):
     """ Begiak also supports pointing users to the output of other commands.
     For example, .wik India -> nick will make Begiak say:
     nick, "India, officially the Republic of India (Bhārat Gaṇarājya),
-    [18][19][c] is a country in South Asia" - https://en.wikipedia.org/wiki/India 
+    [18][19][c] is a country in South Asia" - https://en.wikipedia.org/wiki/India
     . Do .awik Begiak for more information on supported commands.
     """
     pass
@@ -177,5 +178,5 @@ def pointing(phenny, input):
 pointing.commands = ['pointing']
 
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     print(__doc__.strip())

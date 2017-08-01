@@ -25,10 +25,12 @@ def scrape_incubator_list():
 	resp = web.get(url)
 	h = html.document_fromstring(resp)
 	for row in h.find_class('wikitable')[0].findall('tr')[2:]:
-		raw_name = row.findall('td')[0].find('a/b').text
-		name = ' '.join(raw_name.split(' ')[1:])
-		code = row.findall('td')[1].find('a').text.split(' ')[0][3:]
-		data[code] = (name, None)
+		rawHargle = row.findall('td')[0].find('a/b')
+		if rawHargle != None:
+			raw_name = rawHargle.text
+			name = ' '.join(raw_name.split(' ')[1:])
+			code = row.findall('td')[1].find('a').text.split(' ')[0][3:]
+			data[code] = (name, None)
 	return data
 
 def scrape_iso_3to1(d):

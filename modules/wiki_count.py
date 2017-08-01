@@ -25,7 +25,7 @@ def scrape_incubator_list():
 	resp = web.get(url)
 	h = html.document_fromstring(resp)
 	for row in h.find_class('wikitable')[0].findall('tr')[2:]:
-		rawHargle = row.findall('td')[0].find('a/b')
+		rawHargle = row.findall('td')[0].find('b/a')
 		if rawHargle != None:
 			raw_name = rawHargle.text
 			name = ' '.join(raw_name.split(' ')[1:])

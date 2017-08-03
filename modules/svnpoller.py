@@ -215,7 +215,18 @@ def pollsvn(phenny, input):
 		pollers[repo] = SVNPoller(repo, phenny.config.svn_repositories[repo])
 	for repo in phenny.config.svn_repositories:
 		#phenny.say(str(pollers[repo]))
+		allRevs = []
 		for (msg, revisions) in pollers[repo].check(global_revisions):
+			x = (msg,revisions)
+			allRevs.append(x)
+			#print("x: ", x)
+		#print("a: ", allRevs)
+		if len(allRevs) > 3:
+			toReport = [allRevs[0], ("...", {}), allRevs[-1]]
+		else:
+			toReport = allRevs
+		print('t: ', toReport)
+		for (msg, revisions) in toReport:
 			#phenny.say("NEW REVISION NUMBERS: " + str(global_revisions))
 			if msg is not None:
 				results = True

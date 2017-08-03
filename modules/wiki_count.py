@@ -25,12 +25,18 @@ def scrape_incubator_list():
 	resp = web.get(url)
 	h = html.document_fromstring(resp)
 	for row in h.find_class('wikitable')[0].findall('tr')[2:]:
-		rawHargle = row.findall('td')[0].find('b/a')
-		if rawHargle != None:
-			raw_name = rawHargle.text
-			name = ' '.join(raw_name.split(' ')[1:])
-			code = row.findall('td')[1].find('a').text.split(' ')[0][3:]
-			data[code] = (name, None)
+		#raw_name = row.findall('td')[0].find('a/b')
+		raw_name = row.findall('td')[0].find('*/a/b').text
+		#print(raw_name)
+		name = ' '.join(raw_name.split(' ')[1:])
+		raw_name2 = row.findall('td')[1].text
+		if raw_name2 is not None:
+			name += " ("+raw_name2+")"
+		#print(name)
+		#code = row.findall('td')[1].find('a').text.split(' ')[0][3:]
+		code = row.findall('td')[0].findall('*/a')[-1].text.split('/')[1]
+		#print(code)
+		data[code] = (name, None)
 	return data
 
 def scrape_iso_3to1(d):
@@ -56,7 +62,7 @@ def wiki_response(info, lg):
 	else:
 		url = 'http://incubator.wikimedia.org/wiki/Wp/' + lg
 		resp = web.get('http://incubator.wikimedia.org/wiki/Template:Wp/{}/NUMBEROFARTICLES'.format(lg))
-		num_articles = int(html.document_fromstring(resp).get_element_by_id('mw-content-text').find('p/a').text.replace(',', ''))
+		num_articles = int(html.document_fromstring(resp).get_element_by_id('mw-content-text').find('*/p/a').text.replace(',', ''))
 		response = 'The {} ({}) Wikipedia is incubated and has {:,} articles. {}'.format(
 			info[0], lg, num_articles, url)
 	return response

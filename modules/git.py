@@ -201,8 +201,15 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                                 .format(repo, user, action, number, comment, url))
             elif event == 'push':
                 for commit in data['commits']:
-                    msgs.append(self.return_data("github", data, commit) + ' ' +
-                                commit['url'][:commit['url'].rfind('/') + 7])
+                    non_trunc = '{:}: {:} * {:}:  {:}'.format(
+                        data['repository']['name'], data['pusher']['name'],
+                        ', '.join(commit['modified'] + commit['added']),
+                        commit['url'][:commit['url'].rfind('/') + 7])
+                    msgs.append('{:}: {:} * {:}: {:} {:}'.format(
+                        data['repository']['name'], data['pusher']['name'],
+                        ', '.join(commit['modified'] + commit['added']),
+                        truncate(non_trunc, commit['message']),
+                        commit['url'][:commit['url'].rfind('/') + 7]))
             elif event == 'release':
                 tag = data['release']['tag_name']
                 action = data['action']

@@ -228,8 +228,11 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 msgs.append('repository {:} added to team {:} {:}'
                             .format(name, team))
             elif event == 'ping':
-                org = data['organization']
-                sender = data['sender']
+                if 'organization' in data:
+                    org = data['organization']
+                else:
+                    org = "no org specified!"
+                sender = data['sender']['login']
                 msgs.append('ping from {:}, org: {:}'
                             .format(sender, org))
             else:
@@ -272,6 +275,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         for msg in msgs:
             if msg:
                 if hasattr(self.phenny.config, 'git_channels') and repo in self.phenny.config.git_channels:
+                    self.phenny.bot.msg("firespeaker", "DEBUG" + repr(msg))
                     for chan in self.phenny.config.git_channels[repo]:
                         self.phenny.bot.msg(chan, msg)
                 else:

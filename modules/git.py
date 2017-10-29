@@ -157,9 +157,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 url = data['issue']['html_url']
                 opt = ''
                 if data['issue']['assignee']:
-                    opt = 'to ' + data['issue']['assignee']
+                    opt += 'assigned to ' + data['issue']['assignee']['login']
                 elif 'label' in data:
-                    opt = 'with ' + data['label']['name']
+                    opt += 'with ' + data['label']['name']
                 msgs.append('{:}: {:} * issue #{:} "{:}" {:} {:} {:}'
                             .format(repo, user, number, title, action, opt, url))
             elif event == 'member':

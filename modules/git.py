@@ -275,14 +275,13 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         for msg in msgs:
             if msg:
                 if hasattr(self.phenny.config, 'git_channels') and repo in self.phenny.config.git_channels:
-                    self.phenny.bot.msg("firespeaker", "DEBUG" + repr(msg))
                     for chan in self.phenny.config.git_channels[repo]:
                         self.phenny.bot.msg(chan, msg)
                 else:
                     for chan in self.phenny.config.channels:
                         self.phenny.bot.msg(chan, msg)
 
-        # send OK code and notify firespeaker
+        # send OK code
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()

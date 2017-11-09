@@ -57,7 +57,7 @@ def greeting(phenny, input):
 
     if ("[m]" in input.nick):
         ChangeMatrix = "consider removing [m] from your IRC nick!  http://wiki.apertium.org/wiki/IRC/Matrix#Remove_.5Bm.5D_from_your_IRC_nick for more"
-        phenny.say(input.nick + ": " + ChangeMatrix)
+        phenny.msg(input.nick, input.nick + ": " + ChangeMatrix)
     
 greeting.conn = None
 greeting.conndb = None

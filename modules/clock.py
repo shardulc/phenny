@@ -286,14 +286,16 @@ def scrape_wiki_zones():
                 if ctz.find('/')!=-1:
                     ctz=ctz[ctz.find('/')+1:]
             if tmr==5:
-                ctu=tds.find('a').text
-                if ctu[ctu.find(':')+1]=='0':
-                    ctu=ctu[:ctu.find(':')]
-                else:
-                    ctu=ctu[:ctu.find(':')]+'.5'
-                if ctu[0]=='−':
-                    ctu='-'+ctu[1:]
-                data[ctz.upper()]=float(ctu)
+                ctuFind=tds.find('a')
+                if ctuFind != None:
+                    ctu = ctuFind.text
+                    if ctu[ctu.find(':')+1]=='0':
+                        ctu=ctu[:ctu.find(':')]
+                    else:
+                        ctu=ctu[:ctu.find(':')]+'.5'
+                    if ctu[0]=='−':
+                        ctu='-'+ctu[1:]
+                    data[ctz.upper()]=float(ctu)
                                     
     return data
 

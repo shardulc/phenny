@@ -10,12 +10,16 @@ http://inamidst.com/phenny/
 import json
 import web
 
+API_KEY = None
 
 def imdb_search(query): 
     query = query.replace('!', '')
     query = query.encode('utf-8')
     query = web.quote(query)
-    uri = 'http://www.omdbapi.com/?i=&t=%s' % query
+    if API_KEY is not None:
+        uri = 'http://www.omdbapi.com/?apikey=%s?i=&t=%s' % (API_KEY, query)
+    else:
+        uri = 'http://www.omdbapi.com/?i=&t=%s' % query
     bytes = web.get(uri)
     m = json.loads(bytes)
     return m

@@ -11,6 +11,7 @@ import os
 import re
 import socketserver
 import time
+import atexit
 from tools import generate_report
 import urllib.parse
 import web
@@ -24,6 +25,13 @@ MAX_MSG_LEN = 430
 # module-global variables
 Handler = None
 httpd = None
+
+
+def close_socket():
+    if not httpd is None:
+        httpd.server_close()
+
+atexit.register(close_socket)
 
 
 def truncate(non_trunc, trunc):
@@ -80,39 +88,79 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed_params = urllib.parse.urlparse(self.path)
         query_parsed = urllib.parse.parse_qs(parsed_params.query)
-        self.send_response(403)
+        self.send_response(405)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
 
     def do_POST(self):
         '''Handles POST requests for all hooks.'''
 
-        # read and decode data
-        print('payload received; headers: '+str(self.headers))
-        length = int(self.headers['Content-Length'])
-        indata = self.rfile.read(length)
-        post_data = urllib.parse.parse_qs(indata.decode('utf-8'))
-        if len(post_data) == 0:
-            post_data = indata.decode('utf-8')
-        if "payload" in post_data:
-            data = json.loads(post_data['payload'][0])
-        else:
-            data = json.loads(post_data)
+        try:
+            # read and decode data
+            print('payload received; headers: '+str(self.headers))
+            length = int(self.headers['Content-Length'])
+            indata = self.rfile.read(length)
+            post_data = urllib.parse.parse_qs(indata.decode('utf-8'))
 
+            if len(post_data) == 0:
+                post_data = indata.decode('utf-8')
+            if "payload" in post_data:
+                data = json.loads(post_data['payload'][0])
+            else:
+                data = json.loads(post_data)
+        except Exception as error:
+            print('Error 400 (no valid payload)')
+            print(error)
+
+            self.send_response(400)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+
+            for chan in self.phenny.config.channels:
+                self.phenny.msg(chan, 'Webhook received malformed payload')
+
+            return
+
+        try:
+            self.do_POST_unsafe(data)
+        except Exception as error:
+            try:
+                commits = [commit['url'] for commit in data['commits']]
+                print('Error 501 (commits were ' + ', '.join(commits) + ')')
+            except:
+                print('Error 501 (commits unknown or malformed)')
+
+            print(str(data))
+            print(error)
+
+            self.send_response(501)
+            self.send_header("Content-type", "text/html")
+            self.end_headers()
+
+            for chan in self.phenny.config.channels:
+                self.phenny.msg(chan, 'Webhook received problematic payload')
+
+    def do_POST_unsafe(self, data):
         # msgs will contain both commit reports and error reports
         msgs = []
         repo = ''
+
         # handle GitHub triggers
         if 'GitHub' in self.headers['User-Agent']:
             event = self.headers['X-Github-Event']
             user = data['sender']['login']
+
             if 'repository' in data:
                 repo = data['repository']['name']
             elif 'organization' in data:
                 repo = data['organization']['login'] + ' (org)'
+
             if event == 'commit_comment':
                 commit = data['comment']['commit_id'][:7]
                 url = data['comment']['html_url']
                 url = url[:url.rfind('/') + 7]
                 action = data['action']
+
                 if action == 'deleted':
                     msgs.append('{:}: {:} * comment deleted on commit {:}: {:}'
                                 .format(repo, user, commit, url))
@@ -139,8 +187,10 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     url = data['issue']['html_url']
                     text = 'issue'
+
                 number = data['issue']['number']
                 action = data['action']
+
                 if action == 'deleted':
                     msgs.append('{:}: {:} * comment deleted on {:} #{:}: {:}'
                                 .format(repo, user, text, number, url))
@@ -157,10 +207,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 action = data['action']
                 url = data['issue']['html_url']
                 opt = ''
+
                 if data['issue']['assignee']:
                     opt += 'assigned to ' + data['issue']['assignee']['login']
                 elif 'label' in data:
                     opt += 'with ' + data['label']['name']
+
                 msgs.append('{:}: {:} * issue #{:} "{:}" {:} {:} {:}'
                             .format(repo, user, number, title, action, opt, url))
             elif event == 'member':
@@ -182,14 +234,17 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                 action = data['action']
                 url = data['pull_request']['html_url']
                 opt = ''
+
                 if data['pull_request']['assignee']:
                     opt = 'to ' + data['pull_request']['assignee']
+
                 msgs.append('{:}: {:} * pull request #{:} "{:}" {:} {:} {:}'
                             .format(repo, user, number, title, action, opt, url))
             elif event == 'pull_request_review_comment':
                 number = data['pull_request']['number']
                 url = data['comment']['html_url']
                 action = data['action']
+
                 if action == 'deleted':
                     msgs.append('{:}: {:} * review comment deleted on pull request #{:}: {:}'
                                 .format(repo, user, number, url))
@@ -233,13 +288,14 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                     org = data['organization']
                 else:
                     org = "no org specified!"
+
                 sender = data['sender']['login']
                 msgs.append('ping from {:}, org: {:}'
                             .format(sender, org))
             else:
                 msgs.append('sorry, event {:} not supported yet.'.format(event))
                 msgs.append(str(data.keys()))
-#            print("DEBUG:msgs: "+str(msgs))
+
         elif 'Jenkins' in self.headers['User-Agent']:
             msgs.append('Jenkins: {}'.format(data['message']))
         # not github or Jenkins
@@ -274,18 +330,24 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         # post all messages to all channels
         # except where specified in the config
         messages = {}
+
+        has_git_channels = hasattr(self.phenny.config, 'git_channels')
+        use_git_channels = has_git_channels and repo in self.phenny.config.git_channels
+
         for msg in msgs:
-            if msg:
-                if hasattr(self.phenny.config, 'git_channels') and repo in self.phenny.config.git_channels:
-                    for chan in self.phenny.config.git_channels[repo]:
-                        if not chan in messages:
-                            messages[chan] = []
-                        messages[chan].append(msg)
-                else:
-                    for chan in self.phenny.config.channels:
-                        if not chan in messages:
-                            messages[chan] = []
-                        messages[chan].append(msg)
+            if use_git_channels:
+                for chan in self.phenny.config.git_channels[repo]:
+                    if not chan in messages:
+                        messages[chan] = []
+
+                    messages[chan].append(msg)
+            else:
+                for chan in self.phenny.config.channels:
+                    if not chan in messages:
+                        messages[chan] = []
+
+                    messages[chan].append(msg)
+
         for chan in messages.keys():
             more.add_messages(chan, self.phenny, '\n'.join(messages[chan]), break_up=lambda x, y: x.split('\n'))
 
@@ -314,6 +376,7 @@ def setup_server(phenny, input=None):
     if hasattr(phenny.config, 'MAX_MSG_LEN'):
         MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
     httpd = socketserver.TCPServer(("", PORT), Handler)
+    httpd.allow_reuse_address = True
     Thread(target=httpd.serve_forever).start()
     phenny.say("Server is up and running on port %s" % PORT)
 setup_server.rule = '(.*)'
@@ -324,6 +387,7 @@ def teardown(phenny):
     global Handler, httpd
     if httpd is not None:
         httpd.shutdown()
+        httpd.server_close()
         httpd = None
         Handler = None
         phenny.say("Server has stopped on port %s" % PORT)

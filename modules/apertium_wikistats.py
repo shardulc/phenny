@@ -3,7 +3,7 @@
 apertium_wiki.py - Phenny Apertium Wiki Stats Module
 """
 
-import requests, subprocess, shlex, os, urllib
+import requests, subprocess, shlex, os, urllib.request, urllib.error
 
 BOT = ('https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/wiki-tools/bot.py', 'apertium_wikistats_bot.py')
 LEXCCOUNTER = ('https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/lexccounter.py', 'lexccounter.py')
@@ -61,7 +61,13 @@ def awikstats(phenny, input):
             except:
                 phenny.say('Invalid .awikstats coverage command; try something like %s' % repr(awikstats.example_coverage))
                 return
-          
+            
+            try:
+                urllib.request.urlopen('http://wiki.apertium.org/wiki/Apertium-' + lang)
+            except urllib.error.HTTPError:
+                phenny.say('%s: No wiki for specified language!' % input.nick)
+                return
+
             phenny.say('%s: Calculating coverage... It may take a while, I will inform you after it\'s completed.' % input.nick)
 
             commands = shlex.split('python3 %s Immortal "%s" coverage -p %s -r "%s"' % ('bot.py', botPassword, lang, input.nick))
@@ -73,7 +79,7 @@ def awikstats(phenny, input):
             try:
                 out = stdout.splitlines()[-1].decode('utf-8').strip()
                 if out.startswith('Coverage:'):
-                    phenny.say('%s [%s]' % (out, lang))
+                    phenny.say('%s: %s [%s]' % (input.nick, out, lang))
                 else:
                     for line in stderr.splitlines():
                         phenny.msg(input.nick, line)

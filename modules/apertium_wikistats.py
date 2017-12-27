@@ -60,7 +60,7 @@ def awikstats(phenny, input):
                 lang = rawInput.split(' ')[2].strip()
             except:
                 phenny.say('Invalid .awikstats coverage command; try something like %s' % repr(awikstats.example_coverage))
-            return
+                return
 
             try:
                 urllib.request.urlopen('http://wiki.apertium.org/wiki/Apertium-' + lang)

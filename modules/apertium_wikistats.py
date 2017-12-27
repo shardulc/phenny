@@ -55,13 +55,13 @@ def awikstats(phenny, input):
     elif option == 'coverage':
         global IS_COVERAGE_RUNNING
 
-        try:
-            lang = rawInput.split(' ')[2].strip()
-        except:
-            phenny.say('Invalid .awikstats coverage command; try something like %s' % repr(awikstats.example_coverage))
+        if IS_COVERAGE_RUNNING == '':
+            try:
+                lang = rawInput.split(' ')[2].strip()
+            except:
+                phenny.say('Invalid .awikstats coverage command; try something like %s' % repr(awikstats.example_coverage))
             return
 
-        if IS_COVERAGE_RUNNING == '':
             try:
                 urllib.request.urlopen('http://wiki.apertium.org/wiki/Apertium-' + lang)
             except urllib.error.HTTPError:
@@ -87,7 +87,7 @@ def awikstats(phenny, input):
                 for line in stderr.splitlines():
                     phenny.msg(input.nick, line)
         else:
-            phenny.say('%s: Sorry, there is already %s coverage running, try again after it\'s completed!' % (input.nick, lang))
+            phenny.say('%s: Sorry, there is already %s coverage running, try again after it\'s completed!' % (input.nick, IS_COVERAGE_RUNNING))
     else:
         phenny.say('Invalid .awikstats option: %s' % option)
         return

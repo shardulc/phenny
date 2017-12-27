@@ -11,7 +11,7 @@ LEXCCOUNTER = ('https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/lexc
 BOT_AUTOCOVERAGE = ('/bot_autocoverage.py', 'bot_autocoverage.py')
 AUTOCOVERAGE = ('https://svn.code.sf.net/p/apertium/svn/trunk/apertium-tools/autocoverage.py', 'autocoverage.py')
 
-IS_COVERAGE_RUNNING = False
+IS_COVERAGE_RUNNING = ''
 
 def filename(name):
     return os.path.join(os.path.expanduser('~/.phenny'), name)
@@ -55,13 +55,13 @@ def awikstats(phenny, input):
     elif option == 'coverage':
         global IS_COVERAGE_RUNNING
 
-        if not IS_COVERAGE_RUNNING:
-            try:
-                lang = rawInput.split(' ')[2].strip()
-            except:
-                phenny.say('Invalid .awikstats coverage command; try something like %s' % repr(awikstats.example_coverage))
-                return
-            
+        try:
+            lang = rawInput.split(' ')[2].strip()
+        except:
+            phenny.say('Invalid .awikstats coverage command; try something like %s' % repr(awikstats.example_coverage))
+            return
+
+        if IS_COVERAGE_RUNNING == '':
             try:
                 urllib.request.urlopen('http://wiki.apertium.org/wiki/Apertium-' + lang)
             except urllib.error.HTTPError:
@@ -71,10 +71,10 @@ def awikstats(phenny, input):
             phenny.say('%s: Calculating coverage... It may take a while, I will inform you after it\'s completed.' % input.nick)
 
             commands = shlex.split('python3 %s Immortal "%s" coverage -p %s -r "%s"' % ('bot.py', botPassword, lang, input.nick))
-            IS_COVERAGE_RUNNING = True
+            IS_COVERAGE_RUNNING = lang
             process = subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=filename(''))
             stdout, stderr = process.communicate()
-            IS_COVERAGE_RUNNING = False
+            IS_COVERAGE_RUNNING = ''
 
             try:
                 out = stdout.splitlines()[-1].decode('utf-8').strip()
@@ -87,7 +87,7 @@ def awikstats(phenny, input):
                 for line in stderr.splitlines():
                     phenny.msg(input.nick, line)
         else:
-            phenny.say('%s: Sorry, there can be only one coverage running!' % input.nick)
+            phenny.say('%s: Sorry, there is already %s coverage running, try again after it\'s completed!' % (input.nick, lang))
     else:
         phenny.say('Invalid .awikstats option: %s' % option)
         return

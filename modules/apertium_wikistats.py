@@ -17,7 +17,7 @@ def filename(name):
     return os.path.join(os.path.expanduser('~/.phenny'), name)
 
 def setup(phenny):
-    for files in [BOT, LEXCCOUNTER]:
+    for files in [BOT, LEXCCOUNTER, AUTOCOVERAGE]:
         r = requests.get(files[0])
         if r.status_code == 200:
             with open(filename(files[1]), 'wb') as f:
@@ -70,7 +70,7 @@ def awikstats(phenny, input):
 
             phenny.say('%s: Calculating coverage... It may take a while, I will inform you after it\'s completed.' % input.nick)
 
-            commands = shlex.split('python3 %s Immortal "%s" coverage -p %s -r "%s"' % ('bot.py', botPassword, lang, input.nick))
+            commands = shlex.split('python3 %s Immortal "%s" coverage -p %s -r "%s"' % (BOT[1], botPassword, lang, input.nick))
             IS_COVERAGE_RUNNING = lang
             process = subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=filename(''))
             stdout, stderr = process.communicate()

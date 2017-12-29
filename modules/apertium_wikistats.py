@@ -28,7 +28,7 @@ def awikstats(phenny, input):
     """Issue commands to the Apertium Stem Counter Bot."""
     
     
-    if stemCounterBotPassword is not in self.config:
+    if stemCounterBotPassword not in self.config:
         phenny.say('Bot password not set; set it in default.py')
         return
     botPassword = self.config.stemCounterBotPassword

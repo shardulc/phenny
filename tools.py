@@ -13,11 +13,86 @@ import re
 import urllib.request, urllib.parse, urllib.error, json
 import requests
 import web
+import itertools
 from time import time
 
 headers = {
    'User-Agent': 'Mozilla/5.0' + '(X11; U; Linux i686)' + 'Gecko/20071127 Firefox/2.0.0.11'
 }
+
+# maximum message length (see msg() in irc.py)
+# overriden if MAX_MSG_LEN exists in the config
+# TODO: make this a global for all modules
+MAX_MSG_LEN = 430
+
+def setup(self):
+    global MAX_MSG_LEN
+
+    if hasattr(phenny.config, 'MAX_MSG_LEN'):
+        MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
+
+def break_up(text, max_length=MAX_MSG_LEN, max_count=None):
+    if isinstance(text, str):
+        try:
+            text = text.encode('utf-8')
+        except UnicodeEncodeError as error:
+            print(error)
+            return [error.__class__ + ': ' + str(error)]
+
+    if len(text) <= max_length:
+        return [text.decode('utf-8', 'ignore')]
+
+    parts = []
+
+    while len(text) > max_length:
+        # We want to add "..." to last message so we leave place for it
+        if max_count and len(parts) == max_count - 1:
+            max_length -= 3
+
+        space_index = text.rfind(b' ', 0, max_length)
+        newline_index = text.rfind(b'\n', 0, max_length)
+        offset = 0
+
+        if space_index == -1 and newline_index == -1:
+            msg_break = max_length
+        elif space_index > newline_index:
+            msg_break = space_index
+            offset = 1
+        else:
+            msg_break = newline_index
+
+        message = text[:msg_break]
+        text = text[msg_break + offset:]
+
+        # We want to add "..." to last message
+        if max_count and len(parts) == max_count - 1:
+            message += b"..."
+            text = b''
+
+        parts.append(message.decode('utf-8', 'ignore'))
+
+    if text:
+        parts.append(text.decode('utf-8', 'ignore'))
+
+    return parts
+
+def truncate(text, max_length=MAX_MSG_LEN, extra_space=0):
+    max_length -= extra_space
+
+    if text <= max_length:
+        return text
+
+    max_length -= 3
+
+    space_index = text.rfind(' ', 0, max_length)
+    newline_index = text.rfind('\n', 0, max_length)
+
+    if space_index == -1 and newline_index == -1:
+        return text[:max_length] + '...'
+    elif space_index > newline_index:
+        return text[:space_index] + '...'
+    else:
+        return text[:newline_index] + '...'
 
 class GrumbleError(Exception):
     pass
@@ -43,7 +118,7 @@ def generate_report(repo, author, comment, modified_paths, added_paths, removed_
         comment = "No commit message provided!"
     else:
         comment = re.sub("[\n\r]+", " ␍ ", comment.strip())
-    
+
     basepath = os.path.commonprefix(paths)
     print(basepath)
     if len(basepath) > 0:
@@ -51,7 +126,7 @@ def generate_report(repo, author, comment, modified_paths, added_paths, removed_
             basepath = basepath.split("/")
             basepath.pop()
             basepath = '/'.join(basepath) + "/"
-        
+
     text_paths = []
     if len(paths) > 0:
         for path in paths:
@@ -89,7 +164,7 @@ def generate_report(repo, author, comment, modified_paths, added_paths, removed_
     #else: final_path = "empty"
     #if final_path is None: final_path = "empty"
 
-    
+
 def get_page(domain, url, encoding='utf-8', port=80): #get the HTML of a webpage.
     conn = http.client.HTTPConnection(domain, port, timeout=60)
     conn.request("GET", url, headers=headers)
@@ -116,7 +191,7 @@ def translate(phenny, translate_me, input_lang, output_lang='en'):
         response = get_page(self.phenny.config.translate_url, '/translate?q=%s&langpair=%s|%s' % (translate_me, input_lang, output_lang))
     else:
         response = get_page('apy.projectjj.com', '/translate?q=%s&langpair=%s|%s' % (translate_me, input_lang, output_lang), port=2737)	
-    
+
     responseArray = json.loads(response)
     if int(responseArray['responseStatus']) != 200:
         raise GrumbleError('APIerrorHttp' % (responseArray['responseStatus'], responseArray['responseDetails']))
@@ -125,6 +200,6 @@ def translate(phenny, translate_me, input_lang, output_lang='en'):
 
     translated_text = responseArray['responseData']['translatedText']
     return translated_text
-    
+
 if __name__ == '__main__': 
     print(__doc__.strip())

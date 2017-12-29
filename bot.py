@@ -57,6 +57,8 @@ class Phenny(irc.Bot):
                         if n.endswith('.py') and not n.startswith('_'): 
                             filenames.append(os.path.join(fn, n))
 
+        tools.setup(self)
+
         modules = []
         excluded_modules = getattr(self.config, 'exclude', [])
         for filename in filenames: 
@@ -89,7 +91,7 @@ class Phenny(irc.Bot):
 
     def bind_commands(self): 
         self.commands = {'high': {}, 'medium': {}, 'low': {}}
-        
+
         def bind(self, priority, regexp, func): 
             print(priority, regexp.pattern.encode('utf-8'), func)
             # register documentation

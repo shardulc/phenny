@@ -26,7 +26,7 @@ def setup(phenny):
 
 def awikstats(phenny, input):
     """Issue commands to the Apertium Stem Counter Bot."""
-    
+
     botPassword = None
     if stemCounterBotPassword not in phenny.config.stemCounterBotPassword
         phenny.say('Bot password not set; set it in default.py')
@@ -39,7 +39,7 @@ def awikstats(phenny, input):
     except:
         phenny.say('Invalid .awikstats command; try something like %s' % repr(awikstats.example_update))
         return
-    
+
     if option == 'update':
         try:
             langs = ''.join(rawInput.split(' ')[2:]).split(',')
@@ -50,7 +50,7 @@ def awikstats(phenny, input):
         commands = shlex.split('python3 %s StemCounterBot "%s" dict -p %s -r "%s"' % (BOT[1], botPassword, ' '.join(langs), input.nick))
         process = subprocess.Popen(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=filename(''))
         stdout, stderr = process.communicate()
-        
+
         for line in stderr.splitlines():
             phenny.msg(input.nick, line)
     elif option == 'coverage':

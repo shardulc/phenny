@@ -87,7 +87,7 @@ def apertium_translate(phenny, input):
                 phenny.say('{:s}-{:s}: {:s}'.format(input_lang, output_lang, str(err)))
                 return
         phenny.reply(web.decode(translated))
-    
+
 apertium_translate.name = 't'
 apertium_translate.commands = ['t']
 apertium_translate.example = '.t en-es|es-fr en-ca I like pie'
@@ -172,12 +172,11 @@ def apertium_analyse(phenny, input):
 
     jobj = json.loads(response.decode('utf-8'))
     messages = []
+
     for analysis, original in jobj:
         messages.append(original + '  →  ' + analysis)
 
-    more.add_messages(input.nick, phenny,
-                      '\n'.join(messages),
-                      break_up=lambda x, y: x.split('\n'))
+    more.add_messages(input.nick, phenny, messages)
 
 apertium_analyse.name = 'analyse'
 apertium_analyse.commands = ['analyse', 'analyze']
@@ -200,10 +199,11 @@ def apertium_generate(phenny, input):
 
     jobj = json.loads(response.decode('utf-8'))
     messages = []
+
     for generation, original in jobj:
         messages.append(original + '  →  ' + generation)
 
-    more.add_messages(input.nick, phenny, '\n'.join(messages), break_up=lambda x, y: x.split('\n'))
+    more.add_messages(input.nick, phenny, messages)
 
 apertium_generate.name = 'generate'
 apertium_generate.commands = ['generate']
@@ -226,9 +226,11 @@ def apertium_identlang(phenny, input):
         handle_error(error)
 
     messages = []
+
     for key, value in jsdata.items():
         messages.append(key + ' = ' + str(value))
-    more.add_messages(input.nick, phenny, '\n'.join(messages), break_up=lambda x, y: x.split('\n'))
+
+    more.add_messages(input.nick, phenny, messages)
 
 apertium_identlang.name = 'identlang'
 apertium_identlang.commands = ['identlang']

@@ -111,7 +111,7 @@ def give_time(phenny, tz, input_nick, to_user=None):
         else:
             phenny.reply(msg)
         skip=True
-    
+
     if skip ==False:
         if (TZ == 'UTC') or (TZ == 'Z'):
             msg = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
@@ -178,7 +178,7 @@ def f_time(phenny, input):
         return
 
     give_time(phenny, tz, input.nick)
-    
+
 f_time.name = 'time'
 f_time.commands = ['time']
 f_time.example = '.time UTC or .time point nick GMT or nick: .time GMT or '+\
@@ -226,7 +226,7 @@ def scrape_wiki_zones():
     for row in table.findall('tr')[1:]:
         code = row.findall('td')[0].text
         offset = row.findall('td')[2].find('a').text[3:]
-        offset = offset.replace('−', '-') # replacing minus sign with hyphen
+        offset = offset.replace('−', '-') # replacing hyphen with minus sign
         if offset.find(':') > 0:
             offset = int(offset.split(':')[0]) + int(offset.split(':')[1]) / 60
         else:
@@ -273,30 +273,36 @@ def scrape_wiki_zones():
     #                data[ctz.upper()]=float(ctu)
     #            else:
     #                break
+
     url = 'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
-    resp = web.get(url)
-    h = html.document_fromstring(resp)
-    table = h.find_class('wikitable')[0]
-    for trs in table.findall('tr'):
-        tmr=0
-        for tds in trs.findall('td'):
-            tmr=tmr+1
-            if tmr==3:
-                ctz=tds.find('a').text[tds.find('a').text.find('/')+1:].replace('_',' ')
-                if ctz.find('/')!=-1:
-                    ctz=ctz[ctz.find('/')+1:]
-            if tmr==5:
-                ctuFind=tds.find('a')
-                if ctuFind != None:
-                    ctu = ctuFind.text
-                    if ctu[ctu.find(':')+1]=='0':
-                        ctu=ctu[:ctu.find(':')]
-                    else:
-                        ctu=ctu[:ctu.find(':')]+'.5'
-                    if ctu[0]=='−':
-                        ctu='-'+ctu[1:]
-                    data[ctz.upper()]=float(ctu)
-                                    
+    doc = html.document_fromstring(web.get(url))
+    table = doc.find_class('wikitable')[0]
+
+    column_names = [cell.text.replace('*', '') for cell in table.findall('th')]
+
+    for row in table.findall('tr'):
+        column = 0
+
+        for cell in row.findall('td'):
+            if column == column_names.find('TZ'):
+                text = cell.find('a').text
+                text = text.replace('_', ' ').replace('−', '-')
+
+                name = text.split('/')[-1]
+
+            elif column == column_names.find('UTC offset'):
+                text = cell.find('a').text
+                text = text.replace('_', ' ').replace('−', '-')
+
+                if text[text.find(':') + 1] == '0':
+                    text = text[:text.find(':')]
+                else:
+                    text = text[:text.find(':')] + '.5'
+
+                data[name.upper()] = float(text)
+
+            column += 1
+
     return data
 
 def filename(phenny):
@@ -439,7 +445,7 @@ def time_zone_convert(phenny, input_txt, to_user=None):
             if (from_tz_match == "") or (to_tz_match == ""):
                 phenny.reply("Please enter valid time zone(s) :P")
                 return
-                
+
         time_hours = int(int(regex_match.groups()[0])/100)
         time_mins = int(regex_match.groups()[0])%100
         if (time_hours >= 24) or (time_hours < 0) or (time_mins >= 60) or (time_mins < 0):
@@ -475,7 +481,7 @@ def time_zone_convert(phenny, input_txt, to_user=None):
 
 def tz(phenny, input):
     """Usage: .tz <time><from timezone> in <destination> - Convert time to destination zone. (supports pointing)"""
-    
+
     input_txt = input.group(2)
     if not input_txt:
         phenny.reply(tz.__doc__.strip())
@@ -489,12 +495,12 @@ def tz(phenny, input):
     if matched_point:
         to_nick = matched_point.groups()[0]
         input_txt2 = matched_point.groups()[1]
-        
+
         time_zone_convert(phenny, input_txt2, to_user=to_nick)
         return
 
     time_zone_convert(phenny, input_txt)
-    
+
 
 tz.commands = ['tz']
 tz.priority = 'high'

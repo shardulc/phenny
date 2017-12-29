@@ -12,16 +12,14 @@ import re
 import socketserver
 import time
 import atexit
-from tools import generate_report
+from tools import generate_report, truncate
 import urllib.parse
 import web
 from modules import more
 
 # githooks port
 PORT = 1234
-# maximum message length (see msg() in irc.py)
-# overriden if MAX_MSG_LEN exists in the config
-MAX_MSG_LEN = 430
+
 # module-global variables
 Handler = None
 httpd = None
@@ -32,12 +30,6 @@ def close_socket():
         httpd.server_close()
 
 atexit.register(close_socket)
-
-
-def truncate(non_trunc, trunc):
-    while len(non_trunc + trunc) > MAX_MSG_LEN:
-        trunc = trunc[:trunc.rfind(' ')] + '...'
-    return trunc
 
 
 # githooks handler
@@ -165,12 +157,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                     msgs.append('{:}: {:} * comment deleted on commit {:}: {:}'
                                 .format(repo, user, commit, url))
                 else:
+                    template = '{:}: {:} * comment {:} on commit {:}: {:} {:}'
                     comment = truncate(
-                        '{:}: {:} * comment {:} on commit {:}:  {:}'
-                        .format(repo, user, action, commit, url),
-                        data['comment']['body'])
-                    msgs.append('{:}: {:} * comment {:} on commit {:}: {:} {:}'
-                                .format(repo, user, action, commit, comment, url))
+                        template.format(repo, user, action, commit, '', url),
+                        data['comment']['body']
+                    )
+                    msgs.append(template.format(repo, user, action, commit, comment, url))
             elif event == 'create' or event == 'delete':
                 ref = data['ref']
                 type_ = data['ref_type']
@@ -195,12 +187,12 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                     msgs.append('{:}: {:} * comment deleted on {:} #{:}: {:}'
                                 .format(repo, user, text, number, url))
                 else:
+                    template = '{:}: {:} * comment {:} on {:} #{:}: {:} {:}'
                     comment = truncate(
-                        '{:}: {:} * comment {:} on {:} #{:}:  {:}'
-                        .format(repo, user, action, text, number, url),
-                        data['comment']['body'])
-                    msgs.append('{:}: {:} * comment {:} on {:} #{:}: {:} {:}'
-                                .format(repo, user, action, text, number, comment, url))
+                        template.format(repo, user, action, text, number, '', url),
+                        data['comment']['body']
+                    )
+                    msgs.append(template.format(repo, user, action, text, number, comment, url))
             elif event == 'issues':
                 number = data['issue']['number']
                 title = data['issue']['title']
@@ -249,23 +241,22 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                     msgs.append('{:}: {:} * review comment deleted on pull request #{:}: {:}'
                                 .format(repo, user, number, url))
                 else:
+                    template = '{:}: {:} * review comment {:} on pull request #{:}: {:} {:}'
                     comment = truncate(
-                        '{:}: {:} * review comment {:} on pull request #{:}:  {:}'
-                        .format(repo, user, action, number, url),
-                        data['comment']['body'])
-                    msgs.append('{:}: {:} * review comment {:} on pull request #{:}: {:} {:}'
-                                .format(repo, user, action, number, comment, url))
+                        template.format(repo, user, action, number, '', url),
+                        data['comment']['body']
+                    )
+                    msgs.append(template.format(repo, user, action, number, comment, url))
             elif event == 'push':
                 for commit in data['commits']:
-                    non_trunc = '{:}: {:} * {:}:  {:}'.format(
+                    template = '{:}: {:} * {:}: {:} {:}'
+                    non_trunc = template.format(
                         data['repository']['name'], data['pusher']['name'],
                         ', '.join(commit['modified'] + commit['added']),
-                        commit['url'][:commit['url'].rfind('/') + 7])
-                    msgs.append('{:}: {:} * {:}: {:} {:}'.format(
-                        data['repository']['name'], data['pusher']['name'],
-                        ', '.join(commit['modified'] + commit['added']),
-                        truncate(non_trunc, commit['message']),
-                        commit['url'][:commit['url'].rfind('/') + 7]))
+                        '{:}',
+                        commit['url'][:commit['url'].rfind('/') + 7]
+                    )
+                    msgs.append(non_trunc.format(truncate(non_trunc.format(''), commit['message']))
             elif event == 'release':
                 tag = data['release']['tag_name']
                 action = data['action']
@@ -349,7 +340,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
                     messages[chan].append(msg)
 
         for chan in messages.keys():
-            more.add_messages(chan, self.phenny, '\n'.join(messages[chan]), break_up=lambda x, y: x.split('\n'))
+            more.add_messages(chan, self.phenny, messages[chan])
 
         # send OK code
         self.send_response(200)
@@ -370,11 +361,9 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 def setup_server(phenny, input=None):
     '''Set up and start hooks server.'''
 
-    global Handler, httpd, MAX_MSG_LEN
+    global Handler, httpd
     Handler = MyHandler
     Handler.phenny = phenny
-    if hasattr(phenny.config, 'MAX_MSG_LEN'):
-        MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
     httpd = socketserver.TCPServer(("", PORT), Handler)
     httpd.allow_reuse_address = True
     Thread(target=httpd.serve_forever).start()
@@ -489,7 +478,7 @@ def get_recent_commit(phenny, input):
         msg = generate_report(repo, *info)
         # the URL is truncated so that it has at least 6 sha characters
         url = url[:url.rfind('/') + 7]
-        phenny.say('{:s} {:s}'.format(truncate(' ' + url, msg), url))
+        phenny.say('{:s} {:s}'.format(truncate(msg, extra_space=len(' ' + url)), url))
 # command metadata and invocation
 get_recent_commit.rule = ('$nick', 'recent')
 get_recent_commit.priority = 'medium'
@@ -525,6 +514,6 @@ def retrieve_commit(phenny, input):
     msg = generate_report(repo, *info)
     # the URL is truncated so that it has at least 6 sha characters
     url = url[:url.rfind('/') + 7]
-    phenny.say('{:s} {:s}'.format(truncate(' ' + url, msg), url))
+    phenny.say('{:s} {:s}'.format(truncate(msg, extra_space=len(' ' + url)), url))
 # command metadata and invocation
 retrieve_commit.rule = ('$nick', 'info(?: +(.*))')

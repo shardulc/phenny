@@ -7,10 +7,11 @@ author: mattr555 <mattramina@gmail.com>
 import threading
 import imaplib
 import email
+from email.header import decode_header
 from email.utils import parsedate_tz
 import datetime
 import re
-import quopri
+from tools import truncate
 
 def configured(phenny):
     return all(hasattr(phenny.config, i) for i in ['imap_server', 'imap_user', 'imap_pass', 'mailing_lists'])
@@ -56,17 +57,15 @@ def login(phenny):
         phenny.msg(phenny.config.owner, 'IMAP connection/auth failed :(')
 
 def format_email(e, list_name):
-    try:
-        subject = quopri.decodestring(e['Subject']).replace('['+list_name.capitalize()+'] ', '')
-    except:
-        subject =  e['Subject'].replace('['+list_name.capitalize()+'] ', '')
-    #message = '{}: {} * {} * {}'.format(list_name, obfuscate_address(e['From']), e['Subject'].replace('['+list_name.capitalize()+'] ', ''), strip_reply_lines(e))
-    #message = '{}: {}: {}'.format(list_name, obfuscate_address(e['From']), e['Subject'].replace('['+list_name.capitalize()+'] ', ''))
+    subject = e['Subject']
+    subject = re.sub(r"(=\?.*\?=)(?!$)", r"\1 ", subject)
+    subject = ''.join([unicode(t[0], t[1] or 'utf-8') for t in decode_header(subject)])
+    subject = subject.replace('['+list_name.capitalize()+'] ', '')
+
+    # message = '{}: {} * {} * {}'.format(list_name, obfuscate_address(e['From']), subject, strip_reply_lines(e))
     message = '{}: {}: {}'.format(list_name, obfuscate_address(e['From']), subject)
-    if len(message) > 400:
-        return message[:395] + '[...]'
-    else:
-        return message
+
+    return truncate(message)
 
 def check_mail(phenny):
     found = False

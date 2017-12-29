@@ -10,6 +10,7 @@ http://inamidst.com/phenny/
 import sys, re, time, traceback
 import socket, asyncore, asynchat
 import ssl
+from tools import break_up, MAX_MSG_LEN
 
 
 class Origin(object): 
@@ -68,13 +69,17 @@ class Bot(asynchat.async_chat):
 
     def write(self, args, text=None): 
         """This is a safe version of __write"""
+
         def safe(input): 
             if type(input) == str:
-                input = input.replace('\n', '')
-                input = input.replace('\r', '')
+                input = input.replace('\r\n', '\n')
+                input = re.sub(' ?(\r|\n)+', ' ', input)
                 return input.encode('utf-8')
             else:
+                input = input.replace(b'\r\n', b'\n')
+                input = re.sub(b' ?(\r|\n)+', b' ', input)
                 return input
+
         try: 
             args = [safe(arg) for arg in args]
             if text is not None: 
@@ -173,41 +178,22 @@ class Bot(asynchat.async_chat):
         self.sending.acquire()
 
         # Cf. http://swhack.com/logs/2006-03-01#T19-43-25
-        if isinstance(text, str): 
+        if isinstance(text, str):
             try: text = text.encode('utf-8')
-            except UnicodeEncodeError as e: 
-                text = e.__class__ + ': ' + str(e)
-        if isinstance(recipient, str): 
+            except UnicodeEncodeError as error:
+                print(error)
+                text = error.__class__ + ': ' + str(error)
+        if isinstance(recipient, str):
             try: recipient = recipient.encode('utf-8')
-            except UnicodeEncodeError as e: 
+            except UnicodeEncodeError as error:
+                print(error)
                 return
 
         # Split long messages
-        maxlength = 430
-        max_messages_count = 3
-        if len(text) > maxlength:
-            for i in range(max_messages_count):
-                # We want to add "..." to last message so we leave place for it
-                if i == max_messages_count-1:
-                    maxlength=maxlength-3
-                message = text[0:maxlength].decode('utf-8','ignore')
-                line_break = len(message)
-                space_found = 0
-                for j in range(len(message)-1,-1,-1):
-                    if message[j] == " ":
-                        line_break = j
-                        space_found = 1
-                        break
-                message = text.decode('utf-8','ignore')[0:line_break]
-                # We want to add "..." to last message
-                if i == max_messages_count-1:
-                    message = message + "..."
-                    text = b''
+        if len(text) > MAX_MSG_LEN:
+            for message in break_up(text, max_count=3):
                 self.msg(recipient, message)
-                text=text.decode('utf-8','ignore')[line_break+space_found:].encode('utf-8')
-                if len(text) <= maxlength:
-                    self.msg(recipient,text.decode('utf-8','ignore'))
-                    break
+
             self.sending.release()
             return
 
@@ -229,12 +215,7 @@ class Bot(asynchat.async_chat):
                 self.sending.release()
                 return
 
-        def safe(input): 
-            if type(input) == str:
-                input = input.encode('utf-8')
-            input = input.replace(b'\n', b'')
-            return input.replace(b'\r', b'')
-        self.__write((b'PRIVMSG', safe(recipient)), safe(text))
+        self.write((b'PRIVMSG', recipient), text)
         self.stack.append((time.time(), text))
         self.stack = self.stack[-10:]
 

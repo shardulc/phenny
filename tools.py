@@ -28,8 +28,8 @@ MAX_MSG_LEN = 430
 def setup(self):
     global MAX_MSG_LEN
 
-    if hasattr(phenny.config, 'MAX_MSG_LEN'):
-        MAX_MSG_LEN = phenny.config.MAX_MSG_LEN
+    if hasattr(self.config, 'MAX_MSG_LEN'):
+        MAX_MSG_LEN = self.config.MAX_MSG_LEN
 
 def break_up(text, max_length=MAX_MSG_LEN, max_count=None):
     if isinstance(text, str):

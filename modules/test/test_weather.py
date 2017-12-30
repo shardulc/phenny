@@ -28,18 +28,19 @@ class TestWeather(unittest.TestCase):
             return validate
 
         locations = [
-            ('92121', check_places("San Diego", "California")),
-            ('94110', check_places("SF", "California")),
-            ('94041', check_places("Mountain View", "California")),
-            ('27959', check_places("Dare County", "North Carolina")),
-            ('48067', check_places("Royal Oak", "Michigan")),
-            ('23606', check_places("Newport News", "Virginia")),
-            ('23113', check_places("Robious", "Virginia")),
-            ('27517', check_places("Chapel Hill", "North Carolina")),
-            ('15213', check_places("Allegheny County", "Pennsylvania")),
-            ('90210', check_places("LA", "California")),
-            ('33109', check_places("Fisher Island", "Florida")),
-            ('80201', check_places("Denver", "Colorado")),
+            # commented because the names keep changing, see goavki #305
+#            ('92121', check_places("San Diego", "California")),
+#            ('94110', check_places("SF", "California")),
+#            ('94041', check_places("Mountain View", "California")),
+#            ('27959', check_places("Dare County", "North Carolina")),
+#            ('48067', check_places("Royal Oak", "Michigan")),
+#            ('23606', check_places("Newport News", "Virginia")),
+#            ('23113', check_places("Robious", "Virginia")),
+#            ('27517', check_places("Chapel Hill", "North Carolina")),
+#            ('15213', check_places("Allegheny County", "Pennsylvania")),
+#            ('90210', check_places("LA", "California")),
+#            ('33109', check_places("Fisher Island", "Florida")),
+#            ('80201', check_places("Denver", "Colorado")),
 
             ("Berlin", check_places("Berlin", "Deutschland")),
             ("Paris", check_places("Paris", "Île-de-France")),

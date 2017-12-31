@@ -28,7 +28,7 @@ class TestCalc(unittest.TestCase):
     def test_c_none(self):
         self.input.group.return_value = 'aif'
         c(self.phenny, self.input)
-        self.phenny.reply.assert_called_once_with('Sorry, no result.')
+        self.phenny.say.assert_called_once_with('Sorry, no result.')
 
     def test_c_equation(self):
         self.input.group.return_value = '4*x+4=x*5'

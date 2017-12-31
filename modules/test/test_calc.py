@@ -12,10 +12,6 @@ from tools import is_up
 class TestCalc(unittest.TestCase):
 
     def setUp(self):
-        self.skipTest('This module will be rewritten.')
-
-        if not is_up('https://duckduckgo.com'):
-            self.skipTest('DuckDuckGo is down, skipping test.')
         self.phenny = MagicMock()
         self.input = MagicMock()
 
@@ -29,12 +25,12 @@ class TestCalc(unittest.TestCase):
         c(self.phenny, self.input)
         self.phenny.say.assert_called_once_with('2')
 
-    def test_c_scientific(self):
-        self.input.group.return_value = '2^64'
-        c(self.phenny, self.input)
-        self.phenny.say.assert_called_once_with('1.84467440737096 * 10^19')
-
     def test_c_none(self):
         self.input.group.return_value = 'aif'
         c(self.phenny, self.input)
         self.phenny.reply.assert_called_once_with('Sorry, no result.')
+
+    def test_equation(self):
+        self.input.group.return_value = '4*x+4=x*5'
+        c(self.phenny, self.input)
+        self.phenny.say.assert_called_once_with('4')

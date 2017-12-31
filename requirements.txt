@@ -6,3 +6,4 @@ feedparser
 humanize
 coverage
 google-api-python-client
+sympy

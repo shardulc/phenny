@@ -10,40 +10,60 @@ http://inamidst.com/phenny/
 
 import re
 import web
-
-subs = [
-    ('£', 'GBP '),
-    ('€', 'EUR '),
-    ('\$', 'USD '),
-    (r'\n', '; '),
-    ('&deg;', '°'),
-    (r'\/', '/'),
-]
-
+import sympy
+import re
 
 def c(phenny, input):
-    """DuckDuckGo calculator."""
     if not input.group(2):
         return phenny.reply("Nothing to calculate.")
-    q = input.group(2)
+    calc = input.group(2)
 
-    try:
-        r = web.get(
-            'https://api.duckduckgo.com/?q={}&format=json&no_html=1'
-            '&t=mutantmonkey/phenny'.format(web.quote(q)))
-    except web.HTTPError:
-        raise GrumbleError("Couldn't parse the result from DuckDuckGo.")
+    if '=' in calc:
+        calc = calc.replace(' ', '')
+        calc = re.sub(r"((?:\d+)|(?:[a-zA-Z]\w*\(\w+\)))((?:[a-zA-Z]\w*)|\()", r"\1*\2", calc)
 
-    data = web.json(r)
-    if data['AnswerType'] == 'calc':
-        answer = data['Answer'].split('=')[-1].strip()
+        left, right = calc.split('=')
+        calc = left + '-(' + right + ')'
+        try:
+            result = sympy.solve(calc)
+        except:
+            return phenny.say('Sorry, no result.')
+
     else:
-        answer = None
+        try:
+            result = sympy.sympify(calc)
+        except:
+            return phenny.say('Sorry, no result.')
 
-    if answer:
-        phenny.say(answer)
+    res = ''
+    more = False
+    if type(result) is list and len(result) > 1:
+        if type(result[0]) is not dict:
+            more = True
+            for element in result:
+                res += str(sympy.N(element)) + ', '
+            res = res[:-2]
+            res = '[' + res + ']'
+    elif type(result) is list and len(result) == 1:
+        result = result[0]
+
+    if more is not True:
+        try:
+            result = str(float(result))
+            if result.endswith('.0'):
+                result = str(int(float(result)))
+        except:
+            result = str(result)
+            if result.isalpha():
+                return phenny.say('Sorry, no result.')
+
+        if result:
+            phenny.say(result)
+        else:
+            return phenny.say('Sorry, no result.')
     else:
-        phenny.reply('Sorry, no result.')
+        phenny.say(res)
+    
 c.commands = ['c']
 c.example = '.c 5 + 3'
 
@@ -57,30 +77,6 @@ def py(phenny, input):
    else: phenny.reply('Sorry, no result.')
 py.commands = ['py']
 py.example = '.py if not False: print "hello world!"'
-
-def wa(phenny, input): 
-    """Query Wolfram Alpha."""
-
-    if not input.group(2):
-        return phenny.reply("No search term.")
-    query = input.group(2)
-
-    re_output = re.compile(r'{"stringified": "(.*?)",')
-
-    uri = 'http://www.wolframalpha.com/input/?i={}'
-    out = web.get(uri.format(web.quote(query)))
-    answers = re_output.findall(out)
-    if len(answers) <= 0:
-        phenny.reply("Sorry, no result.")
-        return
-
-    answer = answers[1]
-    for sub in subs:
-        answer = answer.replace(sub[0], sub[1])
-
-    phenny.say(answer)
-wa.commands = ['wa']
-wa.example = '.wa answer to life'
 
 if __name__ == '__main__':
     print(__doc__.strip())

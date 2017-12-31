@@ -10,6 +10,7 @@ http://inamidst.com/phenny/
 
 import re
 import web
+import sympy
 
 subs = [
     ('£', 'GBP '),
@@ -22,28 +23,36 @@ subs = [
 
 
 def c(phenny, input):
-    """DuckDuckGo calculator."""
     if not input.group(2):
         return phenny.reply("Nothing to calculate.")
-    q = input.group(2)
+    calc = input.group(2)
 
-    try:
-        r = web.get(
-            'https://api.duckduckgo.com/?q={}&format=json&no_html=1'
-            '&t=mutantmonkey/phenny'.format(web.quote(q)))
-    except web.HTTPError:
-        raise GrumbleError("Couldn't parse the result from DuckDuckGo.")
+    if '=' in calc:
+        calc = calc.replace(' ', '')
+        symbols = ''
+        for c in calc:
+            if c.isalpha() and c not in symbols:
+                symbols += c + ' '
+        symbols = symbols[:-1]
 
-    data = web.json(r)
-    if data['AnswerType'] == 'calc':
-        answer = data['Answer'].split('=')[-1].strip()
+        left, right = calc.split('=')
+        calc = left + '-(' + right + ')'
+        try:
+            result = str(float(sympy.solve(calc, sympy.Symbol(symbols))[0]))
+        except:
+            return phenny.say('Sorry, no result.')
+
     else:
-        answer = None
+        try:
+            result = str(float(sympy.sympify(calc)))
+        except:
+            return phenny.say('Sorry, no result.')
 
-    if answer:
-        phenny.say(answer)
+    if result:
+        phenny.say(result)
     else:
         phenny.reply('Sorry, no result.')
+    
 c.commands = ['c']
 c.example = '.c 5 + 3'
 

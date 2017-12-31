@@ -11,16 +11,7 @@ http://inamidst.com/phenny/
 import re
 import web
 import sympy
-
-subs = [
-    ('£', 'GBP '),
-    ('€', 'EUR '),
-    ('\$', 'USD '),
-    (r'\n', '; '),
-    ('&deg;', '°'),
-    (r'\/', '/'),
-]
-
+import re
 
 def c(phenny, input):
     if not input.group(2):
@@ -29,29 +20,49 @@ def c(phenny, input):
 
     if '=' in calc:
         calc = calc.replace(' ', '')
-        symbols = ''
-        for c in calc:
-            if c.isalpha() and c not in symbols:
-                symbols += c + ' '
-        symbols = symbols[:-1]
+        calc = re.sub(r"((?:\d+)|(?:[a-zA-Z]\w*\(\w+\)))((?:[a-zA-Z]\w*)|\()", r"\1*\2", calc)
 
         left, right = calc.split('=')
         calc = left + '-(' + right + ')'
         try:
-            result = str(float(sympy.solve(calc, sympy.Symbol(symbols))[0]))
+            result = sympy.solve(calc)
         except:
             return phenny.say('Sorry, no result.')
 
     else:
         try:
-            result = str(float(sympy.sympify(calc)))
+            result = sympy.sympify(calc)
         except:
             return phenny.say('Sorry, no result.')
 
-    if result:
-        phenny.say(result)
+    res = ''
+    more = False
+    if type(result) is list and len(result) > 1:
+        if type(result[0]) is not dict:
+            more = True
+            for element in result:
+                res += str(sympy.N(element)) + ', '
+            res = res[:-2]
+            res = '[' + res + ']'
+    elif type(result) is list and len(result) == 1:
+        result = result[0]
+
+    if more is not True:
+        try:
+            result = str(float(result))
+            if result.endswith('.0'):
+                result = str(int(float(result)))
+        except:
+            result = str(result)
+            if result.isalpha():
+                return phenny.say('Sorry, no result.')
+
+        if result:
+            phenny.say(result)
+        else:
+            return phenny.say('Sorry, no result.')
     else:
-        phenny.reply('Sorry, no result.')
+        phenny.say(res)
     
 c.commands = ['c']
 c.example = '.c 5 + 3'
@@ -66,30 +77,6 @@ def py(phenny, input):
    else: phenny.reply('Sorry, no result.')
 py.commands = ['py']
 py.example = '.py if not False: print "hello world!"'
-
-def wa(phenny, input): 
-    """Query Wolfram Alpha."""
-
-    if not input.group(2):
-        return phenny.reply("No search term.")
-    query = input.group(2)
-
-    re_output = re.compile(r'{"stringified": "(.*?)",')
-
-    uri = 'http://www.wolframalpha.com/input/?i={}'
-    out = web.get(uri.format(web.quote(query)))
-    answers = re_output.findall(out)
-    if len(answers) <= 0:
-        phenny.reply("Sorry, no result.")
-        return
-
-    answer = answers[1]
-    for sub in subs:
-        answer = answer.replace(sub[0], sub[1])
-
-    phenny.say(answer)
-wa.commands = ['wa']
-wa.example = '.wa answer to life'
 
 if __name__ == '__main__':
     print(__doc__.strip())

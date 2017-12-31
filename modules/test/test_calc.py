@@ -30,7 +30,12 @@ class TestCalc(unittest.TestCase):
         c(self.phenny, self.input)
         self.phenny.reply.assert_called_once_with('Sorry, no result.')
 
-    def test_equation(self):
+    def test_c_equation(self):
         self.input.group.return_value = '4*x+4=x*5'
         c(self.phenny, self.input)
         self.phenny.say.assert_called_once_with('4')
+
+    def test_c_sin(self):
+        self.input.group.return_value = 'log(90)'
+        c(self.phenny, self.input)
+        self.phenny.say.assert_called_once_with('4.499809670330265')

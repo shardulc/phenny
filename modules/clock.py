@@ -278,20 +278,20 @@ def scrape_wiki_zones():
     url = 'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones'
     doc = html.document_fromstring(web.get(url))
     table = doc.find_class('wikitable')[0]
+    rows = table.findall('tr')
+    column_names = [cell.text.replace('*', '') for cell in rows[0].findall('th')]
 
-    column_names = [cell.text.replace('*', '') for cell in table.findall('th')]
-
-    for row in table.findall('tr'):
+    for row in rows[1:]:
         column = 0
 
         for cell in row.findall('td'):
-            if column == column_names.find('TZ'):
+            if column == column_names.index('TZ'):
                 text = cell.find('a').text
                 text = text.replace('_', ' ').replace('−', '-')
 
                 name = text.split('/')[-1]
 
-            elif column == column_names.find('UTC offset'):
+            elif column == column_names.index('UTC offset'):
                 text = cell.find('a').text
                 text = text.replace('_', ' ').replace('−', '-')
 

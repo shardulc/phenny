@@ -287,13 +287,13 @@ def scrape_wiki_zones():
         column = 0
 
         for cell in row.findall('td'):
-            if column == column_names.find('TZ'):
+            if column == column_names.index('TZ'):
                 text = cell.find('a').text
                 text = text.replace('_', ' ').replace('−', '-')
 
                 name = text.split('/')[-1]
 
-            elif column == column_names.find('UTC offset'):
+            elif column == column_names.index('UTC offset'):
                 text = cell.find('a').text
                 text = text.replace('_', ' ').replace('−', '-')
 

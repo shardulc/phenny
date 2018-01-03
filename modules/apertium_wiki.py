@@ -80,10 +80,10 @@ def apertium_wiki(phenny, input, origterm, to_nick=None):
         check_posted(phenny, input, wikiuri.format(format_term_display(term)))
 
     if to_nick:
-        sentence = truncate(sentence, to_nick + ', ' + ' - ' + wikiuri.format(format_term_display(term)).encode('utf-8'))
+        sentence = truncate(sentence, to_nick + ', ' + ' - ' + wikiuri.format(format_term_display(term)))
         phenny.say(to_nick + ', ' + sentence + ' - ' + wikiuri.format(format_term_display(term)))
     else:
-        sentence = truncate(sentence, ' - ' + wikiuri.format(format_term_display(term)).encode('utf-8'))
+        sentence = truncate(sentence, ' - ' + wikiuri.format(format_term_display(term)))
         phenny.say(sentence + ' - ' + wikiuri.format(format_term_display(term)))
 
 

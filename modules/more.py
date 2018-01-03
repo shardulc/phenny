@@ -4,31 +4,45 @@ more.py - Message Buffer Interface
 Author - mandarj
 """
 
-from tools import break_up
+import sqlite3
+from tools import break_up, DatabaseCursor, db_path, max_message_length
 
 def setup(self):
-    self.messages = {}
+    self.more_db = db_path(self, 'more')
 
-def add_messages(target, phenny, msgs):
-    if not type(msgs) is list:
-        msgs = [msgs]
+    connection = sqlite3.connect(self.more_db)
+    cursor = connection.cursor()
+
+    cursor.execute('''CREATE TABLE IF NOT EXISTS more (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        target     VARCHAR(255),
+        message    VARCHAR({max_msg_len})
+    );'''.format(max_msg_len=max_message_length))
+
+    cursor.close()
+    connection.close()
+
+def add_messages(target, phenny, messages):
+    if not type(messages) is list:
+        messages = [messages]
 
     if not target in phenny.config.channels:
-        msgs = list(map(lambda msg: target + ': ' + msg, msgs))
+        messages = list(map(lambda message: target + ': ' + message, messages))
 
-    msgs = sum(map(lambda msg: break_up(msg), msgs), [])
+    messages = sum(map(lambda message: break_up(message), messages), [])
 
-    if len(msgs) <= 2:
-        for msg in msgs:
-            phenny.msg(target, msg)
+    if len(messages) <= 2:
+        for message in messages:
+            phenny.msg(target, message)
     else:
-        phenny.msg(target, msgs.pop(0))
-        phenny.msg(target, 'you have ' + str(len(msgs)) + ' more message(s). Please type ".more" to view them.')
+        phenny.msg(target, messages.pop(0))
+        phenny.msg(target, 'you have ' + str(len(messages)) + ' more message(s). Please type ".more" to view them.')
 
-        if target.casefold() in phenny.messages:
-            phenny.messages[target.casefold()].extend(msgs)
-        else:
-            phenny.messages[target.casefold()] = msgs
+        target = target.casefold()
+
+        with DatabaseCursor(phenny.more_db) as cursor:
+            values = [(target, message) for message in messages]
+            cursor.executemany("INSERT INTO more (target, message) VALUES (?, ?)", values)
 
 def more(phenny, input):
     ''' '.more N' prints the next N messages.
@@ -47,30 +61,45 @@ more.name = 'more'
 more.rule = r'[.]more(?: ([1-9][0-9]*))?'
 
 def has_more(phenny, target):
-    return target.casefold() in phenny.messages.keys()
+    target = target.casefold()
+
+    with DatabaseCursor(phenny.more_db) as cursor:
+        cursor.execute("SELECT COUNT(*) FROM more WHERE target=?", (target,))
+        return cursor.fetchone()[0] > 0
 
 def show_more(phenny, sender, target, count):
     target = target.casefold()
-    remaining = len(phenny.messages[target])
 
-    if count > remaining:
-        count = remaining
+    with DatabaseCursor(phenny.more_db) as cursor:
+        cursor.execute("SELECT id, message FROM more WHERE target=? ORDER BY id ASC LIMIT ?", (target, count))
+        rows = cursor.fetchall()
 
-    remaining -= count
+        cursor.executemany("DELETE FROM more WHERE id=?", [(row[0],) for row in rows])
 
-    if count > 1:
-        for _ in range(count):
-            phenny.msg(sender, phenny.messages[target].pop(0))
+        cursor.execute("SELECT COUNT(*) FROM more WHERE target=?", (target,))
+        remaining = cursor.fetchone()[0]
+
+    messages = [row[1] for row in rows]
+
+    if len(messages) > 1:
+        for message in messages:
+            phenny.msg(sender, message)
 
         if remaining > 0:
             phenny.msg(sender, str(remaining) + " message(s) remaining")
     else:
-        msg = phenny.messages[target].pop(0)
+        message = messages[0]
 
         if remaining > 0:
-            phenny.msg(sender, msg + " (" + str(remaining) + " remaining)")
+            phenny.msg(sender, message + " (" + str(remaining) + " remaining)")
         else:
-            phenny.msg(sender, msg)
+            phenny.msg(sender, message)
 
-    if remaining == 0:
-        del phenny.messages[target]
+def delete_all(phenny, target=None):
+
+    with DatabaseCursor(phenny.more_db) as cursor:
+        if target:
+            target = target.casefold()
+            cursor.execute("DELETE FROM more WHERE target=?", (target,))
+        else:
+            cursor.execute("DELETE FROM more")

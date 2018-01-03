@@ -10,10 +10,12 @@ http://inamidst.com/phenny/
 import http.client
 import os
 import re
-import urllib.request, urllib.parse, urllib.error, json
+import urllib.request, urllib.parse, urllib.error
+import json
 import requests
 import web
 import itertools
+import sqlite3
 import logging
 from time import time
 
@@ -33,6 +35,27 @@ def setup(self):
 
     if hasattr(self.config, 'max_message_length'):
         max_message_length = self.config.max_message_length
+
+def db_path(self, name):
+    filename = self.nick + '-' + self.config.host + '.' + name + '.db'
+    return os.path.join(os.path.expanduser('~/.phenny'), filename)
+
+class DatabaseCursor():
+    def __init__(self, path):
+        self.path = path
+
+    def __enter__(self):
+        self.connection = sqlite3.connect(
+            self.path,
+            detect_types=sqlite3.PARSE_DECLTYPES,
+            isolation_level=None
+        )
+        self.cursor = self.connection.cursor()
+        return self.cursor
+
+    def __exit__(self, *args):
+        self.cursor.close()
+        self.connection.close()
 
 def encodeIfNot(text):
     if isinstance(text, str):

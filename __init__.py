@@ -43,7 +43,7 @@ def run_phenny(config):
         delay = config.delay
     else:
         delay = 20
-
+        
     try:
         Watcher()
     except Exception as error:
@@ -52,6 +52,7 @@ def run_phenny(config):
     try:
         import bot
         p = bot.Phenny(config)
+        p.use_sasl = config.sasl
     except KeyboardInterrupt:
         sys.exit()
 

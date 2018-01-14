@@ -5,13 +5,12 @@ author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 import unittest
 from mock import MagicMock
 from modules import archwiki
-from tools import is_up
+from web import catch_timeouts
 
 
+@catch_timeouts
 class TestArchwiki(unittest.TestCase):
     def setUp(self):
-        if not is_up('https://wiki.archlinux.org'):
-            self.skipTest('ArchWiki is down, skipping test.')
         self.phenny = MagicMock()
         self.input = MagicMock()
 

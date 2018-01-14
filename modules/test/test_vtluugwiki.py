@@ -6,15 +6,15 @@ import re
 import unittest
 from mock import MagicMock
 from modules import vtluugwiki
-from tools import is_up
+from web import catch_timeouts
 
 
 # these tests are probably skipped because the vtluug.org website appears to be
 # permanently down
+@catch_timeouts
 class TestVtluugwiki(unittest.TestCase):
+
     def setUp(self):
-        if not is_up('https://vtluug.org/wiki'):
-            self.skipTest('VTLUUG wiki is down, skipping test.')
         self.phenny = MagicMock()
         self.input = MagicMock()
 

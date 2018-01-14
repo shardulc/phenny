@@ -5,18 +5,15 @@ author: mutantmonkey <mutantmonkey@mutantmonkey.in>
 """
 import re
 import unittest
-import tools
 from mock import MagicMock
 from modules import tfw
-from tools import is_up
+from web import catch_timeouts
 
 
+@catch_timeouts
 class TestTfw(unittest.TestCase):
+
     def setUp(self):
-        if not is_up('https://nominatim.openstreetmap.org'):
-            self.skipTest('OpenStreetMap API is down, skipping test.')
-        if not is_up('http://tgftp.nws.noaa.gov'):
-            self.skipTest('NOAA weather data unavailable, skipping test.')
         self.phenny = MagicMock()
         self.input = MagicMock()
 

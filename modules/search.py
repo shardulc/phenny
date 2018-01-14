@@ -9,10 +9,10 @@ http://inamidst.com/phenny/
 
 import re
 import web
-import json
 import requests
-from tools import is_up, truncate
+from tools import truncate
 from modules import more
+from web import catch_timeout, is_up, REQUEST_TIMEOUT
 
 ddg_uri = 'https://api.duckduckgo.com/?format=json&pretty=1&q='
 suggest_uri = 'http://suggestqueries.google.com/complete/search?client=firefox&hl=en&q='
@@ -29,7 +29,7 @@ def topics(phenny, input):
         return phenny.reply('.topics about what?')
     query = input.group(2)
 
-    r = requests.get(ddg_uri + query).json()
+    r = requests.get(ddg_uri + query, timeout=REQUEST_TIMEOUT).json()
     topics = r['RelatedTopics']
     if len(topics) == 0:
         return phenny.say('Sorry, no topics found.')
@@ -53,7 +53,7 @@ def search(phenny, input):
     if not is_up('https://api.duckduckgo.com'):
         return phenny.say('Sorry, DuckDuckGo API is down.')
 
-    r = requests.get(ddg_uri + query).json()
+    r = requests.get(ddg_uri + query, timeout=REQUEST_TIMEOUT).json()
     try:
         answer = r['AbstractText']
         answer_url = r['AbstractURL']

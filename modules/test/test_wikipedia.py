@@ -6,10 +6,12 @@ import re
 import unittest
 from mock import MagicMock
 from modules import wikipedia, posted
-from tools import is_up
+from web import catch_timeouts
 
 
+@catch_timeouts
 class TestWikipedia(unittest.TestCase):
+
     def makegroup(*args):
         args2 = [] + list(args)
         def group(x):
@@ -20,8 +22,6 @@ class TestWikipedia(unittest.TestCase):
         return group
 
     def setUp(self):
-        if not is_up('https://en.wikipedia.org'):
-            self.skipTest('Wikipedia is down, skipping test.')
         self.phenny = MagicMock(variables=['posted'], nick='phenny')
         self.phenny.config.host = 'irc.freenode.net'
         posted.DB_DIR = '.'

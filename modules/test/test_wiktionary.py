@@ -7,13 +7,13 @@ import re
 import unittest
 from mock import MagicMock
 from modules import wiktionary
-from tools import is_up
+from web import catch_timeouts
 
 
+@catch_timeouts
 class TestWiktionary(unittest.TestCase):
+
     def setUp(self):
-        if not is_up('https://en.wiktionary.org'):
-            self.skipTest('Wiktionary is down, skipping test.')
         self.phenny = MagicMock()
         self.input = MagicMock()
 

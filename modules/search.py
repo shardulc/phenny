@@ -78,7 +78,7 @@ def suggest(phenny, input):
     suggestions = answer.json()[1][:10]
     phenny.reply(suggestions[0])
     phenny.reply('Check PM for more.')
-    more.add_messages(input.nick, phenny, suggestions[1:])
+    more.add_messages(phenny, input.nick, suggestions[1:])
 suggest.commands = ['suggest']
 
 def lmgtfy(phenny, input):

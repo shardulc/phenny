@@ -40,7 +40,7 @@ def add_messages(phenny, target, messages, tag=None):
             phenny.msg(target, message)
     else:
         phenny.msg(target, messages.pop(0))
-        phenny.msg(target, 'you have ' + str(len(messages)) + ' more message(s). Please type ".more" to view them.')
+        phenny.msg(target, 'Please type ".more" to view remaining messages.')
 
         target = target.casefold()
 
@@ -49,8 +49,9 @@ def add_messages(phenny, target, messages, tag=None):
             cursor.executemany("INSERT INTO more (target, message, tag) VALUES (?, ?, ?)", values)
 
 def more(phenny, input):
-    ''' '.more N' prints the next N messages.
-        If N is not specified, prints the next message.'''
+    ''''.more [N] [tag]' shows queued messages.
+    Optional N: number of messages to show
+    Optional tag: which messages to show (usually a module name)'''
 
     count = int(input.group(1)) if input.group(1) else 1
     tag = input.group(2)
@@ -63,7 +64,7 @@ def more(phenny, input):
         phenny.reply("No more queued messages")
 
 more.name = 'more'
-more.rule = r'[.]more(?: ([1-9][0-9]*)(?: (.*))?)?'
+more.rule = r'[.]more(?: ([1-9][0-9]*))?(?: (\S+))?'
 
 def has_more(phenny, target, tag):
     target = target.casefold()
@@ -81,7 +82,7 @@ def show_more(phenny, sender, target, count, tag):
 
     with DatabaseCursor(phenny.more_db) as cursor:
         if tag:
-            cursor.execute("SELECT id, message FROM more WHERE target=? AND tag=? ORDER BY id ASC LIMIT ?", (target, count, tag))
+            cursor.execute("SELECT id, message FROM more WHERE target=? AND tag=? ORDER BY id ASC LIMIT ?", (target, tag, count))
         else:
             cursor.execute("SELECT id, message FROM more WHERE target=? ORDER BY id ASC LIMIT ?", (target, count))
 

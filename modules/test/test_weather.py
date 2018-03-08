@@ -24,7 +24,7 @@ class TestWeather(unittest.TestCase):
             return validate
 
         locations = [
-            # commented because the names keep changing, see goavki #305
+            # commented because the names keep changing, see apertium/phenny #305
 #            ('92121', check_places("San Diego", "California")),
 #            ('94110', check_places("SF", "California")),
 #            ('94041', check_places("Mountain View", "California")),

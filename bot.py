@@ -77,11 +77,12 @@ class Phenny(irc.Bot):
             try:
                 module_loader = importlib.machinery.SourceFileLoader(name, filename)
                 module = module_loader.load_module()
+
+                if hasattr(module, 'setup'):
+                    module.setup(self)
             except Exception as e: 
                 logger.error("Error loading %s: %s (in bot.py)" % (name, e))
             else: 
-                if hasattr(module, 'setup'): 
-                    module.setup(self)
                 self.register(module)
                 modules.append(name)
 

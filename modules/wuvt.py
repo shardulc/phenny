@@ -3,6 +3,7 @@
 wuvt.py - WUVT now playing module for phenny
 """
 
+import json
 import web
 
 
@@ -11,7 +12,7 @@ def wuvt(phenny, input):
 
     data = web.get('https://www.wuvt.vt.edu/playlists/latest_track',
                    headers={'Accept': "application/json"})
-    trackinfo = web.json(data)
+    trackinfo = json.loads(data)
 
     if 'listeners' in trackinfo:
         phenny.say(

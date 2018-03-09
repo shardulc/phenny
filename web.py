@@ -6,9 +6,8 @@ About: http://inamidst.com/phenny/
 """
 
 import re
-import urllib.parse
+import urllib
 import requests
-import json as jsonlib
 import lxml.html as lhtml
 import unittest
 import inspect
@@ -129,10 +128,6 @@ def decode(html):
 r_string = re.compile(r'("(\\.|[^"\\])*")')
 r_json = re.compile(r'^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]+$')
 env = {'__builtins__': None, 'null': None, 'true': True, 'false': False}
-
-def json(text): 
-    """Evaluate JSON text safely (we hope)."""
-    return jsonlib.loads(text)
 
 if __name__=="__main__": 
     main()

@@ -1,3 +1,4 @@
+import html
 import json
 import re
 import web
@@ -20,38 +21,32 @@ t_sentence = r'^.{5,}?(?<!\b%s)(?:\.(?=[\[ ][A-Z0-9]|\Z)|\Z)'
 r_sentence = re.compile(t_sentence % r')(?<!\b'.join(abbrs))
 
 
+def clean_text(dirty):
+    dirty = r_tag.sub('', dirty)
+    dirty = r_whitespace.sub(' ', dirty)
+    return html.unescape(dirty).strip()
+
 class Wiki(object):
+
     def __init__(self, api, url, searchurl=""):
         self.api = api
         self.url = url
         self.searchurl = searchurl
 
-    @staticmethod
-    def unescape(s): 
-        s = s.replace('&gt;', '>')
-        s = s.replace('&lt;', '<')
-        s = s.replace('&amp;', '&')
-        s = s.replace('&#160;', ' ')
-        return s
-
-    @staticmethod
-    def text(html): 
-        html = r_tag.sub('', html)
-        html = r_whitespace.sub(' ', html)
-        return Wiki.unescape(html).strip()
-
     def search(self, term, last=False):
         url = self.api.format(term)
         bytes = web.get(url)
+
         try:
             result = json.loads(bytes)
             result = result['query']['search']
-            if len(result) <= 0:
-                return None
         except ValueError:
             return None
+
+        if not result:
+            return None
+
         term = result[0]['title']
         term = term.replace(' ', '_')
-        snippet = self.text(result[0]['snippet'])
+        snippet = clean_text(result[0]['snippet'])
         return "{0}|{1}".format(snippet, self.url.format(term))
-

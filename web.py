@@ -124,10 +124,3 @@ def entity(match):
 
 def decode(html): 
     return r_entity.sub(entity, html)
-
-r_string = re.compile(r'("(\\.|[^"\\])*")')
-r_json = re.compile(r'^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]+$')
-env = {'__builtins__': None, 'null': None, 'true': True, 'false': False}
-
-if __name__=="__main__": 
-    main()

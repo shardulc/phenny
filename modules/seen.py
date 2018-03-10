@@ -9,10 +9,9 @@ http://inamidst.com/phenny/
 import datetime
 import logging
 import os
-import shelve
 import sqlite3
 import time
-from tools import db_path, deprecated
+from tools import deprecated
 
 logger = logging.getLogger('phenny')
 
@@ -53,24 +52,6 @@ def f_seen(phenny, input):
 f_seen.name = 'seen'
 f_seen.example = '.seen firespeaker'
 f_seen.rule = (['seen'], r'(\S+)')
-
-@deprecated 
-def f_note(self, origin, match, args):
-    def note(self, origin, match, args):
-        if not hasattr(self.bot, 'seen'):
-            self.bot.seen = shelve.open(db_path(self, 'seen'))
-
-        if origin.sender.startswith('#'):
-            self.seen[origin.nick.lower()] = (origin.sender, time.time())
-            self.seen.sync()
-
-    try:
-        note(self, origin, match, args)
-    except Exception as error:
-        logger.error(str(error))
-
-f_note.rule = r'(.*)'
-f_note.priority = 'low'
 
 def timesince(td):
     seconds = int(abs(datetime.datetime.utcnow() - td).total_seconds())

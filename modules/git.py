@@ -35,6 +35,7 @@ def close_socket():
         httpd.server_close()
 
     httpd = None
+    MyHandler.phenny = None
 
 atexit.register(close_socket)
 
@@ -48,8 +49,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 # githooks handler
 class MyHandler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, phenny):
-        self.phenny = phenny
+    phenny = None
 
     def return_data(self, site, data, commit):
         '''Generates a report for the specified site and commit.'''
@@ -395,7 +395,8 @@ def setup_server(phenny):
     global httpd
 
     if not httpd:
-        httpd = PortReuseTCPServer(("", PORT), MyHandler(phenny))
+        MyHandler.phenny = phenny
+        httpd = PortReuseTCPServer(("", PORT), MyHandler)
         Thread(target=httpd.serve_forever).start()
 
     phenny.say("Server is up and running on port %s" % PORT)

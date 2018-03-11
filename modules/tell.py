@@ -8,13 +8,10 @@ http://inamidst.com/phenny/
 """
 
 import datetime
-import os
 import random
-import re
-import web
 from collections import Counter
 from modules import caseless_list
-from tools import db_path
+from tools import GrumbleError, read_db, write_db
 
 maximum = 4
 
@@ -52,7 +49,7 @@ def aliasPairMerge(phenny, nick1, nick2):
 
     nick_aliases.append(group1)
 
-    dumpAliases(phenny.alias_filename)
+    dumpAliases(phenny)
 
 def alias(phenny, raw):
     if raw.group(1) :
@@ -87,7 +84,7 @@ def alias(phenny, raw):
                 nick_aliases.remove(group)
                 group.remove(nick)
                 nick_aliases.append(group)
-                dumpAliases(phenny.alias_filename)
+                dumpAliases(phenny)
             phenny.reply("You have removed %s from its alias group" % nick)
         else:
             phenny.reply("Usage: .alias add <nick>, .alias list <nick>?, .alias remove")
@@ -96,65 +93,27 @@ def alias(phenny, raw):
 
 alias.rule = r'\.alias(?:\s(\S+))?(?:\s(\S+))?'
 
-def loadAliases(fn):
-    f = open(fn)
-    for line in f: 
-        line = line.strip()
-        if line: 
-            try: nick_aliases.append(line.split('\t'))
-            except ValueError: continue
-    f.close()
+def loadAliases(self):
+    try:
+        nick_aliases = read_db(self, 'alias')
+    except GrumbleError:
+        nick_aliases = []
 
-def dumpAliases(fn):
-    f = open(fn, 'w')
-    for group in nick_aliases: 
-        line = '\t'.join(group)
-        try: f.write(line + '\n')
-        except IOError: break
-    try: f.close()
-    except IOError: pass
+def dumpAliases(self):
+    write_db(self, 'alias', nick_aliases)
 
-def loadReminders(fn): 
-    result = {}
-    f = open(fn)
-    for line in f: 
-        line = line.strip()
-        if line: 
-            try: tellee, teller, verb, timenow, msg = line.split('\t', 4)
-            except ValueError: continue # @@ hmm
-            result.setdefault(tellee, []).append((teller, verb, timenow, msg))
-    f.close()
-    return result
+def loadReminders(self):
+    try:
+        self.reminders = read_db(self, 'tell')
+    except GrumbleError:
+        self.reminders = {}
 
-def dumpReminders(fn, data): 
-    f = open(fn, 'w')
-    for tellee in data.keys(): 
-        for remindon in data[tellee]: 
-            line = '\t'.join((tellee,) + remindon)
-            try: f.write(line + '\n')
-            except IOError: break
-    try: f.close()
-    except IOError: pass
-    return True
+def dumpReminders(self):
+    write_db(self, 'tell', self.reminders)
 
-def setup(self): 
-    self.tell_filename = db_path(self, 'tell')
-    if not os.path.exists(self.tell_filename): 
-        try: f = open(self.tell_filename, 'w')
-        except OSError: pass
-        else: 
-            f.write('')
-            f.close()
-    self.reminders = loadReminders(self.tell_filename) # @@ tell
-
-    self.alias_filename = db_path(self, 'alias')
-    if not os.path.exists(self.alias_filename): 
-        try: f = open(self.alias_filename, 'w')
-        except OSError: pass
-        else: 
-            f.write('')
-            f.close()
-    nick_aliases = loadAliases(self.alias_filename)
+def setup(self):
+    loadReminders(self)
+    loadAliases(self)
 
 def f_remind(phenny, input): 
     teller = input.nick
@@ -169,9 +128,6 @@ def f_remind(phenny, input):
 
     tellee_original = tellee.rstrip('.,:;')
     tellee = tellee_original.lower()
-
-    if not os.path.exists(phenny.tell_filename): 
-        return
 
     if len(tellee) > 20: 
         return phenny.reply('That nickname is too long.')
@@ -201,7 +157,7 @@ def f_remind(phenny, input):
         phenny.reply(response)
     else: phenny.say("Hey, I'm not as stupid as Monty you know!")
 
-    dumpReminders(phenny.tell_filename, phenny.reminders) # @@ tell
+    dumpReminders(phenny)
 f_remind.rule = ('$nick', ['tell', 'ask'], r'(\S+) (.*)')
 f_remind.thread = False
 
@@ -234,10 +190,6 @@ def message(phenny, input):
     aliases = caseless_list(aliasGroupFor(tellee))
     channel = input.sender
 
-    if not os: return
-    if not os.path.exists(phenny.tell_filename): 
-        return
-
     reminders = []
     remkeys = list(reversed(sorted(phenny.reminders.keys())))
     for remkey in remkeys:
@@ -260,7 +212,7 @@ def message(phenny, input):
             phenny.msg(tellee, line)
 
     if len(list(phenny.reminders.keys())) != remkeys: 
-        dumpReminders(phenny.tell_filename, phenny.reminders) # @@ tell
+        dumpReminders(phenny)
 message.rule = r'(.*)'
 message.priority = 'low'
 message.thread = False

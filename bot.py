@@ -14,8 +14,8 @@ import os
 import re
 import sys
 import threading
+import traceback
 import tools
-import logging
 
 logger = logging.getLogger('phenny')
 
@@ -81,7 +81,8 @@ class Phenny(irc.Bot):
                 if hasattr(module, 'setup'):
                     module.setup(self)
             except Exception as e: 
-                logger.error("Error loading %s: %s (in bot.py)" % (name, e))
+                trace = traceback.format_exc()
+                logger.error("Error loading %s module:\n%s" % (name, trace))
             else: 
                 self.register(module)
                 modules.append(name)

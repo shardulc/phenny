@@ -113,33 +113,22 @@ def main(argv=None):
         name = os.path.basename(config_name).split('.')[0] + '_config'
         module = imp.load_source(name, config_name)
         module.filename = config_name
- 
-        if not hasattr(module, 'prefix'): 
-            module.prefix = r'\.'
- 
-        if not hasattr(module, 'name'): 
-            module.name = 'Phenny Palmersbot, http://inamidst.com/phenny/'
- 
-        if not hasattr(module, 'port'): 
-            module.port = 6667
-            
-        if not hasattr(module, 'sasl'):
-            module.sasl = False
-        
-        if not hasattr(module, 'ssl'):
-            module.ssl = False
 
-        if not hasattr(module, 'ca_certs'):
-            module.ca_certs = None
- 
-        if not hasattr(module, 'ipv6'):
-            module.ipv6 = False
+        defaults = {
+            'prefix': r'\.',
+            'name': 'Phenny Palmersbot, http://inamidst.com/phenny/',
+            'port': 6667,
+            'sasl': False,
+            'ssl': False,
+            'ca_certs': None,
+            'ipv6': False,
+            'password': None,
+            'githook_autostart': False,
+        }
 
-        if not hasattr(module, 'password'): 
-            module.password = None
-
-        if not hasattr(module, 'githook_autostart'):
-            module.githook_autostart = False
+        for key, value in defaults.items():
+            if not hasattr(module, key):
+                setattr(module, key, value)
 
         if module.host == 'irc.example.net': 
             logger.critical('You must edit the config file first!')

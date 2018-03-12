@@ -291,14 +291,14 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
                     if ref == 'master' and not fork:
                         msgs_default_channels.append(message)
-                    else:
+                    elif branch_channels:
                         for channel in branch_channels:
                             if channel in msgs_by_channel:
                                 msgs_by_channel[channel].append(message)
                             else:
                                 msgs_by_channel[channel] = [message]
-                        else:
-                            silent_on_purpose = True
+                    else:
+                        silent_on_purpose = True
 
             elif event == 'release':
                 template = '{:}: {:} * release {:} {:} {:}'
